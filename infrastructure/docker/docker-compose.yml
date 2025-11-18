@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: infopanama-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__GRPC_PORT=6334
+    restart: unless-stopped
+    networks:
+      - infopanama
+
+  # PostgreSQL (opcional, para uso futuro)
+  postgres:
+    image: postgres:16-alpine
+    container_name: infopanama-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=infopanama
+      - POSTGRES_PASSWORD=infopanama_dev
+      - POSTGRES_DB=infopanama
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - infopanama
+
+  # Redis (para rate limiting y caching)
+  redis:
+    image: redis:7-alpine
+    container_name: infopanama-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - infopanama
+    command: redis-server --appendonly yes
+
+  # Prefect Server (orquestación de scrapers)
+  prefect:
+    image: prefecthq/prefect:2-python3.11
+    container_name: infopanama-prefect
+    ports:
+      - "4200:4200"
+    environment:
+      - PREFECT_API_URL=http://localhost:4200/api
+      - PREFECT_SERVER_API_HOST=0.0.0.0
+    volumes:
+      - prefect_data:/root/.prefect
+    restart: unless-stopped
+    networks:
+      - infopanama
+    command: prefect server start --host 0.0.0.0
+
+volumes:
+  qdrant_data:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prefect_data:
+    driver: local
+
+networks:
+  infopanama:
+    driver: bridge

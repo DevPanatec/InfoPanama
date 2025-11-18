@@ -1,0 +1,53 @@
+{
+  "name": "infopanama",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plataforma de verificación de información y análisis mediático para Panamá",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=web",
+    "dev:admin": "turbo run dev --filter=admin",
+    "build": "turbo run build",
+    "build:web": "turbo run build --filter=web",
+    "build:admin": "turbo run build --filter=admin",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "test:e2e": "turbo run test:e2e",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\"",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "typecheck": "turbo run typecheck",
+    "deploy:staging": "turbo run build && ./infrastructure/scripts/deploy-staging.sh",
+    "deploy:prod": "turbo run build && ./infrastructure/scripts/deploy-prod.sh",
+    "convex:dev": "convex dev",
+    "convex:deploy": "convex deploy",
+    "api:dev": "cd packages/api && poetry run uvicorn main:app --reload",
+    "scrapers:run": "cd packages/scrapers && poetry run prefect server start",
+    "docker:up": "docker-compose -f infrastructure/docker/docker-compose.yml up -d",
+    "docker:down": "docker-compose -f infrastructure/docker/docker-compose.yml down",
+    "docker:logs": "docker-compose -f infrastructure/docker/docker-compose.yml logs -f"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "@typescript-eslint/eslint-plugin": "^6.19.1",
+    "@typescript-eslint/parser": "^6.19.1",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "15.0.3",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.2.4",
+    "prettier-plugin-tailwindcss": "^0.5.11",
+    "turbo": "^1.12.3",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "packageManager": "npm@10.2.4"
+}
