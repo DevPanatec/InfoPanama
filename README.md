@@ -12,15 +12,15 @@ Plataforma híbrida estilo Snopes + Ground News para Panamá, 100% automatizada 
 ```
 infopanama/
 ├── apps/
-│   ├── web/              # Frontend público Next.js 15
-│   └── admin/            # Panel administrativo Next.js 15
+│   └── web/              # Aplicación Next.js 15 (público + admin)
+│       ├── src/app/      # Rutas públicas
+│       └── src/app/admin/ # Panel administrativo
 ├── packages/
 │   ├── api/              # FastAPI Backend
 │   ├── convex/           # Convex schema & functions
 │   ├── scrapers/         # Playwright scrapers
 │   ├── ai/               # NLP, RAG, verificación
-│   ├── shared/           # Tipos y utilidades compartidas
-│   └── ui/               # Componentes UI compartidos (shadcn)
+│   └── shared/           # Tipos y utilidades compartidas
 ├── docs/                 # Documentación técnica
 └── infrastructure/       # Docker, CI/CD, scripts
 ```
@@ -28,11 +28,14 @@ infopanama/
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **Next.js 15** (App Router)
-- **TypeScript**
-- **Tailwind CSS + shadcn/ui**
-- **ECharts / D3.js** (visualizaciones)
-- **vis.js** (grafos)
+- **Next.js 15.0.3** (App Router)
+- **React 18.3.1** (NO React 19 por compatibilidad)
+- **TypeScript 5.3.3**
+- **Tailwind CSS + shadcn/ui patterns**
+- **Lucide React** (iconos)
+- **date-fns** (manejo de fechas)
+- **ECharts / D3.js** (visualizaciones - por implementar)
+- **vis.js** (grafos - por implementar)
 
 ### Backend
 - **FastAPI** (Python)
@@ -78,17 +81,20 @@ git clone <repo-url>
 cd infopanama
 
 # Instalar dependencias del workspace
-npm install
+npm install --legacy-peer-deps
 
 # Configurar variables de entorno
 cp .env.example .env.local
 # Editar .env.local con tus credenciales
 
-# Levantar servicios con Docker
+# Levantar servicios con Docker (opcional - backend)
 docker-compose up -d
 
-# Iniciar desarrollo
+# Iniciar desarrollo (frontend público + admin)
 npm run dev
+# Accede a:
+# - http://localhost:3000 (sitio público)
+# - http://localhost:3000/admin/dashboard (panel admin)
 ```
 
 ## 📋 Variables de Entorno

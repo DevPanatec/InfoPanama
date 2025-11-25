@@ -1,86 +1,117 @@
+'use client'
+
+import Link from 'next/link'
+import { Sparkles, Shield, Heart, ArrowRight } from 'lucide-react'
+
 export function Footer() {
   return (
-    <footer className="bg-muted/50 border-t border-border mt-20">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 text-white overflow-hidden">
+      {/* Decorative background */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-600 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl animate-pulse [animation-delay:1s]"></div>
+      </div>
+
+      <div className="container mx-auto px-4 py-16 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           {/* About */}
-          <div>
-            <h3 className="font-bold mb-4">InfoPanama</h3>
-            <p className="text-sm text-muted-foreground">
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="h-6 w-6 text-blue-400" />
+              <h3 className="text-2xl font-bold">InfoPanama</h3>
+            </div>
+            <p className="text-gray-300 mb-6 leading-relaxed">
               Plataforma de verificación de información automatizada con IA para Panamá.
+              Construyendo confianza a través de la verdad y la transparencia.
             </p>
+            <div className="flex items-center gap-2 text-blue-400">
+              <Shield className="h-5 w-5" />
+              <span className="text-sm font-semibold">Verificación Oficial de Panamá</span>
+            </div>
           </div>
 
           {/* Links */}
           <div>
-            <h3 className="font-bold mb-4">Navegación</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="font-bold mb-4 text-lg">Navegación</h3>
+            <ul className="space-y-3 text-sm">
               <li>
-                <a href="/verificaciones" className="text-muted-foreground hover:text-foreground">
+                <button
+                  onClick={() => (window.location.href = '/verificaciones')}
+                  className="text-gray-300 hover:text-white hover:translate-x-1 transition-all flex items-center gap-2 group"
+                >
+                  <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   Verificaciones
-                </a>
+                </button>
               </li>
               <li>
-                <a href="/medios" className="text-muted-foreground hover:text-foreground">
+                <button
+                  onClick={() => (window.location.href = '/medios')}
+                  className="text-gray-300 hover:text-white hover:translate-x-1 transition-all flex items-center gap-2 group"
+                >
+                  <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   Medios
-                </a>
+                </button>
               </li>
               <li>
-                <a href="/eventos" className="text-muted-foreground hover:text-foreground">
-                  Eventos
-                </a>
+                <button
+                  onClick={() => (window.location.href = '/actores')}
+                  className="text-gray-300 hover:text-white hover:translate-x-1 transition-all flex items-center gap-2 group"
+                >
+                  <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  Actores
+                </button>
               </li>
             </ul>
           </div>
 
           {/* Info */}
           <div>
-            <h3 className="font-bold mb-4">Información</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="font-bold mb-4 text-lg">Información</h3>
+            <ul className="space-y-3 text-sm">
               <li>
-                <a href="/metodologia" className="text-muted-foreground hover:text-foreground">
+                <a href="/metodologia" className="text-gray-300 hover:text-white hover:translate-x-1 transition-all flex items-center gap-2 group">
+                  <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   Metodología
                 </a>
               </li>
               <li>
-                <a href="/sobre-nosotros" className="text-muted-foreground hover:text-foreground">
+                <a href="/sobre-nosotros" className="text-gray-300 hover:text-white hover:translate-x-1 transition-all flex items-center gap-2 group">
+                  <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   Sobre Nosotros
                 </a>
               </li>
-              <li>
-                <a href="/contacto" className="text-muted-foreground hover:text-foreground">
-                  Contacto
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Submit */}
-          <div>
-            <h3 className="font-bold mb-4">Participar</h3>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a href="/enviar" className="text-muted-foreground hover:text-foreground">
-                  Enviar Rumor
-                </a>
-              </li>
-              <li>
-                <a href="/faq" className="text-muted-foreground hover:text-foreground">
-                  Preguntas Frecuentes
-                </a>
-              </li>
             </ul>
           </div>
         </div>
+
+        {/* Separator */}
+        <div className="border-t border-white/10 mb-8"></div>
 
         {/* Copyright */}
-        <div className="mt-8 pt-8 border-t border-border text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} InfoPanama. Todos los derechos reservados.</p>
-          <p className="mt-2">
-            Desarrollado con ❤️ para Panamá
+        <div className="text-center">
+          <p className="text-gray-400 mb-2">
+            © {new Date().getFullYear()} InfoPanama. Todos los derechos reservados.
           </p>
+          <div className="flex items-center justify-center gap-2 text-gray-300 mb-3">
+            <span>Desarrollado con</span>
+            <Heart className="h-4 w-4 text-red-400 animate-pulse" fill="currentColor" />
+            <span>para Panamá</span>
+          </div>
+
+          {/* Admin Link - discreto */}
+          <div className="mt-4">
+            <Link
+              href="/admin/login"
+              className="text-xs text-gray-500 hover:text-gray-300 transition-colors opacity-50 hover:opacity-100"
+            >
+              Acceso Administrativo
+            </Link>
+          </div>
         </div>
       </div>
+
+      {/* Bottom shine effect */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-400 to-transparent"></div>
     </footer>
   )
 }

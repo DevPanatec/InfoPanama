@@ -105,7 +105,23 @@ export const publicClaims = query({
       .order('desc')
       .take(limit)
 
-    return claims
+    // Enriquecer con veredictos
+    const claimsWithVerdicts = await Promise.all(
+      claims.map(async (claim) => {
+        const verdict = await ctx.db
+          .query('verdicts')
+          .withIndex('by_claim', (q) => q.eq('claimId', claim._id))
+          .order('desc')
+          .first()
+
+        return {
+          ...claim,
+          verdict: verdict?.verdict || null,
+        }
+      })
+    )
+
+    return claimsWithVerdicts
   },
 })
 
@@ -147,6 +163,90 @@ export const stats = query({
       review: review.length,
       bySeverity,
     }
+  },
+})
+
+/**
+ * Obtener categorías con conteos
+ */
+export const categories = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { limit = 10 } = args
+
+    // Obtener todas las claims publicadas
+    const claims = await ctx.db
+      .query('claims')
+      .filter((q) => q.eq(q.field('isPublic'), true))
+      .filter((q) => q.eq(q.field('status'), 'published'))
+      .collect()
+
+    // Agrupar por categoría
+    const categoryMap = new Map<string, number>()
+
+    for (const claim of claims) {
+      if (claim.category) {
+        const count = categoryMap.get(claim.category) || 0
+        categoryMap.set(claim.category, count + 1)
+      }
+    }
+
+    // Convertir a array y ordenar por conteo
+    const categories = Array.from(categoryMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit)
+
+    return categories
+  },
+})
+
+/**
+ * Obtener actividad reciente
+ */
+export const recentActivity = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { limit = 5 } = args
+
+    // Obtener las claims más recientes ordenadas por updatedAt
+    const recentClaims = await ctx.db
+      .query('claims')
+      .filter((q) => q.eq(q.field('isPublic'), true))
+      .order('desc')
+      .take(limit)
+
+    // Formatear la actividad
+    const activities = recentClaims.map((claim) => {
+      let activityType: 'published' | 'investigating' | 'review' = 'published'
+      let color: string = 'bg-emerald-500'
+      let message: string = 'Nueva verificación publicada'
+
+      if (claim.status === 'investigating') {
+        activityType = 'investigating'
+        color = 'bg-blue-500'
+        message = 'Investigación en curso'
+      } else if (claim.status === 'review') {
+        activityType = 'review'
+        color = 'bg-amber-500'
+        message = 'En revisión'
+      }
+
+      return {
+        id: claim._id,
+        type: activityType,
+        message,
+        color,
+        timestamp: claim.updatedAt,
+        claimTitle: claim.title,
+      }
+    })
+
+    return activities
   },
 })
 

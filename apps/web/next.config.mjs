@@ -9,9 +9,40 @@ const nextConfig = {
         hostname: '**.digitaloceanspaces.com',
       },
     ],
+    // Optimización de imágenes
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60,
   },
   experimental: {
-    optimizePackageImports: ['lucide-react', 'echarts'],
+    // Optimizar imports de paquetes grandes
+    optimizePackageImports: ['lucide-react'],
+  },
+  // Comprimir respuestas
+  compress: true,
+  // Generar source maps solo en desarrollo
+  productionBrowserSourceMaps: false,
+  // Headers de seguridad y caché
+  async headers() {
+    return [
+      {
+        source: '/:all*(svg|jpg|png|webp|avif)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on',
+          },
+        ],
+      },
+    ]
   },
 }
 

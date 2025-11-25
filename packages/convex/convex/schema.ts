@@ -27,6 +27,7 @@ export default defineSchema({
     title: v.string(),
     description: v.string(),
     claimText: v.string(),
+    imageUrl: v.optional(v.string()), // Imagen destacada para la card
 
     // Estado del workflow
     status: v.union(
@@ -597,6 +598,170 @@ export default defineSchema({
     .index('by_user', ['userId'])
     .index('by_timestamp', ['timestamp'])
     .index('by_entity', ['entityType', 'entityId']),
+
+  // ============================================
+  // NOTIFICACIONES
+  // ============================================
+  notifications: defineTable({
+    userId: v.id('users'),
+
+    // Tipo de notificación
+    type: v.union(
+      v.literal('new_claim'),
+      v.literal('verdict_published'),
+      v.literal('comment_reply'),
+      v.literal('comment_mention'),
+      v.literal('event_reminder'),
+      v.literal('subscription_update'),
+      v.literal('claim_request_status'),
+      v.literal('system_announcement')
+    ),
+
+    // Contenido
+    title: v.string(),
+    message: v.string(),
+
+    // Entidad relacionada
+    relatedEntityType: v.optional(
+      v.union(
+        v.literal('claim'),
+        v.literal('verdict'),
+        v.literal('comment'),
+        v.literal('event'),
+        v.literal('claimRequest')
+      )
+    ),
+    relatedEntityId: v.optional(v.string()),
+
+    // Estado
+    isRead: v.boolean(),
+    readAt: v.optional(v.number()),
+
+    // Prioridad
+    priority: v.union(
+      v.literal('low'),
+      v.literal('normal'),
+      v.literal('high'),
+      v.literal('urgent')
+    ),
+
+    // URL de acción
+    actionUrl: v.optional(v.string()),
+
+    createdAt: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_read', ['userId', 'isRead'])
+    .index('by_created', ['createdAt']),
+
+  // ============================================
+  // SUSCRIPCIONES
+  // ============================================
+  subscriptions: defineTable({
+    userId: v.id('users'),
+
+    // Tipo de suscripción
+    type: v.union(
+      v.literal('topic'),
+      v.literal('actor'),
+      v.literal('source'),
+      v.literal('category'),
+      v.literal('keyword'),
+      v.literal('all_claims')
+    ),
+
+    // Target ID (dependiendo del tipo)
+    targetId: v.optional(v.string()), // ID del topic/actor/source
+    targetName: v.string(), // Nombre para display
+
+    // Configuración
+    frequency: v.union(
+      v.literal('realtime'),
+      v.literal('daily'),
+      v.literal('weekly'),
+      v.literal('monthly')
+    ),
+
+    // Filtros adicionales
+    filters: v.optional(
+      v.object({
+        verdictTypes: v.optional(v.array(v.string())),
+        riskLevels: v.optional(v.array(v.string())),
+        minConfidence: v.optional(v.number()),
+      })
+    ),
+
+    // Canal de notificación
+    channels: v.array(
+      v.union(v.literal('email'), v.literal('web'), v.literal('push'))
+    ),
+
+    // Estado
+    isActive: v.boolean(),
+    lastNotified: v.optional(v.number()),
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_user_active', ['userId', 'isActive'])
+    .index('by_type', ['type'])
+    .index('by_target', ['type', 'targetId']),
+
+  // ============================================
+  // SOLICITUDES DE VERIFICACIÓN
+  // ============================================
+  claimRequests: defineTable({
+    // Usuario que solicita
+    userId: v.id('users'),
+
+    // Contenido
+    claimText: v.string(),
+    description: v.string(),
+    sourceUrl: v.optional(v.string()),
+    category: v.optional(v.string()),
+
+    // Estado del workflow
+    status: v.union(
+      v.literal('pending'),
+      v.literal('approved'),
+      v.literal('investigating'),
+      v.literal('rejected'),
+      v.literal('duplicate'),
+      v.literal('completed')
+    ),
+
+    // Prioridad
+    priority: v.union(
+      v.literal('low'),
+      v.literal('medium'),
+      v.literal('high'),
+      v.literal('urgent')
+    ),
+
+    // Si fue aprobado
+    claimId: v.optional(v.id('claims')), // ID del claim creado
+
+    // Revisión
+    reviewedBy: v.optional(v.id('users')),
+    reviewedAt: v.optional(v.number()),
+    reviewNotes: v.optional(v.string()),
+
+    // Engagement
+    upvotes: v.number(), // Otros usuarios que también quieren esto verificado
+    upvotedBy: v.array(v.id('users')),
+
+    // Metadata
+    duplicateOf: v.optional(v.id('claimRequests')), // Si es duplicado
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_user', ['userId'])
+    .index('by_status', ['status'])
+    .index('by_priority', ['priority'])
+    .index('by_created', ['createdAt'])
+    .index('by_upvotes', ['upvotes']),
 
   // ============================================
   // CONFIGURACIÓN DEL SISTEMA
