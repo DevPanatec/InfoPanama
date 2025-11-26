@@ -1,5 +1,7 @@
-import { redirect } from 'next/navigation'
-import { currentUser } from '@clerk/nextjs/server'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
   LayoutDashboard,
@@ -12,6 +14,8 @@ import {
   Network,
   History,
   Settings,
+  User,
+  LogOut,
 } from 'lucide-react'
 
 /**
@@ -34,21 +38,53 @@ const adminNav = [
   { href: '/admin/dashboard/config', label: 'Configuración', icon: Settings },
 ]
 
-export default async function AdminLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  // Verificar autenticación
-  const user = await currentUser()
+  const router = useRouter()
+  const pathname = usePathname()
+  const [userEmail, setUserEmail] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(true)
 
-  if (!user) {
-    redirect('/sign-in?redirect=/admin/dashboard')
+  useEffect(() => {
+    // Verificar autenticación simple con localStorage
+    const adminSession = localStorage.getItem('admin_session')
+    const email = localStorage.getItem('admin_email')
+
+    // Si no está en la página de login y no tiene sesión, redirigir
+    if (!adminSession && pathname !== '/admin/login') {
+      router.push('/admin/login')
+      return
+    }
+
+    if (email) {
+      setUserEmail(email)
+    }
+
+    setIsLoading(false)
+  }, [pathname, router])
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin_session')
+    localStorage.removeItem('admin_email')
+    router.push('/admin/login')
   }
 
-  // TODO: Verificar rol en Convex
-  // Por ahora, cualquier usuario autenticado puede acceder
-  // En producción, deberías verificar roles aquí
+  // Si está en la página de login, mostrar solo el children
+  if (pathname === '/admin/login') {
+    return <>{children}</>
+  }
+
+  // Mostrar loading mientras verifica
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen bg-slate-50">
@@ -68,11 +104,16 @@ export default async function AdminLayout({
           <ul className="space-y-1">
             {adminNav.map((item) => {
               const Icon = item.icon
+              const isActive = pathname === item.href
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-slate-700 rounded-lg hover:bg-slate-100 hover:text-blue-700 transition"
+                    className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition ${
+                      isActive
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-slate-700 hover:bg-slate-100 hover:text-blue-700'
+                    }`}
                   >
                     <Icon className="h-5 w-5" />
                     {item.label}
@@ -85,24 +126,29 @@ export default async function AdminLayout({
 
         {/* User Info */}
         <div className="p-4 border-t border-slate-200">
-          <div className="flex items-center gap-3">
-            <img
-              src={user.imageUrl}
-              alt={user.fullName || 'User'}
-              className="h-10 w-10 rounded-full"
-            />
+          <div className="flex items-center gap-3 mb-3">
+            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+              <User className="h-5 w-5 text-blue-600" />
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-slate-900 truncate">
-                {user.fullName || 'Usuario'}
+                Administrador
               </p>
               <p className="text-xs text-slate-500 truncate">
-                {user.emailAddresses[0]?.emailAddress}
+                {userEmail}
               </p>
             </div>
           </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition"
+          >
+            <LogOut className="h-4 w-4" />
+            Cerrar Sesión
+          </button>
           <Link
             href="/"
-            className="mt-3 block w-full px-3 py-2 text-center text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition"
+            className="mt-2 block w-full px-3 py-2 text-center text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition"
           >
             Volver al sitio
           </Link>
