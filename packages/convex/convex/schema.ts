@@ -51,6 +51,15 @@ export default defineSchema({
       v.literal('CRITICAL')
     ),
 
+    // Veredicto (opcional - puede venir de verdicts table)
+    verdict: v.optional(v.union(
+      v.literal('TRUE'),
+      v.literal('FALSE'),
+      v.literal('MIXED'),
+      v.literal('UNPROVEN'),
+      v.literal('NEEDS_CONTEXT')
+    )),
+
     // Metadata de origen
     sourceType: v.union(
       v.literal('user_submitted'),

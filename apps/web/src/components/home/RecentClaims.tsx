@@ -15,6 +15,7 @@ interface Claim {
   createdAt: number
   imageUrl?: string
   riskLevel?: string
+  verdict?: 'TRUE' | 'FALSE' | 'MIXED' | 'UNPROVEN' | 'NEEDS_CONTEXT' | null
 }
 
 export function RecentClaims() {
@@ -65,42 +66,56 @@ export function RecentClaims() {
 }
 
 function ClaimCard({ claim }: { claim: Claim }) {
-  const getVerdictInfo = (status: string, riskLevel?: string) => {
-    // Usar riskLevel para determinar el color/icono
-    if (riskLevel === 'CRITICAL') {
-      return {
-        icon: XCircle,
-        color: 'text-red-600',
-        bgColor: 'bg-red-500',
-        label: 'Crítico'
-      }
-    }
-    if (riskLevel === 'HIGH') {
-      return {
-        icon: CheckCircle2,
-        color: 'text-orange-600',
-        bgColor: 'bg-orange-500',
-        label: 'Alto'
-      }
-    }
-    if (riskLevel === 'MEDIUM') {
-      return {
-        icon: HelpCircle,
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-500',
-        label: 'Medio'
-      }
-    }
-    // Default para LOW o sin riskLevel
-    return {
-      icon: CheckCircle2,
-      color: 'text-green-600',
-      bgColor: 'bg-green-500',
-      label: 'Verificado'
+  const getVerdictInfo = (verdict?: string | null) => {
+    // Mostrar veredicto si existe
+    switch (verdict) {
+      case 'TRUE':
+        return {
+          icon: CheckCircle2,
+          color: 'text-green-600',
+          bgColor: 'bg-green-500',
+          label: 'Verdadero'
+        }
+      case 'FALSE':
+        return {
+          icon: XCircle,
+          color: 'text-red-600',
+          bgColor: 'bg-red-500',
+          label: 'Falso'
+        }
+      case 'MIXED':
+        return {
+          icon: HelpCircle,
+          color: 'text-amber-600',
+          bgColor: 'bg-amber-500',
+          label: 'Mixto'
+        }
+      case 'UNPROVEN':
+        return {
+          icon: HelpCircle,
+          color: 'text-slate-600',
+          bgColor: 'bg-slate-500',
+          label: 'Sin Pruebas'
+        }
+      case 'NEEDS_CONTEXT':
+        return {
+          icon: HelpCircle,
+          color: 'text-blue-600',
+          bgColor: 'bg-blue-500',
+          label: 'Necesita Contexto'
+        }
+      default:
+        // Sin veredicto aún
+        return {
+          icon: HelpCircle,
+          color: 'text-slate-600',
+          bgColor: 'bg-slate-400',
+          label: 'En Verificación'
+        }
     }
   }
 
-  const verdictInfo = getVerdictInfo(claim.status, claim.riskLevel)
+  const verdictInfo = getVerdictInfo(claim.verdict)
   const Icon = verdictInfo.icon
 
   const timeAgo = (timestamp: number) => {

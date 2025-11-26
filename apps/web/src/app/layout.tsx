@@ -5,6 +5,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { ToastProvider } from '@/components/ui/Toast'
 import { LoadingBar } from '@/components/LoadingBar'
 import { ConvexClientProvider } from '@/components/providers/ConvexClientProvider'
+// import { ClerkProvider } from '@clerk/nextjs' // Desactivado por ahora
 
 // Optimización de fuente con display swap para mejor rendimiento
 const inter = Inter({
