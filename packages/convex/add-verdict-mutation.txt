@@ -1,0 +1,21 @@
+// Agregar esta mutation al final de convex/claims.ts:
+
+export const updateVerdict = mutation({
+  args: {
+    id: v.id('claims'),
+    verdict: v.union(
+      v.literal('TRUE'),
+      v.literal('FALSE'),
+      v.literal('MIXED'),
+      v.literal('UNPROVEN'),
+      v.literal('NEEDS_CONTEXT')
+    ),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      verdict: args.verdict,
+      updatedAt: Date.now(),
+    })
+    return args.id
+  },
+})

@@ -161,7 +161,7 @@ export function Navbar() {
           {/* Admin Link in Mobile */}
           <div className="mt-4 pt-4 border-t border-slate-700">
             <Link
-              href="/admin/login"
+              href="/admin/dashboard"
               className="block px-4 py-3 rounded-lg text-sm text-slate-400 hover:bg-slate-700 hover:text-slate-300 transition"
               onClick={() => setIsOpen(false)}
             >

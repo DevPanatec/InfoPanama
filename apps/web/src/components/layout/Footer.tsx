@@ -98,7 +98,7 @@ export function Footer() {
             </div>
             <span>•</span>
             <Link
-              href="/admin/login"
+              href="/admin/dashboard"
               className="text-gray-500 hover:text-gray-300 transition-colors"
             >
               Admin
