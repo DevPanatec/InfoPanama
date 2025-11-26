@@ -1,5 +1,5 @@
 import { v } from 'convex/values'
-import { mutation, query } from './_generated/server'
+import { mutation, query, internalQuery, internalMutation } from './_generated/server'
 
 /**
  * CLAIMS - Gestión de afirmaciones a verificar
@@ -52,46 +52,9 @@ export const getById = query({
 })
 
 /**
- * Buscar claims
+ * Obtener claims públicas para homepage
  */
-export const search = query({
-  args: {
-    query: v.string(),
-    status: v.optional(v.string()),
-    category: v.optional(v.string()),
-    riskLevel: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const { query, status, category, riskLevel } = args
-
-    // Usando full-text search
-    const results = await ctx.db
-      .query('claims')
-      .withSearchIndex('search_claims', (q) => {
-        let search = q.search('claimText', query)
-
-        if (status) {
-          search = search.eq('status', status)
-        }
-        if (category) {
-          search = search.eq('category', category)
-        }
-        if (riskLevel) {
-          search = search.eq('riskLevel', riskLevel)
-        }
-
-        return search
-      })
-      .take(50)
-
-    return results
-  },
-})
-
-/**
- * Obtener claims públicas para el frontend
- */
-export const publicClaims = query({
+export const getPublished = query({
   args: {
     limit: v.optional(v.number()),
   },
@@ -100,101 +63,170 @@ export const publicClaims = query({
 
     const claims = await ctx.db
       .query('claims')
-      .filter((q) => q.eq(q.field('isPublic'), true))
-      .filter((q) => q.eq(q.field('status'), 'published'))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field('status'), 'published'),
+          q.eq(q.field('isPublic'), true)
+        )
+      )
       .order('desc')
       .take(limit)
 
-    // Enriquecer con veredictos
-    const claimsWithVerdicts = await Promise.all(
-      claims.map(async (claim) => {
-        const verdict = await ctx.db
-          .query('verdicts')
-          .withIndex('by_claim', (q) => q.eq('claimId', claim._id))
-          .order('desc')
-          .first()
+    return claims
+  },
+})
 
-        return {
-          ...claim,
-          verdict: verdict?.verdict || null,
-        }
-      })
-    )
+/**
+ * Obtener stats generales
+ */
+export const getStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const [all, published, investigating, review] = await Promise.all([
+      ctx.db.query('claims').collect(),
+      ctx.db
+        .query('claims')
+        .filter((q) => q.eq(q.field('status'), 'published'))
+        .collect(),
+      ctx.db
+        .query('claims')
+        .filter((q) => q.eq(q.field('status'), 'investigating'))
+        .collect(),
+      ctx.db
+        .query('claims')
+        .filter((q) => q.eq(q.field('status'), 'review'))
+        .collect(),
+    ])
 
-    return claimsWithVerdicts
+    return {
+      total: all.length,
+      published: published.length,
+      investigating: investigating.length,
+      review: review.length,
+    }
+  },
+})
+
+/**
+ * Buscar claims por categoría
+ */
+export const getByCategory = query({
+  args: {
+    category: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { category, limit = 20 } = args
+
+    const claims = await ctx.db
+      .query('claims')
+      .filter((q) =>
+        q.and(
+          q.eq(q.field('category'), category),
+          q.eq(q.field('isPublic'), true)
+        )
+      )
+      .order('desc')
+      .take(limit)
+
+    return claims
+  },
+})
+
+/**
+ * Obtener claims con nivel de riesgo alto
+ */
+export const getHighRisk = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { limit = 10 } = args
+
+    const claims = await ctx.db
+      .query('claims')
+      .filter((q) =>
+        q.or(
+          q.eq(q.field('riskLevel'), 'HIGH'),
+          q.eq(q.field('riskLevel'), 'CRITICAL')
+        )
+      )
+      .order('desc')
+      .take(limit)
+
+    return claims
   },
 })
 
 /**
  * Obtener claims featured
  */
-export const featuredClaims = query({
-  handler: async (ctx) => {
-    return await ctx.db
-      .query('claims')
-      .filter((q) => q.eq(q.field('isFeatured'), true))
-      .filter((q) => q.eq(q.field('isPublic'), true))
-      .order('desc')
-      .take(5)
-  },
-})
-
-/**
- * Obtener estadísticas de claims
- */
-export const stats = query({
-  handler: async (ctx) => {
-    const total = await ctx.db.query('claims').collect()
-    const published = total.filter((c) => c.status === 'published')
-    const investigating = total.filter((c) => c.status === 'investigating')
-    const review = total.filter((c) => c.status === 'review')
-
-    const bySeverity = {
-      LOW: total.filter((c) => c.riskLevel === 'LOW').length,
-      MEDIUM: total.filter((c) => c.riskLevel === 'MEDIUM').length,
-      HIGH: total.filter((c) => c.riskLevel === 'HIGH').length,
-      CRITICAL: total.filter((c) => c.riskLevel === 'CRITICAL').length,
-    }
-
-    return {
-      total: total.length,
-      published: published.length,
-      investigating: investigating.length,
-      review: review.length,
-      bySeverity,
-    }
-  },
-})
-
-/**
- * Obtener categorías con conteos
- */
-export const categories = query({
+export const getFeatured = query({
   args: {
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { limit = 10 } = args
+    const { limit = 5 } = args
 
-    // Obtener todas las claims publicadas
     const claims = await ctx.db
       .query('claims')
+      .filter((q) =>
+        q.and(
+          q.eq(q.field('isFeatured'), true),
+          q.eq(q.field('isPublic'), true)
+        )
+      )
+      .order('desc')
+      .take(limit)
+
+    return claims
+  },
+})
+
+/**
+ * Obtener claims por tag
+ */
+export const getByTag = query({
+  args: {
+    tag: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { tag, limit = 20 } = args
+
+    const allClaims = await ctx.db
+      .query('claims')
       .filter((q) => q.eq(q.field('isPublic'), true))
-      .filter((q) => q.eq(q.field('status'), 'published'))
       .collect()
 
-    // Agrupar por categoría
-    const categoryMap = new Map<string, number>()
+    const filtered = allClaims.filter((claim) => claim.tags.includes(tag))
 
-    for (const claim of claims) {
+    return filtered.slice(0, limit)
+  },
+})
+
+/**
+ * Obtener todas las categorías únicas
+ */
+export const getCategories = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { limit = 20 } = args
+
+    const allClaims = await ctx.db.query('claims').collect()
+
+    const categoryCount = new Map<string, number>()
+
+    allClaims.forEach((claim) => {
       if (claim.category) {
-        const count = categoryMap.get(claim.category) || 0
-        categoryMap.set(claim.category, count + 1)
+        const current = categoryCount.get(claim.category) || 0
+        categoryCount.set(claim.category, current + 1)
       }
-    }
+    })
 
-    // Convertir a array y ordenar por conteo
-    const categories = Array.from(categoryMap.entries())
+    const categories = Array.from(categoryCount.entries())
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, limit)
@@ -278,6 +310,17 @@ export const create = mutation({
       v.literal('HIGH'),
       v.literal('CRITICAL')
     )),
+    isPublic: v.optional(v.boolean()),
+    isFeatured: v.optional(v.boolean()),
+    autoPublished: v.optional(v.boolean()),
+    status: v.optional(v.union(
+      v.literal('new'),
+      v.literal('investigating'),
+      v.literal('review'),
+      v.literal('approved'),
+      v.literal('rejected'),
+      v.literal('published')
+    )),
   },
   handler: async (ctx, args) => {
     const now = Date.now()
@@ -286,15 +329,15 @@ export const create = mutation({
       title: args.title,
       description: args.description,
       claimText: args.claimText,
-      status: 'new',
+      status: args.status || 'new',
       category: args.category,
       tags: args.tags || [],
       riskLevel: args.riskLevel || 'MEDIUM',
       sourceType: args.sourceType,
       sourceUrl: args.sourceUrl,
-      isPublic: false,
-      isFeatured: false,
-      autoPublished: false,
+      isPublic: args.isPublic !== undefined ? args.isPublic : false,
+      isFeatured: args.isFeatured !== undefined ? args.isFeatured : false,
+      autoPublished: args.autoPublished !== undefined ? args.autoPublished : false,
       createdAt: now,
       updatedAt: now,
     })
@@ -411,6 +454,24 @@ export const updateRiskLevel = mutation({
 })
 
 /**
+ * Actualizar imagen de un claim
+ */
+export const updateImage = mutation({
+  args: {
+    id: v.id('claims'),
+    imageUrl: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      imageUrl: args.imageUrl,
+      updatedAt: Date.now(),
+    })
+
+    return args.id
+  },
+})
+
+/**
  * Eliminar claim (soft delete - cambiar a rejected)
  */
 export const remove = mutation({
@@ -425,5 +486,66 @@ export const remove = mutation({
     })
 
     return args.id
+  },
+})
+
+// ============================================
+// INTERNAL FUNCTIONS (para cron jobs)
+// ============================================
+
+/**
+ * Obtener claims pendientes para verificación automática
+ */
+export const getPendingForVerification = internalQuery({
+  args: {
+    limit: v.number(),
+  },
+  handler: async (ctx, args) => {
+    // Obtener claims con status 'new' y riskLevel HIGH o CRITICAL
+    const claims = await ctx.db
+      .query('claims')
+      .filter((q) =>
+        q.and(
+          q.eq(q.field('status'), 'new'),
+          q.or(
+            q.eq(q.field('riskLevel'), 'HIGH'),
+            q.eq(q.field('riskLevel'), 'CRITICAL')
+          )
+        )
+      )
+      .order('desc')
+      .take(args.limit)
+
+    return claims
+  },
+})
+
+/**
+ * Eliminar claims rechazados antiguos
+ */
+export const deleteOldRejected = internalMutation({
+  args: {
+    beforeDate: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const oldClaims = await ctx.db
+      .query('claims')
+      .filter((q) =>
+        q.and(
+          q.eq(q.field('status'), 'rejected'),
+          q.lt(q.field('updatedAt'), args.beforeDate)
+        )
+      )
+      .collect()
+
+    let deletedCount = 0
+    for (const claim of oldClaims) {
+      await ctx.db.delete(claim._id)
+      deletedCount++
+    }
+
+    console.log(`🗑️  Eliminados ${deletedCount} claims rechazados antiguos`)
+
+    return deletedCount
   },
 })

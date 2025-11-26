@@ -13,12 +13,14 @@ interface Claim {
   category?: string
   publishedAt?: number
   createdAt: number
-  verdict: 'TRUE' | 'FALSE' | 'MIXED' | 'UNPROVEN' | 'NEEDS_CONTEXT' | null
   imageUrl?: string
+  riskLevel?: string
 }
 
 export function RecentClaims() {
-  const claims = useQuery(api.claims.publicClaims, { limit: 5 })
+  const claims = useQuery(api.claims.getPublished, { limit: 6 })
+
+  console.log('🔍 RecentClaims - claims:', claims)
 
   if (!claims) {
     return (
@@ -63,54 +65,42 @@ export function RecentClaims() {
 }
 
 function ClaimCard({ claim }: { claim: Claim }) {
-  const getVerdictInfo = (verdictType: string | null) => {
-    switch (verdictType) {
-      case 'TRUE':
-        return {
-          icon: CheckCircle2,
-          color: 'text-blue-600',
-          bgColor: 'bg-blue-500',
-          label: 'Verdadero'
-        }
-      case 'FALSE':
-        return {
-          icon: XCircle,
-          color: 'text-slate-600',
-          bgColor: 'bg-slate-500',
-          label: 'Falso'
-        }
-      case 'MIXED':
-        return {
-          icon: HelpCircle,
-          color: 'text-blue-500',
-          bgColor: 'bg-blue-400',
-          label: 'Mixto'
-        }
-      case 'UNPROVEN':
-        return {
-          icon: HelpCircle,
-          color: 'text-slate-600',
-          bgColor: 'bg-slate-600',
-          label: 'Sin Pruebas'
-        }
-      case 'NEEDS_CONTEXT':
-        return {
-          icon: HelpCircle,
-          color: 'text-sky-600',
-          bgColor: 'bg-sky-500',
-          label: 'Requiere Contexto'
-        }
-      default:
-        return {
-          icon: HelpCircle,
-          color: 'text-blue-500',
-          bgColor: 'bg-blue-400',
-          label: 'En Verificación'
-        }
+  const getVerdictInfo = (status: string, riskLevel?: string) => {
+    // Usar riskLevel para determinar el color/icono
+    if (riskLevel === 'CRITICAL') {
+      return {
+        icon: XCircle,
+        color: 'text-red-600',
+        bgColor: 'bg-red-500',
+        label: 'Crítico'
+      }
+    }
+    if (riskLevel === 'HIGH') {
+      return {
+        icon: CheckCircle2,
+        color: 'text-orange-600',
+        bgColor: 'bg-orange-500',
+        label: 'Alto'
+      }
+    }
+    if (riskLevel === 'MEDIUM') {
+      return {
+        icon: HelpCircle,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-500',
+        label: 'Medio'
+      }
+    }
+    // Default para LOW o sin riskLevel
+    return {
+      icon: CheckCircle2,
+      color: 'text-green-600',
+      bgColor: 'bg-green-500',
+      label: 'Verificado'
     }
   }
 
-  const verdictInfo = getVerdictInfo(claim.verdict)
+  const verdictInfo = getVerdictInfo(claim.status, claim.riskLevel)
   const Icon = verdictInfo.icon
 
   const timeAgo = (timestamp: number) => {

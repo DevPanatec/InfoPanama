@@ -13,7 +13,8 @@
     "codegen": "convex dev --once"
   },
   "dependencies": {
-    "convex": "^1.16.0"
+    "convex": "^1.16.0",
+    "openai": "^6.9.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",

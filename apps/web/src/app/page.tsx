@@ -23,9 +23,10 @@ const CATEGORY_COLORS = [
 ]
 
 export default function HomePage() {
-  const trendingTopics = useQuery(api.topics.trendingTopics, { limit: 5 })
-  const categories = useQuery(api.claims.categories, { limit: 8 })
-  const recentActivity = useQuery(api.claims.recentActivity, { limit: 3 })
+  // TODO: Implementar estas queries cuando estén listas
+  const trendingTopics = undefined
+  const categories = useQuery(api.claims.getCategories)
+  const recentActivity = undefined
   return (
     <main className="min-h-screen bg-slate-50">
       {/* Hero Section - Más compacto estilo Snopes */}
@@ -127,7 +128,7 @@ export default function HomePage() {
                 </p>
               ) : (
                 <div className="flex flex-wrap gap-2">
-                  {categories.map((cat, index) => (
+                  {categories.map((cat: { name: string; count: number }, index: number) => (
                     <Link
                       key={cat.name}
                       href={`/verificaciones?category=${encodeURIComponent(cat.name)}`}

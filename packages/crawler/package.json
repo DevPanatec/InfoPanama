@@ -1,0 +1,25 @@
+{
+  "name": "@infopanama/crawler",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "crawl:prensa": "tsx src/crawlers/la-prensa.ts",
+    "crawl:gaceta": "tsx src/crawlers/gaceta-oficial.ts",
+    "crawl:all": "tsx src/index.ts",
+    "extract:claims": "tsx src/processors/claim-extractor.ts"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "playwright": "^1.48.2",
+    "convex": "^1.17.2",
+    "dotenv": "^16.4.5",
+    "openai": "^4.73.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
