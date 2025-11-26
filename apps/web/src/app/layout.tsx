@@ -5,7 +5,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { ToastProvider } from '@/components/ui/Toast'
 import { LoadingBar } from '@/components/LoadingBar'
 import { ConvexClientProvider } from '@/components/providers/ConvexClientProvider'
-// import { ClerkProvider } from '@clerk/nextjs' // Desactivado por ahora
+import { ClerkProvider } from '@clerk/nextjs'
 
 // Optimización de fuente con display swap para mejor rendimiento
 const inter = Inter({
@@ -54,16 +54,18 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es" className={inter.variable} suppressHydrationWarning>
-      <body className={`${inter.className} antialiased`}>
-        <ConvexClientProvider>
-          <ToastProvider>
-            <LoadingBar />
-            <Navbar />
-            {children}
-          </ToastProvider>
-        </ConvexClientProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="es" className={inter.variable} suppressHydrationWarning>
+        <body className={`${inter.className} antialiased`}>
+          <ConvexClientProvider>
+            <ToastProvider>
+              <LoadingBar />
+              <Navbar />
+              {children}
+            </ToastProvider>
+          </ConvexClientProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

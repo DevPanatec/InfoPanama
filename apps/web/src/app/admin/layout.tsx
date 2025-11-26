@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useUser, UserButton } from '@clerk/nextjs'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
   LayoutDashboard,
@@ -14,8 +14,6 @@ import {
   Network,
   History,
   Settings,
-  User,
-  LogOut,
 } from 'lucide-react'
 
 /**
@@ -43,42 +41,11 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const router = useRouter()
+  const { user, isLoaded } = useUser()
   const pathname = usePathname()
-  const [userEmail, setUserEmail] = useState<string>('')
-  const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    // Verificar autenticación simple con localStorage
-    const adminSession = localStorage.getItem('admin_session')
-    const email = localStorage.getItem('admin_email')
-
-    // Si no está en la página de login y no tiene sesión, redirigir
-    if (!adminSession && pathname !== '/admin/login') {
-      router.push('/admin/login')
-      return
-    }
-
-    if (email) {
-      setUserEmail(email)
-    }
-
-    setIsLoading(false)
-  }, [pathname, router])
-
-  const handleLogout = () => {
-    localStorage.removeItem('admin_session')
-    localStorage.removeItem('admin_email')
-    router.push('/admin/login')
-  }
-
-  // Si está en la página de login, mostrar solo el children
-  if (pathname === '/admin/login') {
-    return <>{children}</>
-  }
-
-  // Mostrar loading mientras verifica
-  if (isLoading) {
+  // Mostrar loading mientras carga Clerk
+  if (!isLoaded) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50">
         <div className="h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -127,28 +94,25 @@ export default function AdminLayout({
         {/* User Info */}
         <div className="p-4 border-t border-slate-200">
           <div className="flex items-center gap-3 mb-3">
-            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-              <User className="h-5 w-5 text-blue-600" />
-            </div>
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: 'h-10 w-10',
+                },
+              }}
+            />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-slate-900 truncate">
-                Administrador
+                {user?.fullName || 'Usuario'}
               </p>
               <p className="text-xs text-slate-500 truncate">
-                {userEmail}
+                {user?.primaryEmailAddress?.emailAddress}
               </p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition"
-          >
-            <LogOut className="h-4 w-4" />
-            Cerrar Sesión
-          </button>
           <Link
             href="/"
-            className="mt-2 block w-full px-3 py-2 text-center text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition"
+            className="block w-full px-3 py-2 text-center text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition"
           >
             Volver al sitio
           </Link>
