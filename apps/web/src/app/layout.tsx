@@ -23,8 +23,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'VerificaPanama - Verificación de Información',
-    template: '%s | VerificaPanama',
+    default: 'VerificaPty - Verificación de Información',
+    template: '%s | VerificaPty',
   },
   description:
     'Plataforma de verificación de información y análisis mediático para Panamá',
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     'medios',
     'debida diligencia',
   ],
-  authors: [{ name: 'VerificaPanama' }],
+  authors: [{ name: 'VerificaPty' }],
   robots: {
     index: true,
     follow: true,
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'es_PA',
-    siteName: 'VerificaPanama',
+    siteName: 'VerificaPty',
   },
 }
 
