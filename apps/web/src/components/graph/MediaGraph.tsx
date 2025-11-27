@@ -50,14 +50,8 @@ export function MediaGraph({
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
 
-  // Obtener datos del grafo
-  const graphData = useQuery(api.entityRelations.getGraphData, {
-    limit: 200,
-    minStrength,
-    relationTypes,
-  })
-
-  const stats = useQuery(api.entityRelations.getGraphStats)
+  // Obtener TODOS los nodos del grafo OSINT
+  const graphData = useQuery(api.entityRelations.getFullGraph)
 
   // Transformar datos de Convex a formato ReactFlow
   useEffect(() => {
@@ -68,11 +62,8 @@ export function MediaGraph({
       const Icon = NODE_ICONS[node.type as keyof typeof NODE_ICONS]
       const color = NODE_COLORS[node.type as keyof typeof NODE_COLORS]
 
-      // Obtener nombre según el tipo
-      let label = 'Unknown'
-      if (node.data) {
-        label = node.data.name || node.data.title || node.data.normalizedName || 'Unknown'
-      }
+      // El label ya viene en node.label desde getFullGraph
+      const label = node.label || 'Unknown'
 
       return {
         id: node.id,
@@ -113,18 +104,18 @@ export function MediaGraph({
     const flowEdges: Edge[] = graphData.edges.map((edge) => {
       // Color según el tipo de relación
       let color = '#64748b' // slate-500 por defecto
-      if (edge.relationType === 'owns') color = '#ef4444' // red-500
-      if (edge.relationType === 'supports') color = '#10b981' // green-500
-      if (edge.relationType === 'opposes') color = '#f59e0b' // amber-500
+      if (edge.type === 'owns') color = '#ef4444' // red-500
+      if (edge.type === 'supports') color = '#10b981' // green-500
+      if (edge.type === 'opposes') color = '#f59e0b' // amber-500
 
-      const strokeWidth = Math.max(2, edge.strength / 30)
+      const strokeWidth = Math.max(2, (edge.strength || 50) / 30)
 
       return {
-        id: edge._id,
-        source: edge.sourceId,
-        target: edge.targetId,
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
         type: 'smoothstep', // Curvas suaves estilo Obsidian
-        animated: edge.strength > 70,
+        animated: (edge.strength || 50) > 70,
         style: {
           stroke: color,
           strokeWidth: strokeWidth,
@@ -170,17 +161,16 @@ export function MediaGraph({
   if (graphData.nodes.length === 0) {
     return (
       <div
-        className="flex items-center justify-center bg-slate-50 rounded-lg border border-slate-200"
+        className="flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-lg border border-slate-700"
         style={{ height }}
       >
         <div className="text-center max-w-md">
           <Building2 className="h-12 w-12 text-slate-400 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">
-            No hay datos disponibles
+          <h3 className="text-lg font-semibold text-white mb-2">
+            No hay entidades en el sistema
           </h3>
-          <p className="text-sm text-slate-600">
-            Aún no existen relaciones en el grafo. Comienza agregando actores, fuentes y
-            sus conexiones.
+          <p className="text-sm text-slate-300">
+            Agrega actores, fuentes y entidades para comenzar a construir el grafo OSINT.
           </p>
         </div>
       </div>
@@ -235,16 +225,16 @@ export function MediaGraph({
         )}
 
         {/* Stats - solo si hay datos */}
-        {stats && stats.totalNodes > 0 && (
+        {graphData && graphData.nodes.length > 0 && (
           <Panel position="bottom-left" className="bg-slate-800/70 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-700">
             <div className="flex items-center gap-6 text-xs">
               <div>
                 <span className="text-slate-400">Nodos:</span>{' '}
-                <span className="text-white font-semibold">{stats.totalNodes}</span>
+                <span className="text-white font-semibold">{graphData.nodes.length}</span>
               </div>
               <div>
                 <span className="text-slate-400">Conexiones:</span>{' '}
-                <span className="text-white font-semibold">{stats.totalEdges}</span>
+                <span className="text-white font-semibold">{graphData.edges.length}</span>
               </div>
             </div>
           </Panel>

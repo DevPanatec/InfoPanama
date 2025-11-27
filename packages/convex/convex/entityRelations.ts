@@ -3,6 +3,89 @@ import { mutation, query } from './_generated/server'
 import { Doc, Id } from './_generated/dataModel'
 
 /**
+ * Obtener grafo completo OSINT con TODOS los nodos y relaciones
+ * Siempre muestra todos los actores, fuentes y entidades, tengan o no relaciones
+ */
+export const getFullGraph = query({
+  args: {},
+  handler: async (ctx) => {
+    // Obtener todos los actores
+    const actors = await ctx.db.query('actors').collect()
+
+    // Obtener todas las fuentes
+    const sources = await ctx.db.query('sources').collect()
+
+    // Obtener todas las entidades
+    const entities = await ctx.db.query('entities').collect()
+
+    // Obtener todas las relaciones activas
+    const relations = await ctx.db
+      .query('entityRelations')
+      .filter((q) => q.eq(q.field('isActive'), true))
+      .collect()
+
+    // Crear nodos
+    const nodes = []
+
+    // Agregar actores como nodos
+    for (const actor of actors) {
+      nodes.push({
+        id: actor._id,
+        type: 'actor',
+        label: actor.name,
+        data: {
+          ...actor,
+          description: actor.bio || '',
+          mentionCount: actor.articleCount || 0,
+        },
+      })
+    }
+
+    // Agregar fuentes como nodos
+    for (const source of sources) {
+      nodes.push({
+        id: source._id,
+        type: 'source',
+        label: source.name,
+        data: {
+          ...source,
+          description: source.description || '',
+          mentionCount: source.articleCount || 0,
+        },
+      })
+    }
+
+    // Agregar entidades como nodos
+    for (const entity of entities) {
+      nodes.push({
+        id: entity._id,
+        type: 'entity',
+        label: entity.name,
+        data: {
+          ...entity,
+          description: entity.metadata?.description || '',
+          mentionCount: entity.mentionCount || 0,
+        },
+      })
+    }
+
+    // Crear edges (conexiones)
+    const edges = relations.map((rel) => ({
+      id: rel._id,
+      source: rel.sourceId,
+      target: rel.targetId,
+      type: rel.relationType,
+      strength: rel.strength,
+      confidence: rel.confidence,
+      context: rel.context,
+      data: rel,
+    }))
+
+    return { nodes, edges }
+  },
+})
+
+/**
  * Obtener todas las relaciones activas para el grafo
  */
 export const getGraphData = query({
