@@ -50,83 +50,13 @@ export default function MediaGraphPage() {
         </p>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg border border-slate-200 p-4 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter className="h-4 w-4 text-slate-600" />
-          <span className="text-sm font-medium text-slate-900">Filtros</span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Fuerza mínima */}
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-2">
-              Fuerza mínima de relación: {minStrength}%
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={minStrength}
-              onChange={(e) => setMinStrength(Number(e.target.value))}
-              className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-            />
-          </div>
-
-          {/* Tipos de relación */}
-          <div>
-            <label className="block text-xs font-medium text-slate-700 mb-2">
-              Tipos de relación
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {relationTypes.map((type) => (
-                <button
-                  key={type.value}
-                  onClick={() => toggleType(type.value)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition ${
-                    selectedTypes.includes(type.value) || selectedTypes.length === 0
-                      ? `${type.color} text-white`
-                      : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
-                  {type.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Graph */}
-      <div className="bg-white rounded-lg border border-slate-200 p-4">
+      {/* Graph - Fullscreen estilo Obsidian */}
+      <div className="rounded-lg overflow-hidden shadow-2xl">
         <MediaGraph
           minStrength={minStrength}
           relationTypes={selectedTypes.length > 0 ? selectedTypes : undefined}
-          height="calc(100vh - 400px)"
+          height="calc(100vh - 200px)"
         />
-      </div>
-
-      {/* Legend */}
-      <div className="mt-6 bg-white rounded-lg border border-slate-200 p-4">
-        <h3 className="text-sm font-semibold text-slate-900 mb-3">Leyenda</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded border-2 border-blue-500 bg-white"></div>
-            <span className="text-xs text-slate-600">Actor</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded border-2 border-green-500 bg-white"></div>
-            <span className="text-xs text-slate-600">Fuente</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded border-2 border-amber-500 bg-white"></div>
-            <span className="text-xs text-slate-600">Entidad</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded border-2 border-purple-500 bg-white"></div>
-            <span className="text-xs text-slate-600">Evento</span>
-          </div>
-        </div>
       </div>
     </div>
   )

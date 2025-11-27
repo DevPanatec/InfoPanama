@@ -63,7 +63,7 @@ export function MediaGraph({
   useEffect(() => {
     if (!graphData) return
 
-    // Crear nodos
+    // Crear nodos estilo Obsidian
     const flowNodes: Node[] = graphData.nodes.map((node, index) => {
       const Icon = NODE_ICONS[node.type as keyof typeof NODE_ICONS]
       const color = NODE_COLORS[node.type as keyof typeof NODE_COLORS]
@@ -79,51 +79,62 @@ export function MediaGraph({
         type: 'default',
         data: {
           label: (
-            <div className="flex items-center gap-2">
-              <Icon className="h-4 w-4" style={{ color }} />
-              <span className="text-xs font-medium">{label}</span>
+            <div className="flex flex-col items-center gap-2 text-center">
+              <div
+                className="rounded-full p-3 shadow-lg"
+                style={{
+                  backgroundColor: color,
+                  boxShadow: `0 0 20px ${color}80, 0 0 40px ${color}40`
+                }}
+              >
+                <Icon className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xs font-semibold text-white px-3 py-1 bg-slate-800/90 rounded-full">
+                {label}
+              </span>
             </div>
           ),
           nodeData: node,
         },
         position: {
-          x: Math.cos((index * 2 * Math.PI) / graphData.nodes.length) * 300 + 400,
-          y: Math.sin((index * 2 * Math.PI) / graphData.nodes.length) * 300 + 300,
+          x: Math.cos((index * 2 * Math.PI) / graphData.nodes.length) * 350 + 400,
+          y: Math.sin((index * 2 * Math.PI) / graphData.nodes.length) * 350 + 300,
         },
         style: {
-          background: 'white',
-          border: `2px solid ${color}`,
-          borderRadius: '8px',
-          padding: '10px',
-          minWidth: '150px',
+          background: 'transparent',
+          border: 'none',
+          padding: '0',
+          width: 'auto',
         },
       }
     })
 
-    // Crear edges
+    // Crear edges estilo Obsidian
     const flowEdges: Edge[] = graphData.edges.map((edge) => {
       // Color según el tipo de relación
-      let color = '#94a3b8' // slate-400 por defecto
+      let color = '#64748b' // slate-500 por defecto
       if (edge.relationType === 'owns') color = '#ef4444' // red-500
       if (edge.relationType === 'supports') color = '#10b981' // green-500
       if (edge.relationType === 'opposes') color = '#f59e0b' // amber-500
+
+      const strokeWidth = Math.max(2, edge.strength / 30)
 
       return {
         id: edge._id,
         source: edge.sourceId,
         target: edge.targetId,
-        type: 'default',
+        type: 'smoothstep', // Curvas suaves estilo Obsidian
         animated: edge.strength > 70,
-        label: edge.relationType.replace(/_/g, ' '),
-        labelStyle: { fontSize: 10, fontWeight: 500 },
-        labelBgStyle: { fill: 'white' },
         style: {
           stroke: color,
-          strokeWidth: Math.max(1, edge.strength / 25),
+          strokeWidth: strokeWidth,
+          strokeOpacity: 0.6,
         },
         markerEnd: {
           type: MarkerType.ArrowClosed,
           color: color,
+          width: 20,
+          height: 20,
         },
         data: edge,
       }
@@ -134,7 +145,7 @@ export function MediaGraph({
   }, [graphData, setNodes, setEdges])
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    (params: Connection) => setEdges((eds: Edge[]) => addEdge(params, eds)),
     [setEdges]
   )
 
@@ -186,67 +197,55 @@ export function MediaGraph({
         onConnect={onConnect}
         onNodeClick={onNodeClick}
         fitView
-        className="bg-slate-50 rounded-lg border border-slate-200"
+        className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+        proOptions={{ hideAttribution: true }}
       >
-        <Background />
-        <Controls className="bg-white rounded-lg shadow-lg border border-slate-200" />
-        <MiniMap
-          className="bg-white rounded-lg shadow-lg border border-slate-200"
-          nodeColor={(node) => {
-            const nodeData = node.data?.nodeData
-            if (!nodeData) return '#94a3b8'
-            return NODE_COLORS[nodeData.type as keyof typeof NODE_COLORS] || '#94a3b8'
-          }}
+        <Background
+          color="#334155"
+          gap={20}
+          size={1}
+          className="opacity-30"
         />
-
-        {/* Panel de estadísticas */}
-        {stats && (
-          <Panel position="top-left" className="bg-white rounded-lg shadow-lg p-4 border border-slate-200">
-            <div className="space-y-2">
-              <div className="text-xs font-semibold text-slate-700 mb-2">
-                Estadísticas del Grafo
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-xs text-slate-600">Nodos:</span>
-                <span className="text-xs font-bold text-slate-900">{stats.totalNodes}</span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-xs text-slate-600">Relaciones:</span>
-                <span className="text-xs font-bold text-slate-900">{stats.totalEdges}</span>
-              </div>
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-xs text-slate-600">Fuerza Prom.:</span>
-                <span className="text-xs font-bold text-slate-900">
-                  {stats.avgStrength.toFixed(0)}%
-                </span>
-              </div>
-            </div>
-          </Panel>
-        )}
 
         {/* Panel de info del nodo seleccionado */}
         {selectedNode && (
-          <Panel position="top-right" className="bg-white rounded-lg shadow-lg p-4 border border-slate-200 max-w-xs">
+          <Panel position="top-right" className="bg-slate-800/90 backdrop-blur-sm rounded-lg shadow-2xl p-4 border border-slate-700 max-w-xs">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-slate-900">
+                <div className="text-sm font-semibold text-white">
                   {selectedNode.data.nodeData?.data?.name || 'Nodo'}
                 </div>
                 <button
                   onClick={() => setSelectedNode(null)}
-                  className="text-slate-400 hover:text-slate-600"
+                  className="text-slate-400 hover:text-white transition"
                 >
                   ✕
                 </button>
               </div>
-              <div className="text-xs text-slate-600">
-                Tipo: <span className="font-medium">{selectedNode.data.nodeData?.type}</span>
+              <div className="text-xs text-slate-300">
+                Tipo: <span className="font-medium text-white">{selectedNode.data.nodeData?.type}</span>
               </div>
               {selectedNode.data.nodeData?.data?.description && (
-                <p className="text-xs text-slate-600 line-clamp-3">
+                <p className="text-xs text-slate-300 line-clamp-3">
                   {selectedNode.data.nodeData.data.description}
                 </p>
               )}
+            </div>
+          </Panel>
+        )}
+
+        {/* Stats - solo si hay datos */}
+        {stats && stats.totalNodes > 0 && (
+          <Panel position="bottom-left" className="bg-slate-800/70 backdrop-blur-sm rounded-lg px-4 py-2 border border-slate-700">
+            <div className="flex items-center gap-6 text-xs">
+              <div>
+                <span className="text-slate-400">Nodos:</span>{' '}
+                <span className="text-white font-semibold">{stats.totalNodes}</span>
+              </div>
+              <div>
+                <span className="text-slate-400">Conexiones:</span>{' '}
+                <span className="text-white font-semibold">{stats.totalEdges}</span>
+              </div>
             </div>
           </Panel>
         )}
