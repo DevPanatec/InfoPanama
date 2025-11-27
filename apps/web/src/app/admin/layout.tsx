@@ -26,14 +26,9 @@ import {
 const adminNav = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/dashboard/claims', label: 'Verificaciones', icon: FileCheck },
+  { href: '/admin/dashboard/media-graph', label: 'Grafo de Medios', icon: Network },
   { href: '/admin/dashboard/actores', label: 'Actores', icon: Users },
-  { href: '/admin/dashboard/dd', label: 'Debida Diligencia', icon: Shield },
   { href: '/admin/dashboard/fuentes', label: 'Fuentes', icon: Newspaper },
-  { href: '/admin/dashboard/eventos', label: 'Eventos', icon: Calendar },
-  { href: '/admin/dashboard/comentarios', label: 'Comentarios', icon: MessageSquare },
-  { href: '/admin/dashboard/media-graph', label: 'Media Graph', icon: Network },
-  { href: '/admin/dashboard/audit', label: 'Auditoría', icon: History },
-  { href: '/admin/dashboard/config', label: 'Configuración', icon: Settings },
 ]
 
 export default function AdminLayout({
