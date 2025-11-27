@@ -29,15 +29,15 @@ export const list = query({
   handler: async (ctx, args) => {
     const { type, limit = 50 } = args
 
-    let entitiesQuery = ctx.db.query('entities')
-
     if (type) {
-      entitiesQuery = entitiesQuery.withIndex('by_type', (q) =>
-        q.eq('type', type)
-      )
+      return await ctx.db
+        .query('entities')
+        .withIndex('by_type', (q) => q.eq('type', type))
+        .order('desc')
+        .take(limit)
     }
 
-    return await entitiesQuery.order('desc').take(limit)
+    return await ctx.db.query('entities').order('desc').take(limit)
   },
 })
 
@@ -79,12 +79,36 @@ export const findByName = query({
 })
 
 /**
+ * Obtener entidades mencionadas en un artículo específico
+ */
+export const findByArticle = query({
+  args: { articleId: v.id('articles') },
+  handler: async (ctx, args) => {
+    const allEntities = await ctx.db.query('entities').collect()
+
+    // Filtrar entidades que tienen este artículo en su array mentionedIn
+    return allEntities.filter((entity) =>
+      entity.mentionedIn.includes(args.articleId)
+    )
+  },
+})
+
+/**
  * Buscar entidades
  */
 export const search = query({
   args: {
     query: v.string(),
-    type: v.optional(v.string()),
+    type: v.optional(
+      v.union(
+        v.literal('PERSON'),
+        v.literal('ORGANIZATION'),
+        v.literal('LOCATION'),
+        v.literal('EVENT'),
+        v.literal('DATE'),
+        v.literal('OTHER')
+      )
+    ),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {

@@ -210,6 +210,103 @@ export const analyzeBatchArticles = action({
 })
 
 /**
+ * Generar relaciones automáticas por co-mención
+ * Conecta entidades que aparecen juntas en el mismo artículo
+ */
+export const generateCoMentionRelations = action({
+  args: {
+    articleIds: v.optional(v.array(v.id('articles'))),
+  },
+  handler: async (ctx, args) => {
+    console.log('🔄 Iniciando generación de co-menciones...')
+
+    // Si no se especifican artículos, obtener todos
+    const articles = args.articleIds
+      ? await Promise.all(
+          args.articleIds.map((id) => ctx.runQuery(api.articles.getById, { id }))
+        )
+      : await ctx.runQuery(api.articles.list, { limit: 100 })
+
+    if (!articles || articles.length === 0) {
+      return {
+        success: false,
+        message: 'No hay artículos para procesar',
+        articlesProcessed: 0,
+        relationsCreated: 0,
+      }
+    }
+
+    console.log(`📄 Procesando ${articles.length} artículos...`)
+
+    let totalRelationsCreated = 0
+    const relationStats = new Map<string, number>() // Para contar co-menciones
+
+    for (const article of articles) {
+      if (!article) continue
+
+      // Obtener todas las entidades que mencionan este artículo
+      const entities = await ctx.runQuery(api.entities.findByArticle, {
+        articleId: article._id,
+      })
+
+      if (entities.length < 2) {
+        console.log(`⏭️  Artículo ${article._id}: solo ${entities.length} entidad(es), saltando`)
+        continue
+      }
+
+      console.log(`🔗 Artículo ${article._id}: ${entities.length} entidades encontradas`)
+
+      // Crear relaciones entre cada par de entidades
+      for (let i = 0; i < entities.length; i++) {
+        for (let j = i + 1; j < entities.length; j++) {
+          const entity1 = entities[i]
+          const entity2 = entities[j]
+
+          // Crear clave única para el par (ordenada alfabéticamente)
+          const pairKey = [entity1._id, entity2._id].sort().join('|')
+          const currentCount = relationStats.get(pairKey) || 0
+          relationStats.set(pairKey, currentCount + 1)
+
+          // Calcular strength basado en frecuencia de co-mención
+          // Primera mención = 30, cada mención adicional suma 10 (máximo 100)
+          const strength = Math.min(100, 30 + currentCount * 10)
+
+          // Confidence aumenta con más co-menciones
+          const confidence = Math.min(95, 60 + currentCount * 5)
+
+          try {
+            await ctx.runMutation(api.entityRelations.upsertRelation, {
+              sourceId: entity1._id,
+              sourceType: 'entity',
+              targetId: entity2._id,
+              targetType: 'entity',
+              relationType: 'mentioned_with',
+              strength,
+              confidence,
+              context: `Co-mencionados en: ${article.title}`,
+              evidenceArticleIds: [article._id],
+            })
+
+            totalRelationsCreated++
+          } catch (error) {
+            console.error(`Error creando relación ${entity1.name} <-> ${entity2.name}:`, error)
+          }
+        }
+      }
+    }
+
+    console.log(`✅ Co-menciones completadas: ${totalRelationsCreated} relaciones creadas`)
+
+    return {
+      success: true,
+      articlesProcessed: articles.length,
+      relationsCreated: totalRelationsCreated,
+      uniquePairs: relationStats.size,
+    }
+  },
+})
+
+/**
  * Obtener sugerencias de relaciones usando IA
  */
 export const suggestRelations = action({

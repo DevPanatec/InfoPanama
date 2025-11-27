@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { MediaGraph } from '@/components/graph/MediaGraph'
-import { Filter, Download, Plus, Sparkles, Loader2 } from 'lucide-react'
+import { Filter, Download, Plus, Sparkles, Loader2, Link2 } from 'lucide-react'
 import { useAction, useQuery } from 'convex/react'
 import { api } from '@infopanama/convex'
 
@@ -10,10 +10,12 @@ export default function MediaGraphPage() {
   const [minStrength, setMinStrength] = useState(20)
   const [selectedTypes, setSelectedTypes] = useState<string[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isGeneratingCoMentions, setIsGeneratingCoMentions] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<string | null>(null)
   const hasAutoAnalyzed = useRef(false)
 
   const analyzeBatch = useAction(api.graphAnalysis.analyzeBatchArticles)
+  const generateCoMentions = useAction(api.graphAnalysis.generateCoMentionRelations)
   const articles = useQuery(api.articles.list, { limit: 10 })
   const graphStats = useQuery(api.entityRelations.getGraphStats)
 
@@ -64,6 +66,33 @@ export default function MediaGraphPage() {
     }
   }
 
+  const handleGenerateCoMentions = async () => {
+    console.log('🔗 Generando co-menciones...')
+
+    setIsGeneratingCoMentions(true)
+    setAnalysisResult(null)
+
+    try {
+      const result = await generateCoMentions({})
+      console.log('✅ Co-menciones generadas:', result)
+
+      if (result.success) {
+        setAnalysisResult(
+          `✓ Co-menciones generadas: ${result.relationsCreated} conexiones creadas entre ${result.uniquePairs} pares únicos de entidades (${result.articlesProcessed} artículos procesados)`
+        )
+      } else {
+        setAnalysisResult(result.message || 'Error al generar co-menciones')
+      }
+      setTimeout(() => setAnalysisResult(null), 6000)
+    } catch (error) {
+      console.error('Error generando co-menciones:', error)
+      setAnalysisResult('Error al generar co-menciones')
+      setTimeout(() => setAnalysisResult(null), 3000)
+    } finally {
+      setIsGeneratingCoMentions(false)
+    }
+  }
+
   // Auto-analizar si no hay datos en el grafo
   useEffect(() => {
     if (
@@ -100,6 +129,23 @@ export default function MediaGraphPage() {
                 <>
                   <Sparkles className="h-4 w-4" />
                   Analizar con IA
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleGenerateCoMentions}
+              disabled={isGeneratingCoMentions}
+              className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition flex items-center gap-2"
+            >
+              {isGeneratingCoMentions ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generando...
+                </>
+              ) : (
+                <>
+                  <Link2 className="h-4 w-4" />
+                  Generar Co-menciones
                 </>
               )}
             </button>
