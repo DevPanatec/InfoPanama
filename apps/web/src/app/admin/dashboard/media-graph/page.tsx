@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { MediaGraph } from '@/components/graph/MediaGraph'
 import { Filter, Download, Plus, Sparkles, Loader2 } from 'lucide-react'
 import { useAction, useQuery } from 'convex/react'
@@ -11,9 +11,11 @@ export default function MediaGraphPage() {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<string | null>(null)
+  const hasAutoAnalyzed = useRef(false)
 
   const analyzeBatch = useAction(api.graphAnalysis.analyzeBatchArticles)
   const articles = useQuery(api.articles.list, { limit: 10 })
+  const graphStats = useQuery(api.entityRelations.getGraphStats)
 
   const relationTypes = [
     { value: 'owns', label: 'Propiedad', color: 'bg-red-500' },
@@ -30,6 +32,21 @@ export default function MediaGraphPage() {
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     )
   }
+
+  // Auto-analizar si no hay datos en el grafo
+  useEffect(() => {
+    if (
+      !hasAutoAnalyzed.current &&
+      graphStats &&
+      graphStats.totalNodes === 0 &&
+      articles &&
+      articles.length > 0 &&
+      !isAnalyzing
+    ) {
+      hasAutoAnalyzed.current = true
+      handleAnalyzeWithAI()
+    }
+  }, [graphStats, articles, isAnalyzing])
 
   const handleAnalyzeWithAI = async () => {
     if (!articles || articles.length === 0) {
