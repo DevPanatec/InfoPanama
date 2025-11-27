@@ -33,22 +33,9 @@ export default function MediaGraphPage() {
     )
   }
 
-  // Auto-analizar si no hay datos en el grafo
-  useEffect(() => {
-    if (
-      !hasAutoAnalyzed.current &&
-      graphStats &&
-      graphStats.totalNodes === 0 &&
-      articles &&
-      articles.length > 0 &&
-      !isAnalyzing
-    ) {
-      hasAutoAnalyzed.current = true
-      handleAnalyzeWithAI()
-    }
-  }, [graphStats, articles, isAnalyzing])
-
   const handleAnalyzeWithAI = async () => {
+    console.log('🔍 handleAnalyzeWithAI llamado', { articles: articles?.length })
+
     if (!articles || articles.length === 0) {
       setAnalysisResult('No hay artículos para analizar')
       setTimeout(() => setAnalysisResult(null), 3000)
@@ -60,7 +47,9 @@ export default function MediaGraphPage() {
 
     try {
       const articleIds = articles.map(a => a._id)
+      console.log('📤 Enviando artículos para análisis:', articleIds)
       const result = await analyzeBatch({ articleIds })
+      console.log('✅ Resultado del análisis:', result)
 
       setAnalysisResult(
         `✓ Análisis completado: ${result.successful} artículos procesados exitosamente, ${result.failed} fallaron`
@@ -74,6 +63,21 @@ export default function MediaGraphPage() {
       setIsAnalyzing(false)
     }
   }
+
+  // Auto-analizar si no hay datos en el grafo
+  useEffect(() => {
+    if (
+      !hasAutoAnalyzed.current &&
+      graphStats &&
+      graphStats.totalNodes === 0 &&
+      articles &&
+      articles.length > 0 &&
+      !isAnalyzing
+    ) {
+      hasAutoAnalyzed.current = true
+      handleAnalyzeWithAI()
+    }
+  }, [graphStats, articles, isAnalyzing, handleAnalyzeWithAI])
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen">
