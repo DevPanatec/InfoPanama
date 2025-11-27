@@ -63,7 +63,7 @@ Responde ÚNICAMENTE con un JSON válido sin markdown, con el siguiente formato:
     try {
       // Llamar a OpenAI
       const response = await openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || 'gpt-4',
+        model: process.env.OPENAI_MODEL || 'gpt-5-mini',
         messages: [
           {
             role: 'system',
@@ -341,7 +341,7 @@ Responde ÚNICAMENTE con un JSON válido sin markdown:
 
     try {
       const response = await openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || 'gpt-4',
+        model: process.env.OPENAI_MODEL || 'gpt-5-mini',
         messages: [
           {
             role: 'system',
