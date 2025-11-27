@@ -78,7 +78,7 @@ export function Hero() {
 
       <div className="container mx-auto px-4 text-center relative z-10">
         <h1 className={`text-4xl md:text-5xl font-bold mb-3 text-white ${mounted ? 'animate-fade-in-up' : ''}`}>
-          InfoPanama
+          VerificaPty
           <span className="block bg-gradient-to-r from-blue-400 via-blue-300 to-slate-300 bg-clip-text text-transparent">
             Fact-Checking
           </span>

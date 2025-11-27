@@ -43,8 +43,8 @@ export function Navbar() {
             href="/"
             className="text-2xl md:text-3xl font-bold hover:scale-105 transition-transform duration-200 cursor-pointer group"
           >
-            <span className="text-white group-hover:text-blue-100 transition-colors">Info</span>
-            <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-cyan-300 transition-all">Panama</span>
+            <span className="text-white group-hover:text-blue-100 transition-colors">Verifica</span>
+            <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-cyan-300 transition-all">Pty</span>
           </Link>
 
           {/* Desktop Navigation */}
