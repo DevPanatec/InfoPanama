@@ -16,7 +16,7 @@ export const analyzeArticleForRelations = action({
   },
   handler: async (ctx, args) => {
     // Obtener el artículo
-    const article = await ctx.runQuery(api.articles.get, {
+    const article = await ctx.runQuery(api.articles.getById, {
       id: args.articleId,
     })
 
@@ -98,12 +98,23 @@ Responde ÚNICAMENTE con un JSON válido sin markdown, con el siguiente formato:
 
         if (existing) {
           entityMap.set(entity.name, existing._id)
+          // Agregar mención al artículo
+          await ctx.runMutation(api.entities.addMention, {
+            entityId: existing._id,
+            articleId: args.articleId,
+          })
         } else {
           // Crear nueva entidad
+          const normalized = entity.name.toLowerCase().trim()
           const newEntityId = await ctx.runMutation(api.entities.create, {
             name: entity.name,
+            normalizedName: normalized,
             type: entity.type,
-            mentionedInArticle: args.articleId,
+          })
+          // Agregar mención al artículo
+          await ctx.runMutation(api.entities.addMention, {
+            entityId: newEntityId,
+            articleId: args.articleId,
           })
           entityMap.set(entity.name, newEntityId)
         }
