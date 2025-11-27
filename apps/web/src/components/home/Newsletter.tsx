@@ -1,15 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMutation } from 'convex/react'
 import { api } from '@infopanama/convex'
+import { useUser } from '@clerk/nextjs'
 
 export function Newsletter() {
+  const { user, isLoaded } = useUser()
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState('')
 
   const subscribeNewsletter = useMutation(api.subscriptions.subscribeNewsletter)
+
+  // Auto-llenar email si el usuario está autenticado
+  useEffect(() => {
+    if (isLoaded && user?.primaryEmailAddress?.emailAddress) {
+      setEmail(user.primaryEmailAddress.emailAddress)
+    }
+  }, [isLoaded, user])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,7 +35,6 @@ export function Newsletter() {
       await subscribeNewsletter({ email })
       setStatus('success')
       setMessage('¡Suscrito exitosamente!')
-      setEmail('')
 
       // Reset después de 3 segundos
       setTimeout(() => {
@@ -58,8 +66,9 @@ export function Newsletter() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="tu@email.com"
+          readOnly={!!user}
           disabled={status === 'loading' || status === 'success'}
-          className="w-full px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3 disabled:opacity-50 disabled:cursor-not-allowed read-only:bg-white/5"
         />
 
         <button
