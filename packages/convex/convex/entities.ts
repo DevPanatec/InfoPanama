@@ -65,6 +65,20 @@ export const getByName = query({
 })
 
 /**
+ * Buscar entidad por nombre (alias para getByName)
+ */
+export const findByName = query({
+  args: { name: v.string() },
+  handler: async (ctx, args) => {
+    const normalized = args.name.toLowerCase().trim()
+    return await ctx.db
+      .query('entities')
+      .withIndex('by_name', (q) => q.eq('normalizedName', normalized))
+      .first()
+  },
+})
+
+/**
  * Buscar entidades
  */
 export const search = query({

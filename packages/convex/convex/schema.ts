@@ -773,6 +773,74 @@ export default defineSchema({
     .index('by_upvotes', ['upvotes']),
 
   // ============================================
+  // GRAFO DE RELACIONES
+  // ============================================
+  entityRelations: defineTable({
+    // Nodos del grafo
+    sourceId: v.string(), // ID de la entidad source (puede ser actor, source, entity, event)
+    sourceType: v.union(
+      v.literal('actor'),
+      v.literal('source'),
+      v.literal('entity'),
+      v.literal('event')
+    ),
+
+    targetId: v.string(), // ID de la entidad target
+    targetType: v.union(
+      v.literal('actor'),
+      v.literal('source'),
+      v.literal('entity'),
+      v.literal('event')
+    ),
+
+    // Tipo de relación
+    relationType: v.union(
+      v.literal('owns'), // Dueño de medio
+      v.literal('works_for'), // Trabaja para
+      v.literal('affiliated_with'), // Afiliado con
+      v.literal('mentioned_with'), // Mencionado junto a
+      v.literal('quoted_by'), // Citado por
+      v.literal('covers'), // Cubre (medio->evento/actor)
+      v.literal('participates_in'), // Participa en evento
+      v.literal('related_to'), // Relacionado genérico
+      v.literal('opposes'), // Se opone a
+      v.literal('supports') // Apoya a
+    ),
+
+    // Fuerza de la relación
+    strength: v.number(), // 0-100, calculado por IA o frecuencia de co-ocurrencia
+    confidence: v.number(), // 0-100, confianza en la relación
+
+    // Contexto
+    context: v.optional(v.string()), // Descripción de la relación
+
+    // Evidencia
+    evidenceArticles: v.array(v.id('articles')), // Artículos que evidencian esta relación
+    evidenceCount: v.number(),
+
+    // Metadata de análisis IA
+    aiAnalysis: v.optional(v.object({
+      summary: v.string(),
+      sentiment: v.number(), // -100 to 100
+      keywords: v.array(v.string()),
+      analyzedAt: v.number(),
+    })),
+
+    // Lifecycle
+    isActive: v.boolean(),
+    verifiedBy: v.optional(v.id('users')), // Usuario que verificó manualmente
+    verifiedAt: v.optional(v.number()),
+
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_source', ['sourceId', 'sourceType'])
+    .index('by_target', ['targetId', 'targetType'])
+    .index('by_relation_type', ['relationType'])
+    .index('by_strength', ['strength'])
+    .index('by_active', ['isActive']),
+
+  // ============================================
   // CONFIGURACIÓN DEL SISTEMA
   // ============================================
   systemConfig: defineTable({
