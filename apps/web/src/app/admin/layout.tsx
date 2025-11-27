@@ -56,7 +56,7 @@ export default function AdminLayout({
         <div className="p-6 border-b border-slate-200">
           <Link href="/admin/dashboard" className="block">
             <h2 className="text-xl font-bold bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent">
-              InfoPanama Admin
+              VerificaPanama Admin
             </h2>
           </Link>
         </div>
