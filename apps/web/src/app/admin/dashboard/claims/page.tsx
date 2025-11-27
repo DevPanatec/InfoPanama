@@ -3,55 +3,26 @@
 import { CheckCircle2, XCircle, HelpCircle, Search } from 'lucide-react'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-
-// Datos de ejemplo
-const DEMO_CLAIMS = [
-  {
-    id: '1',
-    title: 'Gobierno anuncia nueva inversión en infraestructura',
-    status: 'published',
-    verdict: 'TRUE',
-    riskLevel: 'LOW',
-    createdAt: '2024-01-15',
-  },
-  {
-    id: '2',
-    title: 'Cifras de desempleo bajan al 3%',
-    status: 'review',
-    verdict: 'FALSE',
-    riskLevel: 'MEDIUM',
-    createdAt: '2024-01-14',
-  },
-  {
-    id: '3',
-    title: 'Nuevo hospital será inaugurado en diciembre',
-    status: 'investigating',
-    verdict: null,
-    riskLevel: 'LOW',
-    createdAt: '2024-01-13',
-  },
-  {
-    id: '4',
-    title: 'Reducción de impuestos para pequeñas empresas',
-    status: 'new',
-    verdict: null,
-    riskLevel: 'MEDIUM',
-    createdAt: '2024-01-12',
-  },
-]
+import { useQuery } from 'convex/react'
+import { api } from '@infopanama/convex'
 
 export default function ClaimsPage() {
   const router = useRouter()
-  const [claims] = useState(DEMO_CLAIMS)
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'new' | 'investigating' | 'review' | 'approved' | 'rejected' | 'published' | ''>('')
   const [riskFilter, setRiskFilter] = useState('')
 
-  const filteredClaims = claims.filter((claim) => {
+  // Obtener claims reales de Convex
+  const allClaims = useQuery(api.claims.list, {
+    status: statusFilter || undefined,
+    limit: 100
+  })
+
+  // Filtrar claims por búsqueda y nivel de riesgo (status ya filtrado en query)
+  const filteredClaims = (allClaims || []).filter((claim) => {
     const matchesSearch = claim.title.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = !statusFilter || claim.status === statusFilter
     const matchesRisk = !riskFilter || claim.riskLevel === riskFilter
-    return matchesSearch && matchesStatus && matchesRisk
+    return matchesSearch && matchesRisk
   })
 
   const getVerdictBadge = (verdict: string | null) => {
@@ -113,6 +84,18 @@ export default function ClaimsPage() {
     )
   }
 
+  // Loading state
+  if (!allClaims) {
+    return (
+      <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50/30 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando verificaciones...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50/30 min-h-screen">
       {/* Header con gradiente */}
@@ -144,7 +127,7 @@ export default function ClaimsPage() {
       <div className="mb-6 flex gap-4">
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => setStatusFilter(e.target.value as any)}
           className="px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-white hover:border-blue-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-medium text-sm"
         >
           <option value="">Todos los estados</option>
@@ -194,31 +177,35 @@ export default function ClaimsPage() {
           <tbody>
             {filteredClaims.map((claim, index) => (
               <tr
-                key={claim.id}
+                key={claim._id}
                 className="border-t border-gray-100 hover:bg-blue-50/30 transition-colors group"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <td className="px-6 py-4">
                   <p className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">{claim.title}</p>
-                  <p className="text-xs text-gray-500 mt-1">ID: {claim.id}</p>
+                  <p className="text-xs text-gray-500 mt-1">ID: {claim._id}</p>
                 </td>
                 <td className="px-6 py-4">{getStatusBadge(claim.status)}</td>
-                <td className="px-6 py-4">{getVerdictBadge(claim.verdict)}</td>
+                <td className="px-6 py-4">{getVerdictBadge(claim.verdict || null)}</td>
                 <td className="px-6 py-4">{getRiskBadge(claim.riskLevel)}</td>
                 <td className="px-6 py-4 text-sm text-gray-600 font-medium">
-                  {claim.createdAt}
+                  {new Date(claim.createdAt).toLocaleDateString('es-PA', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
                 </td>
                 <td className="px-6 py-4 text-right">
                   {claim.status === 'published' ? (
                     <button
-                      onClick={() => router.push(`/verificaciones/${claim.id}`)}
+                      onClick={() => router.push(`/verificaciones/${claim._id}`)}
                       className="text-sm text-gray-600 hover:text-gray-700 font-semibold hover:underline"
                     >
                       Ver publicada →
                     </button>
                   ) : (
                     <button
-                      onClick={() => router.push(`/admin/dashboard/claims/${claim.id}/review`)}
+                      onClick={() => router.push(`/admin/dashboard/claims/${claim._id}/review`)}
                       className="text-sm text-blue-600 hover:text-blue-700 font-semibold hover:underline flex items-center gap-1 justify-end"
                     >
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

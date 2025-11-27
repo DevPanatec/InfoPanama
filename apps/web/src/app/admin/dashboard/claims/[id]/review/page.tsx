@@ -1,38 +1,62 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { ArrowLeft, CheckCircle, XCircle, Save, Eye } from 'lucide-react'
-
-// Demo data - esto vendría de la base de datos
-const DEMO_CLAIM = {
-  id: '1',
-  title: 'Gobierno anuncia nueva inversión en infraestructura',
-  content: 'El gobierno anunció una inversión de $500 millones en proyectos de infraestructura para el próximo año fiscal. Esta declaración fue hecha durante la conferencia de prensa del Ministerio de Economía.',
-  status: 'investigating',
-  verdict: null,
-  riskLevel: 'LOW',
-  createdAt: '2024-01-15',
-  sources: [
-    'Ministerio de Economía y Finanzas',
-    'Presidencia de la República'
-  ],
-  analysis: 'Análisis generado por IA: La afirmación sobre la inversión de $500 millones ha sido corroborada con documentos oficiales del MEF. Los fondos están destinados principalmente a proyectos viales y de transporte público.',
-  evidence: [
-    'Comunicado oficial MEF del 15/01/2024',
-    'Presupuesto nacional 2024 - Anexo C'
-  ]
-}
+import { ArrowLeft, CheckCircle, XCircle, Save, Eye, Sparkles, Loader2 } from 'lucide-react'
+import { useQuery, useAction, useMutation } from 'convex/react'
+import { api } from '@infopanama/convex'
+import { Id } from '@infopanama/convex/convex/_generated/dataModel'
 
 export default function ReviewClaimPage() {
   const router = useRouter()
   const params = useParams()
-  const [claim, setClaim] = useState(DEMO_CLAIM)
-  const [verdict, setVerdict] = useState<string | null>(claim.verdict)
-  const [editedTitle, setEditedTitle] = useState(claim.title)
-  const [editedContent, setEditedContent] = useState(claim.content)
-  const [editedAnalysis, setEditedAnalysis] = useState(claim.analysis)
+  const claimId = params.id as Id<'claims'>
+
+  // Obtener claim y veredicto de Convex
+  const claim = useQuery(api.claims.getById, { id: claimId })
+  const verifyClaim = useAction(api.verification.verifyClaim)
+
+  const [verdict, setVerdict] = useState<string | null>(null)
+  const [editedTitle, setEditedTitle] = useState('')
+  const [editedContent, setEditedContent] = useState('')
+  const [editedAnalysis, setEditedAnalysis] = useState('')
   const [notes, setNotes] = useState('')
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [verificationResult, setVerificationResult] = useState<any>(null)
+
+  // Inicializar campos cuando se carga el claim
+  useEffect(() => {
+    if (claim) {
+      setEditedTitle(claim.title)
+      setEditedContent(claim.claimText || claim.description || '')
+      setVerdict(claim.verdict || null)
+    }
+  }, [claim])
+
+  // Función para ejecutar verificación con IA
+  const handleVerifyWithAI = async () => {
+    if (!claim) return
+
+    setIsVerifying(true)
+    setVerificationResult(null)
+
+    try {
+      console.log('🤖 Ejecutando verificación con GPT-5 mini...')
+      const result = await verifyClaim({ claimId: claim._id })
+      console.log('✅ Verificación completada:', result)
+
+      setVerificationResult(result)
+      setVerdict(result.verdict)
+      setEditedAnalysis(result.explanation || '')
+
+      alert(`Verificación completada con IA!\n\nVeredicto: ${result.verdict}\nConfianza: ${result.confidenceScore}%\n\nRevisa el análisis generado.`)
+    } catch (error) {
+      console.error('Error al verificar con IA:', error)
+      alert('Error al ejecutar verificación con IA. Verifica los logs.')
+    } finally {
+      setIsVerifying(false)
+    }
+  }
 
   const handleApprove = () => {
     if (!verdict) {
@@ -58,6 +82,18 @@ export default function ReviewClaimPage() {
     }
   }
 
+  // Loading state
+  if (!claim) {
+    return (
+      <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50/30 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando verificación...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50/30 min-h-screen">
       {/* Header */}
@@ -70,10 +106,50 @@ export default function ReviewClaimPage() {
           Volver a Verificaciones
         </button>
 
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-          Revisar y Aprobar Verificación
-        </h1>
-        <p className="text-gray-600">ID: {params.id}</p>
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+              Revisar y Aprobar Verificación
+            </h1>
+            <p className="text-gray-600">ID: {params.id}</p>
+          </div>
+
+          {/* Botón de Verificación con IA */}
+          <button
+            onClick={handleVerifyWithAI}
+            disabled={isVerifying}
+            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isVerifying ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Verificando con IA...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-5 w-5" />
+                Verificar con GPT-5 mini
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Mostrar resultado de verificación si existe */}
+        {verificationResult && (
+          <div className="mt-4 p-4 bg-green-50 border-2 border-green-200 rounded-xl">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-green-900">Verificación IA completada</p>
+                <p className="text-sm text-green-700 mt-1">
+                  Veredicto: <strong>{verificationResult.verdict}</strong> |
+                  Confianza: <strong>{verificationResult.confidenceScore}%</strong> |
+                  Tokens usados: {verificationResult.tokensUsed}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -125,20 +201,22 @@ export default function ReviewClaimPage() {
             />
           </div>
 
-          {/* Evidencia */}
-          <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-lg">
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              Evidencia
-            </label>
-            <ul className="space-y-2">
-              {claim.evidence.map((item, index) => (
-                <li key={index} className="flex items-center gap-2 text-sm text-gray-700">
-                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Resultado de Verificación IA */}
+          {verificationResult && verificationResult.evidence && verificationResult.evidence.length > 0 && (
+            <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-lg">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Evidencia (Generada por IA)
+              </label>
+              <ul className="space-y-2">
+                {verificationResult.evidence.map((item: any, index: number) => (
+                  <li key={index} className="flex items-center gap-2 text-sm text-gray-700">
+                    <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                    {typeof item === 'string' ? item : item.source || item.description}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Notas del Administrador */}
           <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-lg">
@@ -196,14 +274,22 @@ export default function ReviewClaimPage() {
           {/* Fuentes */}
           <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-lg">
             <label className="block text-sm font-semibold text-gray-700 mb-3">
-              Fuentes Consultadas
+              Información de la Fuente
             </label>
             <ul className="space-y-2">
-              {claim.sources.map((source, index) => (
-                <li key={index} className="text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-lg">
-                  {source}
+              {claim.sourceUrl && (
+                <li className="text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-lg">
+                  <strong>URL:</strong>{' '}
+                  <a href={claim.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                    {claim.sourceUrl}
+                  </a>
                 </li>
-              ))}
+              )}
+              {claim.sourceType && (
+                <li className="text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-lg">
+                  <strong>Tipo:</strong> {claim.sourceType}
+                </li>
+              )}
             </ul>
           </div>
 
@@ -223,8 +309,20 @@ export default function ReviewClaimPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Creada:</span>
-                <span className="font-semibold">{claim.createdAt}</span>
+                <span className="font-semibold">
+                  {new Date(claim.createdAt).toLocaleDateString('es-PA', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </span>
               </div>
+              {claim.category && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Categoría:</span>
+                  <span className="font-semibold">{claim.category}</span>
+                </div>
+              )}
             </div>
           </div>
 
