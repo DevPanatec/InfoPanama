@@ -197,29 +197,58 @@ export function MediaGraph({
           className="opacity-30"
         />
 
-        {/* Panel de info del nodo seleccionado */}
-        {selectedNode && (
-          <Panel position="top-right" className="bg-slate-800/90 backdrop-blur-sm rounded-lg shadow-2xl p-4 border border-slate-700 max-w-xs">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-white">
-                  {selectedNode.data.nodeData?.data?.name || 'Nodo'}
+        {/* Panel de info del nodo seleccionado - Estilo OSINT */}
+        {selectedNode && selectedNode.data.nodeData && (
+          <Panel position="top-right" className="bg-slate-900/95 backdrop-blur-md rounded-xl shadow-2xl p-6 border-2 border-blue-500/30 max-w-sm">
+            <div className="space-y-4">
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="text-lg font-bold text-white mb-1">
+                    {selectedNode.data.nodeData.label}
+                  </div>
+                  <div className="inline-flex items-center gap-1 px-2 py-1 bg-blue-500/20 rounded-md">
+                    <span className="text-xs font-medium text-blue-300">
+                      {selectedNode.data.nodeData.type.toUpperCase()}
+                    </span>
+                  </div>
                 </div>
                 <button
                   onClick={() => setSelectedNode(null)}
-                  className="text-slate-400 hover:text-white transition"
+                  className="text-slate-400 hover:text-white transition p-1"
                 >
-                  ✕
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
-              <div className="text-xs text-slate-300">
-                Tipo: <span className="font-medium text-white">{selectedNode.data.nodeData?.type}</span>
-              </div>
-              {selectedNode.data.nodeData?.data?.description && (
-                <p className="text-xs text-slate-300 line-clamp-3">
-                  {selectedNode.data.nodeData.data.description}
-                </p>
+
+              {/* Descripción */}
+              {selectedNode.data.nodeData.data.description && (
+                <div>
+                  <div className="text-xs font-semibold text-slate-400 mb-1">DESCRIPCIÓN</div>
+                  <p className="text-sm text-slate-200 leading-relaxed">
+                    {selectedNode.data.nodeData.data.description}
+                  </p>
+                </div>
               )}
+
+              {/* Menciones */}
+              {selectedNode.data.nodeData.data.mentionCount > 0 && (
+                <div>
+                  <div className="text-xs font-semibold text-slate-400 mb-1">MENCIONES</div>
+                  <div className="text-2xl font-bold text-blue-400">
+                    {selectedNode.data.nodeData.data.mentionCount}
+                  </div>
+                </div>
+              )}
+
+              {/* ID para debugging */}
+              <div className="pt-3 border-t border-slate-700">
+                <div className="text-xs text-slate-500 font-mono">
+                  ID: {selectedNode.id}
+                </div>
+              </div>
             </div>
           </Panel>
         )}
