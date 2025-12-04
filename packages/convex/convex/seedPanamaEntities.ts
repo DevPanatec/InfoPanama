@@ -5,8 +5,10 @@ export const seedPanamaEntities = mutation({
   args: {},
   handler: async (ctx) => {
     const results = {
-      organizations: 0,
-      persons: 0,
+      organizationsCreated: 0,
+      organizationsUpdated: 0,
+      personsCreated: 0,
+      personsUpdated: 0,
       media: 0,
       errors: [] as string[],
     }
@@ -20,25 +22,33 @@ export const seedPanamaEntities = mutation({
           .filter((q) => q.eq(q.field('name'), org.name))
           .first()
 
-        if (!existing) {
-          const now = Date.now()
-          const entityType = org.type === 'POLITICAL_PARTY' ? 'ORGANIZATION' : org.type as 'PERSON' | 'ORGANIZATION' | 'LOCATION' | 'EVENT' | 'DATE' | 'OTHER'
+        const now = Date.now()
+        const entityType = org.type === 'POLITICAL_PARTY' ? 'ORGANIZATION' : org.type as 'PERSON' | 'ORGANIZATION' | 'LOCATION' | 'EVENT' | 'DATE' | 'OTHER'
 
-          await ctx.db.insert('entities', {
-            name: org.name,
-            type: entityType,
-            normalizedName: org.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
-            aliases: org.aliases || [],
-            mentionedIn: [],
-            mentionCount: 0,
-            metadata: {
-              description: org.description,
-              affiliation: org.category,
-            },
-            createdAt: now,
-            updatedAt: now,
-          })
-          results.organizations++
+        const entityData = {
+          name: org.name,
+          type: entityType,
+          normalizedName: org.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+          aliases: org.aliases || [],
+          mentionedIn: existing?.mentionedIn || [],
+          mentionCount: existing?.mentionCount || 0,
+          metadata: {
+            description: org.description,
+            affiliation: org.category,
+            owners: (org as any).owners || undefined,
+            connections: (org as any).connections || undefined,
+          },
+          createdAt: existing?.createdAt || now,
+          updatedAt: now,
+        }
+
+        if (!existing) {
+          await ctx.db.insert('entities', entityData)
+          results.organizationsCreated++
+        } else {
+          // Update existing entity with new data
+          await ctx.db.patch(existing._id, entityData)
+          results.organizationsUpdated++
         }
       } catch (error) {
         results.errors.push(`Error creating organization ${org.name}: ${error}`)
@@ -53,26 +63,33 @@ export const seedPanamaEntities = mutation({
           .filter((q) => q.eq(q.field('name'), person.name))
           .first()
 
-        if (!existing) {
-          const now = Date.now()
-          const entityType = person.type === 'POI' ? 'PERSON' : person.type as 'PERSON' | 'ORGANIZATION' | 'LOCATION' | 'EVENT' | 'DATE' | 'OTHER'
+        const now = Date.now()
+        const entityType = person.type === 'POI' ? 'PERSON' : person.type as 'PERSON' | 'ORGANIZATION' | 'LOCATION' | 'EVENT' | 'DATE' | 'OTHER'
 
-          await ctx.db.insert('entities', {
-            name: person.name,
-            type: entityType,
-            normalizedName: person.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
-            aliases: person.aliases || [],
-            mentionedIn: [],
-            mentionCount: 0,
-            metadata: {
-              description: person.description,
-              position: person.position,
-              affiliation: person.category,
-            },
-            createdAt: now,
-            updatedAt: now,
-          })
-          results.persons++
+        const personData = {
+          name: person.name,
+          type: entityType,
+          normalizedName: person.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+          aliases: person.aliases || [],
+          mentionedIn: existing?.mentionedIn || [],
+          mentionCount: existing?.mentionCount || 0,
+          metadata: {
+            description: person.description,
+            position: person.position,
+            affiliation: person.category,
+            connections: (person as any).connections || undefined,
+          },
+          createdAt: existing?.createdAt || now,
+          updatedAt: now,
+        }
+
+        if (!existing) {
+          await ctx.db.insert('entities', personData)
+          results.personsCreated++
+        } else {
+          // Update existing person with new data
+          await ctx.db.patch(existing._id, personData)
+          results.personsUpdated++
         }
       } catch (error) {
         results.errors.push(`Error creating person ${person.name}: ${error}`)
@@ -117,7 +134,7 @@ export const seedPanamaEntities = mutation({
 
     return {
       success: true,
-      message: `Seeded ${results.organizations} organizations, ${results.persons} persons, ${results.media} media outlets`,
+      message: `Created ${results.organizationsCreated} orgs, updated ${results.organizationsUpdated} orgs, created ${results.personsCreated} persons, updated ${results.personsUpdated} persons, ${results.media} media outlets`,
       details: results,
     }
   },
