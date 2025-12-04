@@ -24,6 +24,13 @@ export interface ExtractedEntity {
   context: string // Contexto en el que se menciona
   isPOI: boolean // Si es persona de interés especial
   relevanceScore: number // 0-100
+  relationships?: {
+    owns?: string[] // Empresas que posee
+    worksFor?: string[] // Empresas donde trabaja
+    memberOf?: string[] // Partidos/organizaciones de las que es miembro
+    relatedTo?: string[] // Personas relacionadas (familia, socios, etc)
+    contracts?: string[] // Contratos o negocios mencionados
+  }
 }
 
 export interface EntityExtractionResult {
@@ -107,6 +114,15 @@ PARTIDOS POLÍTICOS CONOCIDOS EN PANAMÁ:
 - Movimiento Liberal Republicano Nacionalista (MOLIRENA)
 - Partido Popular (PP)
 
+🔍 EXTRACCIÓN DE RELACIONES (CRÍTICO PARA OSINT):
+Además de extraer entidades, DEBES identificar sus RELACIONES:
+
+1. **Propiedad/Control**: ¿Quién es dueño/accionista/presidente de qué empresa?
+2. **Contratos**: ¿Qué empresa tiene contratos con qué institución?
+3. **Afiliación política**: ¿Quién pertenece a qué partido?
+4. **Conexiones familiares**: ¿Hay hermanos, primos, familiares mencionados?
+5. **Relaciones laborales**: ¿Quién trabaja para quién?
+
 RESPONDE SOLO CON JSON VÁLIDO, sin markdown:
 {
   "entities": [
@@ -117,10 +133,23 @@ RESPONDE SOLO CON JSON VÁLIDO, sin markdown:
       "affiliation": "Partido o institución (opcional)",
       "context": "Breve contexto de la mención",
       "isPOI": true/false,
-      "relevanceScore": 85
+      "relevanceScore": 85,
+      "relationships": {
+        "owns": ["Empresa X", "Empresa Y"],
+        "worksFor": ["Institución Z"],
+        "memberOf": ["Partido A"],
+        "relatedTo": ["Persona B (hermano)", "Persona C (socio)"],
+        "contracts": ["Contrato con Minsa por $X"]
+      }
     }
   ]
-}`
+}
+
+EJEMPLO:
+Si el artículo dice "Rubén Daniel Arguelles, presidente de Hombres de Blanco, cuyo hermano Rubén Darío fue candidato de RM", debes extraer:
+- Rubén Daniel Arguelles (POI, role: "Presidente", relationships: { owns: ["Hombres de Blanco"], relatedTo: ["Rubén Darío Arguelles (hermano)"] })
+- Hombres de Blanco (ORGANIZATION, relationships: { relatedTo: ["Rubén Daniel Arguelles (dueño)"] })
+- Rubén Darío Arguelles (POI, relationships: { memberOf: ["Realizando Metas"], relatedTo: ["Rubén Daniel Arguelles (hermano)"] })`
 
 /**
  * Extrae entidades de un artículo usando OpenAI

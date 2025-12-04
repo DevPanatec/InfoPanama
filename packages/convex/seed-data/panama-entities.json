@@ -16,9 +16,15 @@
       "name": "Hombres de Blanco",
       "type": "ORGANIZATION",
       "category": "Empresa",
-      "description": "Empresa constructora panameña, competencia de Sicarelli",
+      "description": "Empresa de limpieza y mantenimiento con más de 17 años de experiencia. Contratos polémicos con Tocumen y Minsa",
       "relevance": "high",
-      "aliases": ["Constructora Hombres de Blanco", "Grupo Hombres de Blanco"]
+      "aliases": ["Hombres de Blanco Corp", "HDB Panama"],
+      "owners": ["Rubén Daniel Arguelles Sánchez"],
+      "connections": {
+        "political": ["Ricardo Martinelli", "Rubén Darío Arguelles Sánchez"],
+        "contracts": ["Tocumen International Airport", "Ministerio de Salud"],
+        "controversies": ["Falta de limpieza en Tocumen pese a pagos", "Contratos sin licitación pública"]
+      }
     },
     {
       "name": "Copa Airlines",
@@ -206,6 +212,32 @@
       "description": "Fiscal General de la Nación",
       "relevance": "high",
       "aliases": ["Martínez-Acha"]
+    },
+    {
+      "name": "Rubén Daniel Arguelles Sánchez",
+      "type": "POI",
+      "category": "Empresario",
+      "position": "Presidente de Hombres de Blanco Corp",
+      "description": "Presidente y representante legal de Hombres de Blanco Corp y Consorcio Servicios Integrales de Higiene",
+      "relevance": "high",
+      "aliases": ["Rubén Daniel Arguelles", "Arguelles Sánchez"],
+      "connections": {
+        "companies": ["Hombres de Blanco Corp", "Consorcio Servicios Integrales de Higiene"],
+        "family": ["Rubén Darío Arguelles Sánchez"]
+      }
+    },
+    {
+      "name": "Rubén Darío Arguelles Sánchez",
+      "type": "POI",
+      "category": "Político",
+      "position": "Cónsul General en Río de Janeiro",
+      "description": "Hermano gemelo del dueño de Hombres de Blanco. Ex candidato a diputado por Realizando Metas. Cónsul en Brasil nombrado por gobierno Mulino",
+      "relevance": "high",
+      "aliases": ["Rubén Darío Arguelles", "Arguelles"],
+      "connections": {
+        "political": ["Ricardo Martinelli", "José Raúl Mulino", "Realizando Metas"],
+        "family": ["Rubén Daniel Arguelles Sánchez"]
+      }
     }
   ],
 
