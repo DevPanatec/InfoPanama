@@ -8,9 +8,16 @@
       "name": "Sicarelli",
       "type": "ORGANIZATION",
       "category": "Empresa",
-      "description": "Empresa constructora panameña",
+      "description": "Empresa de limpieza hospitalaria. Contratos millonarios durante pandemia con el Estado panameño",
       "relevance": "high",
-      "aliases": ["Constructora Sicarelli", "Grupo Sicarelli"]
+      "aliases": ["Sicarelli Holdings", "Sicarelle Holdings"],
+      "owners": ["Juan Carlos López López"],
+      "connections": {
+        "political": ["Laurentino Cortizo", "María Eugenia López (Magistrada CSJ)"],
+        "family": ["Mónica Rodríguez (esposa)", "Juan Carlos Soto (primo)", "Nadia del Río (conexión política)"],
+        "contracts": ["Hospitales CSS", "Ministerio de Salud"],
+        "controversies": ["Millones drenados del Estado bajo limpieza hospitalaria", "Acceso privilegiado vía Nadia del Río"]
+      }
     },
     {
       "name": "Hombres de Blanco",
@@ -30,9 +37,68 @@
       "name": "Copa Airlines",
       "type": "ORGANIZATION",
       "category": "Empresa",
-      "description": "Aerolínea bandera de Panamá",
+      "description": "Aerolínea bandera de Panamá. Mayor hub latinoamericano. Controlada por tres dinastías familiares",
       "relevance": "high",
-      "aliases": ["Copa", "Compañía Panameña de Aviación"]
+      "aliases": ["Copa", "Compañía Panameña de Aviación", "Copa Holdings"],
+      "owners": ["Stanley Motta", "Familia Heilbron", "Familia Arias"],
+      "connections": {
+        "families": ["Familia Motta", "Familia Heilbron", "Familia Arias"],
+        "executives": ["Pedro Heilbron (CEO)", "Carlos A. Motta", "Makelín Arias"],
+        "companies": ["CIASA (Corporación de Inversiones Aéreas)", "Petróleos Delta", "ASSA"]
+      }
+    },
+    {
+      "name": "CUSA",
+      "type": "ORGANIZATION",
+      "category": "Empresa",
+      "description": "Constructora Urbana S.A. Fundada en 1961. Socio de Odebrecht en Panamá",
+      "relevance": "high",
+      "aliases": ["Constructora Urbana", "Constructora Urbana S.A."],
+      "owners": ["Rogelio Alemán"],
+      "connections": {
+        "political": ["José Luis 'Popi' Varela"],
+        "companies": ["Odebrecht"],
+        "projects": ["Renovación Urbana de Colón (43%)", "Ampliación Canal de Panamá"]
+      }
+    },
+    {
+      "name": "Constructora Meco",
+      "type": "ORGANIZATION",
+      "category": "Empresa",
+      "description": "Constructora costarricense con presencia en Panamá desde 1977. Vinculada a sobornos",
+      "relevance": "high",
+      "aliases": ["Meco", "Meco S.A."],
+      "owners": ["Carlos Enrique Cerdas"],
+      "connections": {
+        "companies": ["Odebrecht"],
+        "controversies": ["Supuestos sobornos en Panamá", "Sociedades en Islas Vírgenes"]
+      }
+    },
+    {
+      "name": "Grupo Rey",
+      "type": "ORGANIZATION",
+      "category": "Empresa",
+      "description": "Cadena de supermercados líder en Panamá con 145 sucursales. Propiedad de Corporación Favorita (Ecuador)",
+      "relevance": "medium",
+      "aliases": ["Supermercados Rey"],
+      "owners": ["Corporación Favorita (Ecuador)"],
+      "connections": {
+        "founders": ["Nicholas Psychoyos"],
+        "parent": ["Corporación Favorita"]
+      }
+    },
+    {
+      "name": "Cable Onda",
+      "type": "ORGANIZATION",
+      "category": "Empresa",
+      "description": "Empresa de telecomunicaciones. Vendida a Millicom (Tigo) en 2019 por +$850M",
+      "relevance": "medium",
+      "aliases": ["Tigo Panamá", "Cable Onda S.A."],
+      "owners": ["Millicom International (Tigo)"],
+      "connections": {
+        "previousOwners": ["Familia Eleta (51%)", "Grupo Motta (49%)"],
+        "media": ["Medcom", "RPC Canal 4", "Telemetro Canal 13"]
+      }
     },
     {
       "name": "Tribunal Electoral",
@@ -237,6 +303,85 @@
       "connections": {
         "political": ["Ricardo Martinelli", "José Raúl Mulino", "Realizando Metas"],
         "family": ["Rubén Daniel Arguelles Sánchez"]
+      }
+    },
+    {
+      "name": "Juan Carlos López López",
+      "type": "POI",
+      "category": "Empresario",
+      "position": "Accionista principal de Sicarelli Holdings",
+      "description": "Empresario con contratos millonarios de limpieza hospitalaria durante pandemia. Esposo de Magistrada CSJ María Eugenia López",
+      "relevance": "critical",
+      "aliases": ["Juan Carlos López", "López López"],
+      "connections": {
+        "companies": ["Sicarelli Holdings", "JPM Enterprises"],
+        "family": ["Mónica Rodríguez (esposa)", "Juan Carlos Soto (primo)"],
+        "political": ["María Eugenia López (esposa, Magistrada CSJ)", "Nadia del Río", "Laurentino Cortizo"]
+      }
+    },
+    {
+      "name": "Stanley Motta",
+      "type": "POI",
+      "category": "Empresario",
+      "position": "Presidente de Copa Holdings",
+      "description": "Principal accionista de Copa Airlines. Fortuna de $1.1 mil millones. Acapara 1.4% de riqueza anual de Panamá",
+      "relevance": "critical",
+      "aliases": ["Motta"],
+      "connections": {
+        "companies": ["Copa Airlines", "Copa Holdings", "Cable Onda (49%)", "Petróleos Delta"],
+        "family": ["Carlos A. Motta (hijo)"]
+      }
+    },
+    {
+      "name": "Pedro Heilbron",
+      "type": "POI",
+      "category": "Empresario",
+      "position": "CEO de Copa Airlines",
+      "description": "CEO de Copa Airlines con más de 30 años en la empresa. Parte de la familia accionista Heilbron",
+      "relevance": "high",
+      "aliases": ["Heilbron"],
+      "connections": {
+        "companies": ["Copa Airlines", "CIASA"],
+        "family": ["Álvaro Heilbron (hermano)"]
+      }
+    },
+    {
+      "name": "Rogelio Alemán",
+      "type": "POI",
+      "category": "Empresario",
+      "position": "Representante de CUSA",
+      "description": "Constructor con conexiones a familia Varela. Socio de Odebrecht en proyectos de infraestructura",
+      "relevance": "high",
+      "aliases": ["Alemán"],
+      "connections": {
+        "companies": ["CUSA", "Odebrecht"],
+        "political": ["José Luis 'Popi' Varela"]
+      }
+    },
+    {
+      "name": "Fernando Eleta Almarán",
+      "type": "PERSON",
+      "category": "Empresario",
+      "position": "Fundador de Grupo Eleta (fallecido 2011)",
+      "description": "Fundador de RPC Radio (1964) y magnate de medios. Creó Medcom al fusionar con Medios Panameños",
+      "relevance": "high",
+      "aliases": ["Don Fernando Eleta", "Eleta Almarán"],
+      "connections": {
+        "companies": ["RPC Radio", "Medcom", "Cable Onda (51%)"],
+        "media": ["RPC Canal 4", "Telemetro Canal 13"]
+      }
+    },
+    {
+      "name": "Carlos Enrique Cerdas",
+      "type": "POI",
+      "category": "Empresario",
+      "position": "Dueño de Constructora Meco",
+      "description": "Constructor costarricense. Millonario vinculado a controversias de sobornos en Panamá",
+      "relevance": "high",
+      "aliases": ["Cerdas", "Carlos Cerdas"],
+      "connections": {
+        "companies": ["Constructora Meco", "Odebrecht"],
+        "controversies": ["Supuestos sobornos", "Sociedades offshore en Islas Vírgenes"]
       }
     }
   ],
