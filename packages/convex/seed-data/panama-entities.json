@@ -1,0 +1,263 @@
+{
+  "description": "Entidades políticas y empresariales clave de Panamá para pre-carga en el sistema OSINT",
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-03",
+
+  "organizations": [
+    {
+      "name": "Sicarelli",
+      "type": "ORGANIZATION",
+      "category": "Empresa",
+      "description": "Empresa constructora panameña",
+      "relevance": "high",
+      "aliases": ["Constructora Sicarelli", "Grupo Sicarelli"]
+    },
+    {
+      "name": "Copa Airlines",
+      "type": "ORGANIZATION",
+      "category": "Empresa",
+      "description": "Aerolínea bandera de Panamá",
+      "relevance": "high",
+      "aliases": ["Copa", "Compañía Panameña de Aviación"]
+    },
+    {
+      "name": "Tribunal Electoral",
+      "type": "ORGANIZATION",
+      "category": "Institución Gubernamental",
+      "description": "Organismo electoral de Panamá",
+      "relevance": "high",
+      "aliases": ["TE", "Tribunal Electoral de Panamá"]
+    },
+    {
+      "name": "Asamblea Nacional",
+      "type": "ORGANIZATION",
+      "category": "Institución Gubernamental",
+      "description": "Poder Legislativo de Panamá",
+      "relevance": "high",
+      "aliases": ["Asamblea", "Legislatura"]
+    },
+    {
+      "name": "Caja de Seguro Social",
+      "type": "ORGANIZATION",
+      "category": "Institución Gubernamental",
+      "description": "Sistema de seguridad social de Panamá",
+      "relevance": "high",
+      "aliases": ["CSS", "Seguro Social"]
+    },
+    {
+      "name": "Autoridad del Canal de Panamá",
+      "type": "ORGANIZATION",
+      "category": "Institución Gubernamental",
+      "description": "Entidad autónoma que administra el Canal de Panamá",
+      "relevance": "high",
+      "aliases": ["ACP", "Canal de Panamá"]
+    },
+    {
+      "name": "Partido Realizando Metas",
+      "type": "POLITICAL_PARTY",
+      "category": "Partido Político",
+      "description": "Partido político panameño",
+      "relevance": "high",
+      "aliases": ["RM", "Realizando Metas"]
+    },
+    {
+      "name": "Partido Revolucionario Democrático",
+      "type": "POLITICAL_PARTY",
+      "category": "Partido Político",
+      "description": "Partido político panameño",
+      "relevance": "high",
+      "aliases": ["PRD"]
+    },
+    {
+      "name": "Partido Panameñista",
+      "type": "POLITICAL_PARTY",
+      "category": "Partido Político",
+      "description": "Partido político panameño",
+      "relevance": "high",
+      "aliases": ["Panameñista"]
+    },
+    {
+      "name": "Cambio Democrático",
+      "type": "POLITICAL_PARTY",
+      "category": "Partido Político",
+      "description": "Partido político panameño",
+      "relevance": "high",
+      "aliases": ["CD"]
+    },
+    {
+      "name": "Ministerio Público",
+      "type": "ORGANIZATION",
+      "category": "Institución Gubernamental",
+      "description": "Fiscalía de Panamá",
+      "relevance": "high",
+      "aliases": ["MP", "Fiscalía"]
+    },
+    {
+      "name": "Contraloría General de la República",
+      "type": "ORGANIZATION",
+      "category": "Institución Gubernamental",
+      "description": "Órgano de control fiscal",
+      "relevance": "high",
+      "aliases": ["Contraloría", "CGR"]
+    },
+    {
+      "name": "ACODECO",
+      "type": "ORGANIZATION",
+      "category": "Institución Gubernamental",
+      "description": "Autoridad de Protección al Consumidor",
+      "relevance": "medium",
+      "aliases": ["Autoridad de Protección al Consumidor"]
+    },
+    {
+      "name": "MIDA",
+      "type": "ORGANIZATION",
+      "category": "Institución Gubernamental",
+      "description": "Ministerio de Desarrollo Agropecuario",
+      "relevance": "medium",
+      "aliases": ["Ministerio de Desarrollo Agropecuario"]
+    },
+    {
+      "name": "IMA",
+      "type": "ORGANIZATION",
+      "category": "Institución Gubernamental",
+      "description": "Instituto de Mercadeo Agropecuario",
+      "relevance": "medium",
+      "aliases": ["Instituto de Mercadeo Agropecuario"]
+    }
+  ],
+
+  "persons": [
+    {
+      "name": "José Raúl Mulino",
+      "type": "POI",
+      "category": "Político",
+      "position": "Presidente de Panamá",
+      "description": "Presidente de la República de Panamá (2024-2029)",
+      "relevance": "critical",
+      "aliases": ["Mulino", "José Mulino", "Raúl Mulino"]
+    },
+    {
+      "name": "Ricardo Martinelli",
+      "type": "POI",
+      "category": "Político",
+      "position": "Ex Presidente",
+      "description": "Ex Presidente de Panamá (2009-2014)",
+      "relevance": "critical",
+      "aliases": ["Martinelli"]
+    },
+    {
+      "name": "Fernando Boyd Galindo",
+      "type": "POI",
+      "category": "Funcionario",
+      "position": "Director de la CSS",
+      "description": "Director de la Caja de Seguro Social",
+      "relevance": "high",
+      "aliases": ["Boyd Galindo", "Boyd"]
+    },
+    {
+      "name": "Ilya Espino de Marotta",
+      "type": "POI",
+      "category": "Funcionario",
+      "position": "Subadministradora de la ACP",
+      "description": "Subadministradora de la Autoridad del Canal de Panamá",
+      "relevance": "high",
+      "aliases": ["Ilya Espino", "Espino de Marotta"]
+    },
+    {
+      "name": "Alfredo Juncá",
+      "type": "POI",
+      "category": "Funcionario",
+      "position": "Magistrado del Tribunal Electoral",
+      "description": "Magistrado del Tribunal Electoral",
+      "relevance": "high",
+      "aliases": ["Juncá"]
+    },
+    {
+      "name": "Sergio Gálvez",
+      "type": "POI",
+      "category": "Político",
+      "position": "Diputado",
+      "description": "Diputado de la Asamblea Nacional",
+      "relevance": "high",
+      "aliases": ["Chello Gálvez", "Sergio 'Chello' Gálvez"]
+    },
+    {
+      "name": "Juan Diego Vásquez",
+      "type": "POI",
+      "category": "Político",
+      "position": "Diputado",
+      "description": "Presidente de la Asamblea Nacional",
+      "relevance": "high",
+      "aliases": ["JD Vásquez", "Vásquez"]
+    },
+    {
+      "name": "Javier Martínez-Acha",
+      "type": "PERSON",
+      "category": "Fiscal",
+      "position": "Fiscal General",
+      "description": "Fiscal General de la Nación",
+      "relevance": "high",
+      "aliases": ["Martínez-Acha"]
+    }
+  ],
+
+  "mediaOutlets": [
+    {
+      "name": "La Prensa",
+      "type": "MEDIA",
+      "category": "Medio de Comunicación",
+      "description": "Periódico panameño",
+      "relevance": "high",
+      "url": "https://www.prensa.com"
+    },
+    {
+      "name": "TVN",
+      "type": "MEDIA",
+      "category": "Medio de Comunicación",
+      "description": "Canal de televisión panameño",
+      "relevance": "high",
+      "url": "https://www.tvn-2.com"
+    },
+    {
+      "name": "Telemetro",
+      "type": "MEDIA",
+      "category": "Medio de Comunicación",
+      "description": "Canal de televisión panameño",
+      "relevance": "high",
+      "url": "https://www.telemetro.com"
+    },
+    {
+      "name": "Panama América",
+      "type": "MEDIA",
+      "category": "Medio de Comunicación",
+      "description": "Periódico panameño",
+      "relevance": "medium"
+    }
+  ],
+
+  "exclusions": {
+    "description": "Entidades que NO deben incluirse en el grafo OSINT de Panamá",
+    "internationalFigures": [
+      "Rey Carlos III",
+      "Rey Charles III",
+      "Princesa Ana",
+      "Nicolás Maduro",
+      "Donald Trump",
+      "Joe Biden"
+    ],
+    "products": [
+      "Cebolla",
+      "Tomate",
+      "Arroz",
+      "Pan",
+      "Leche"
+    ],
+    "genericLocations": [
+      "Darién",
+      "España",
+      "Reino Unido",
+      "Venezuela"
+    ],
+    "note": "Excepto si la figura internacional tiene relación DIRECTA con política panameña (ej: embajadores, tratados)"
+  }
+}

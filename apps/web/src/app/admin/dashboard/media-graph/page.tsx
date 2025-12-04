@@ -2,38 +2,31 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { MediaGraph } from '@/components/graph/MediaGraph'
-import { Filter, Download, Plus, Sparkles, Loader2, Link2 } from 'lucide-react'
+import { GraphFilters, type GraphFilterOptions } from '@/components/graph/GraphFilters'
+import { Download, Plus, Sparkles, Loader2, Link2 } from 'lucide-react'
 import { useAction, useQuery } from 'convex/react'
 import { api } from '@infopanama/convex'
 
 export default function MediaGraphPage() {
-  const [minStrength, setMinStrength] = useState(20)
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([])
+  const [filters, setFilters] = useState<GraphFilterOptions>({
+    minStrength: 0,
+    selectedRelationTypes: [],
+    selectedEntityTypes: [],
+    showIsolatedNodes: true,
+    searchQuery: '',
+    zoomLevel: 100,
+  })
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isGeneratingCoMentions, setIsGeneratingCoMentions] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<string | null>(null)
   const hasAutoAnalyzed = useRef(false)
 
+  // Funciones de análisis con IA
   const analyzeBatch = useAction(api.graphAnalysis.analyzeBatchArticles)
+  // @ts-ignore - Function has 'any' type to avoid circular dependencies
   const generateCoMentions = useAction(api.graphAnalysis.generateCoMentionRelations)
   const articles = useQuery(api.articles.list, { limit: 10 })
   const graphStats = useQuery(api.entityRelations.getGraphStats)
-
-  const relationTypes = [
-    { value: 'owns', label: 'Propiedad', color: 'bg-red-500' },
-    { value: 'works_for', label: 'Trabaja para', color: 'bg-blue-500' },
-    { value: 'affiliated_with', label: 'Afiliado con', color: 'bg-purple-500' },
-    { value: 'mentioned_with', label: 'Mencionado con', color: 'bg-gray-500' },
-    { value: 'covers', label: 'Cubre', color: 'bg-green-500' },
-    { value: 'supports', label: 'Apoya', color: 'bg-emerald-500' },
-    { value: 'opposes', label: 'Se opone', color: 'bg-orange-500' },
-  ]
-
-  const toggleType = (type: string) => {
-    setSelectedTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
-    )
-  }
 
   const handleAnalyzeWithAI = async () => {
     console.log('🔍 handleAnalyzeWithAI llamado', { articles: articles?.length })
@@ -113,8 +106,14 @@ export default function MediaGraphPage() {
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-3xl font-bold text-slate-900">Grafo de Entidades</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Grafo OSINT de Entidades</h1>
           <div className="flex gap-2">
+            <GraphFilters
+              onFiltersChange={setFilters}
+              stats={graphStats}
+              onSearchEntity={(query) => setFilters(prev => ({ ...prev, searchQuery: query }))}
+              onZoomChange={(zoom) => setFilters(prev => ({ ...prev, zoomLevel: zoom }))}
+            />
             <button
               onClick={handleAnalyzeWithAI}
               disabled={isAnalyzing || !articles || articles.length === 0}
@@ -171,6 +170,39 @@ export default function MediaGraphPage() {
           </div>
         )}
 
+        {/* Active Search/Filters Indicator */}
+        {(filters.searchQuery ||
+          filters.minStrength > 0 ||
+          filters.selectedRelationTypes.length > 0 ||
+          filters.selectedEntityTypes.length > 0 ||
+          !filters.showIsolatedNodes) && (
+          <div className="mb-4 px-4 py-2 bg-blue-50 text-blue-800 border border-blue-200 rounded-lg text-sm flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Filtros activos:</span>
+              {filters.searchQuery && (
+                <span className="px-2 py-0.5 bg-blue-100 rounded text-xs">
+                  Búsqueda: "{filters.searchQuery}"
+                </span>
+              )}
+              {filters.minStrength > 0 && (
+                <span className="px-2 py-0.5 bg-blue-100 rounded text-xs">
+                  Fuerza ≥ {filters.minStrength}%
+                </span>
+              )}
+              {filters.selectedEntityTypes.length > 0 && (
+                <span className="px-2 py-0.5 bg-blue-100 rounded text-xs">
+                  {filters.selectedEntityTypes.length} tipo(s) de entidad
+                </span>
+              )}
+              {filters.selectedRelationTypes.length > 0 && (
+                <span className="px-2 py-0.5 bg-blue-100 rounded text-xs">
+                  {filters.selectedRelationTypes.length} tipo(s) de relación
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         <p className="text-slate-600">
           Visualización de relaciones entre actores, medios y eventos
         </p>
@@ -179,8 +211,7 @@ export default function MediaGraphPage() {
       {/* Graph - Fullscreen estilo Obsidian */}
       <div className="rounded-lg overflow-hidden shadow-2xl">
         <MediaGraph
-          minStrength={minStrength}
-          relationTypes={selectedTypes.length > 0 ? selectedTypes : undefined}
+          filters={filters}
           height="calc(100vh - 200px)"
         />
       </div>
