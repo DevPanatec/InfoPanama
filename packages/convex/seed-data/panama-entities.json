@@ -13,6 +13,14 @@
       "aliases": ["Constructora Sicarelli", "Grupo Sicarelli"]
     },
     {
+      "name": "Hombres de Blanco",
+      "type": "ORGANIZATION",
+      "category": "Empresa",
+      "description": "Empresa constructora panameña, competencia de Sicarelli",
+      "relevance": "high",
+      "aliases": ["Constructora Hombres de Blanco", "Grupo Hombres de Blanco"]
+    },
+    {
       "name": "Copa Airlines",
       "type": "ORGANIZATION",
       "category": "Empresa",
