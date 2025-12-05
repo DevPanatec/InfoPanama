@@ -96,16 +96,16 @@ export const seedPanamaEntities = mutation({
       }
     }
 
-    // Seed Media Outlets (as sources)
+    // Seed Media Outlets (as both sources AND entities in graph)
     for (const media of panamaEntitiesData.mediaOutlets) {
       try {
-        // Check if source already exists
-        const existing = await ctx.db
+        // 1. Insert as source (for scraping)
+        const existingSource = await ctx.db
           .query('sources')
           .filter((q) => q.eq(q.field('name'), media.name))
           .first()
 
-        if (!existing) {
+        if (!existingSource && media.url) {
           const now = Date.now()
           await ctx.db.insert('sources', {
             name: media.name,
@@ -125,6 +125,37 @@ export const seedPanamaEntities = mutation({
             createdAt: now,
             updatedAt: now,
           })
+        }
+
+        // 2. Insert as entity (for graph)
+        const existingEntity = await ctx.db
+          .query('entities')
+          .filter((q) => q.eq(q.field('name'), media.name))
+          .first()
+
+        const now = Date.now()
+        const entityData = {
+          name: media.name,
+          type: 'ORGANIZATION' as const,
+          normalizedName: media.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+          aliases: (media as any).aliases || [],
+          mentionedIn: existingEntity?.mentionedIn || [],
+          mentionCount: existingEntity?.mentionCount || 0,
+          metadata: {
+            description: media.description,
+            affiliation: media.category,
+            owners: (media as any).owners || undefined,
+            connections: (media as any).connections || undefined,
+          },
+          createdAt: existingEntity?.createdAt || now,
+          updatedAt: now,
+        }
+
+        if (!existingEntity) {
+          await ctx.db.insert('entities', entityData)
+          results.media++
+        } else {
+          await ctx.db.patch(existingEntity._id, entityData)
           results.media++
         }
       } catch (error) {

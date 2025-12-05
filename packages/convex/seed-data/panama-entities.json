@@ -389,34 +389,83 @@
   "mediaOutlets": [
     {
       "name": "La Prensa",
-      "type": "MEDIA",
+      "type": "ORGANIZATION",
       "category": "Medio de Comunicación",
-      "description": "Periódico panameño",
+      "description": "Principal periódico de Panamá. Independiente.",
       "relevance": "high",
-      "url": "https://www.prensa.com"
+      "url": "https://www.prensa.com",
+      "aliases": ["Diario La Prensa"],
+      "connections": {
+        "mediaType": ["Periódico", "Digital"]
+      }
     },
     {
-      "name": "TVN",
-      "type": "MEDIA",
+      "name": "Medcom",
+      "type": "ORGANIZATION",
       "category": "Medio de Comunicación",
-      "description": "Canal de televisión panameño",
+      "description": "Conglomerado mediático panameño. Fusión de familias González Revilla y Eleta",
+      "relevance": "critical",
+      "aliases": ["Medios de Comunicación S.A."],
+      "owners": ["Familia González Revilla", "Familia Eleta"],
+      "connections": {
+        "media": ["RPC Canal 4", "Telemetro Canal 13", "Cable Onda"],
+        "families": ["Familia Eleta", "Familia González Revilla"]
+      }
+    },
+    {
+      "name": "RPC Canal 4",
+      "type": "ORGANIZATION",
+      "category": "Medio de Comunicación",
+      "description": "Canal de televisión fundado por familia Eleta. Parte de Medcom",
       "relevance": "high",
-      "url": "https://www.tvn-2.com"
+      "aliases": ["RPC", "Radio Programas Continentales"],
+      "owners": ["Medcom"],
+      "connections": {
+        "parent": ["Medcom"],
+        "founder": ["Fernando Eleta Almarán"]
+      }
     },
     {
       "name": "Telemetro",
-      "type": "MEDIA",
+      "type": "ORGANIZATION",
       "category": "Medio de Comunicación",
-      "description": "Canal de televisión panameño",
+      "description": "Canal 13. Propiedad de familia González Revilla. Parte de Medcom",
       "relevance": "high",
-      "url": "https://www.telemetro.com"
+      "url": "https://www.telemetro.com",
+      "aliases": ["Telemetro Canal 13", "Canal 13"],
+      "owners": ["Medcom", "Familia González Revilla"],
+      "connections": {
+        "parent": ["Medcom"],
+        "families": ["Familia González Revilla"]
+      }
     },
     {
-      "name": "Panama América",
-      "type": "MEDIA",
+      "name": "TVN",
+      "type": "ORGANIZATION",
       "category": "Medio de Comunicación",
-      "description": "Periódico panameño",
-      "relevance": "medium"
+      "description": "Televisora Nacional. Canal 2",
+      "relevance": "high",
+      "url": "https://www.tvn-2.com",
+      "aliases": ["TVN-2", "Canal 2"]
+    },
+    {
+      "name": "Foco Panamá",
+      "type": "ORGANIZATION",
+      "category": "Medio de Comunicación",
+      "description": "Medio digital independiente de periodismo de investigación",
+      "relevance": "high",
+      "aliases": ["Foco"],
+      "connections": {
+        "mediaType": ["Digital", "Investigación"]
+      }
+    },
+    {
+      "name": "Panamá América",
+      "type": "ORGANIZATION",
+      "category": "Medio de Comunicación",
+      "description": "Periódico panameño tradicional",
+      "relevance": "medium",
+      "aliases": ["Panama América"]
     }
   ],
 
