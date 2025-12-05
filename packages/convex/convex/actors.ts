@@ -42,23 +42,26 @@ export const list = query({
   handler: async (ctx, args) => {
     const { type, riskLevel, kyaStatus, limit = 50 } = args
 
-    let actorsQuery = ctx.db.query('actors')
+    // Get all actors and filter in memory for now
+    // TODO: Optimize with proper indexes when needed
+    const allActors = await ctx.db.query('actors').take(limit * 2)
+
+    // Apply filters
+    let filteredActors = allActors
 
     if (type) {
-      actorsQuery = actorsQuery.withIndex('by_type', (q) => q.eq('type', type))
+      filteredActors = filteredActors.filter((actor) => actor.type === type)
     }
 
     if (riskLevel) {
-      actorsQuery = actorsQuery.filter((q) => q.eq(q.field('riskLevel'), riskLevel))
+      filteredActors = filteredActors.filter((actor) => actor.riskLevel === riskLevel)
     }
 
     if (kyaStatus) {
-      actorsQuery = actorsQuery.filter((q) => q.eq(q.field('kyaStatus'), kyaStatus))
+      filteredActors = filteredActors.filter((actor) => actor.kyaStatus === kyaStatus)
     }
 
-    const actors = await actorsQuery.take(limit)
-
-    return actors
+    return filteredActors.slice(0, limit)
   },
 })
 
@@ -78,9 +81,29 @@ export const getById = query({
 export const search = query({
   args: {
     query: v.string(),
-    type: v.optional(v.string()),
-    riskLevel: v.optional(v.string()),
-    kyaStatus: v.optional(v.string()),
+    type: v.optional(v.union(
+      v.literal('person'),
+      v.literal('group'),
+      v.literal('troll_network'),
+      v.literal('botnet'),
+      v.literal('HB'),
+      v.literal('anonymous'),
+      v.literal('verified_account'),
+      v.literal('media_outlet'),
+      v.literal('official')
+    )),
+    riskLevel: v.optional(v.union(
+      v.literal('LOW'),
+      v.literal('MEDIUM'),
+      v.literal('HIGH'),
+      v.literal('CRITICAL')
+    )),
+    kyaStatus: v.optional(v.union(
+      v.literal('verified'),
+      v.literal('suspicious'),
+      v.literal('flagged'),
+      v.literal('blocked')
+    )),
   },
   handler: async (ctx, args) => {
     const { query, type, riskLevel, kyaStatus } = args
@@ -475,5 +498,20 @@ export const addRelationship = mutation({
     })
 
     return args.actorId
+  },
+})
+
+/**
+ * Eliminar todos los actores (para limpiar datos mock)
+ */
+export const deleteAll = mutation({
+  handler: async (ctx) => {
+    const actors = await ctx.db.query('actors').collect()
+
+    for (const actor of actors) {
+      await ctx.db.delete(actor._id)
+    }
+
+    return { deleted: actors.length }
   },
 })

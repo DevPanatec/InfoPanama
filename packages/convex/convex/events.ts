@@ -58,26 +58,34 @@ export const getById = query({
 export const search = query({
   args: {
     query: v.string(),
-    eventType: v.optional(v.string()),
+    eventType: v.optional(
+      v.union(
+        v.literal('legislative'),
+        v.literal('executive'),
+        v.literal('judicial'),
+        v.literal('election'),
+        v.literal('public_hearing'),
+        v.literal('other')
+      )
+    ),
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { query, eventType, limit = 50 } = args
 
-    const results = await ctx.db
+    // Buscar sin filtro de tipo primero
+    const allResults = await ctx.db
       .query('events')
-      .withSearchIndex('search_events', (q) => {
-        let search = q.search('title', query)
+      .withSearchIndex('search_events', (q) => q.search('title', query))
+      .take(limit * 2) // Obtener más resultados para filtrar
 
-        if (eventType) {
-          search = search.eq('eventType', eventType)
-        }
+    // Filtrar por tipo si se especifica
+    let results = allResults
+    if (eventType) {
+      results = allResults.filter((e) => e.eventType === eventType)
+    }
 
-        return search
-      })
-      .take(limit)
-
-    return results
+    return results.slice(0, limit)
   },
 })
 

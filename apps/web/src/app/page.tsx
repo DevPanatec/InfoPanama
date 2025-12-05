@@ -23,10 +23,10 @@ const CATEGORY_COLORS = [
 ]
 
 export default function HomePage() {
-  // TODO: Implementar estas queries cuando estén listas
-  const trendingTopics = undefined
-  const categories = useQuery(api.claims.getCategories)
-  const recentActivity = undefined
+  // Obtener datos de Convex
+  const trendingTopics: any[] | undefined = undefined // TODO: Implementar query
+  const categories = useQuery(api.claims.getCategories, {})
+  const recentActivity: any[] | undefined = undefined // TODO: Implementar query
   return (
     <main className="min-h-screen bg-slate-50">
       {/* Hero Section - Más compacto estilo Snopes */}
@@ -68,48 +68,22 @@ export default function HomePage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Trending Topics */}
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            {/* Trending Topics - TODO: Implementar */}
+            {/* <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
               <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-blue-600" />
                 Más Buscados
               </h3>
-              {!trendingTopics ? (
-                <div className="space-y-3">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="animate-pulse flex gap-3">
-                      <div className="w-6 h-6 bg-slate-200 rounded-full" />
-                      <div className="flex-1 h-6 bg-slate-200 rounded" />
-                      <div className="w-8 h-6 bg-slate-200 rounded" />
-                    </div>
-                  ))}
-                </div>
-              ) : trendingTopics.length === 0 ? (
-                <p className="text-sm text-slate-500 text-center py-4">
-                  No hay temas disponibles
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {trendingTopics.map((topic, index) => (
-                    <Link
-                      key={topic.id}
-                      href={`/verificaciones?topic=${topic.slug}`}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition group"
-                    >
-                      <span className="flex-shrink-0 w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-bold text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition">
-                        {index + 1}
-                      </span>
-                      <span className="flex-1 text-sm text-slate-700 group-hover:text-blue-600 transition">
-                        {topic.title}
-                      </span>
-                      <span className="text-xs text-slate-400">
-                        {topic.count}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="animate-pulse flex gap-3">
+                    <div className="w-6 h-6 bg-slate-200 rounded-full" />
+                    <div className="flex-1 h-6 bg-slate-200 rounded" />
+                    <div className="w-8 h-6 bg-slate-200 rounded" />
+                  </div>
+                ))}
+              </div>
+            </div> */}
 
             {/* Categories */}
             <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
@@ -144,56 +118,24 @@ export default function HomePage() {
               )}
             </div>
 
-            {/* Recent Activity */}
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+            {/* Recent Activity - TODO: Implementar */}
+            {/* <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
               <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 Actividad Reciente
               </h3>
-              {!recentActivity ? (
-                <div className="space-y-4">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="animate-pulse flex gap-3">
-                      <div className="w-2 h-2 bg-slate-200 rounded-full mt-1.5" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-slate-200 rounded w-3/4" />
-                        <div className="h-3 bg-slate-200 rounded w-1/2" />
-                      </div>
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="animate-pulse flex gap-3">
+                    <div className="w-2 h-2 bg-slate-200 rounded-full mt-1.5" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-slate-200 rounded w-3/4" />
+                      <div className="h-3 bg-slate-200 rounded w-1/2" />
                     </div>
-                  ))}
-                </div>
-              ) : recentActivity.length === 0 ? (
-                <p className="text-sm text-slate-500 text-center py-4">
-                  No hay actividad reciente
-                </p>
-              ) : (
-                <div className="space-y-4 text-sm">
-                  {recentActivity.map((activity) => {
-                    const timeAgo = (timestamp: number) => {
-                      const seconds = Math.floor((Date.now() - timestamp) / 1000)
-                      const minutes = Math.floor(seconds / 60)
-                      const hours = Math.floor(minutes / 60)
-                      const days = Math.floor(hours / 24)
-
-                      if (days > 0) return `hace ${days} día${days > 1 ? 's' : ''}`
-                      if (hours > 0) return `hace ${hours} hora${hours > 1 ? 's' : ''}`
-                      if (minutes > 0) return `hace ${minutes} minuto${minutes > 1 ? 's' : ''}`
-                      return 'hace unos segundos'
-                    }
-
-                    return (
-                      <div key={activity.id} className="flex gap-3">
-                        <div className={`w-2 h-2 ${activity.color} rounded-full mt-1.5 flex-shrink-0`} />
-                        <div>
-                          <p className="text-slate-700">{activity.message}</p>
-                          <p className="text-slate-400 text-xs">{timeAgo(activity.timestamp)}</p>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
+                  </div>
+                ))}
+              </div>
+            </div> */}
 
             {/* Newsletter */}
             <Newsletter />

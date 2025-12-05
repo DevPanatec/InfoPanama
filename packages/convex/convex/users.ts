@@ -30,19 +30,24 @@ export const list = query({
   handler: async (ctx, args) => {
     const { role, isActive, limit = 50 } = args
 
-    let usersQuery = ctx.db.query('users')
+    let users
 
+    // Si hay filtro de role, usar el índice
     if (role) {
-      usersQuery = usersQuery.withIndex('by_role', (q) => q.eq('role', role))
+      users = await ctx.db
+        .query('users')
+        .withIndex('by_role', (q) => q.eq('role', role))
+        .take(limit * 2)
+    } else {
+      users = await ctx.db.query('users').take(limit * 2)
     }
 
-    const users = await usersQuery.take(limit)
-
+    // Filtrar por isActive si se proporciona
     if (isActive !== undefined) {
-      return users.filter((u) => u.isActive === isActive)
+      users = users.filter((u) => u.isActive === isActive)
     }
 
-    return users
+    return users.slice(0, limit)
   },
 })
 

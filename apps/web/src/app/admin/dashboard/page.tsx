@@ -1,20 +1,26 @@
 'use client'
 
-import { FileCheck, Users, Shield, AlertTriangle, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { FileCheck, Users, Shield, AlertTriangle, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-
-// Datos de ejemplo
-const DEMO_STATS = {
-  totalClaims: 67,
-  investigating: 8,
-  review: 5,
-  published: 42,
-  highRiskActors: 3,
-  criticalClaims: 2,
-}
+import { useQuery } from 'convex/react'
+import { api } from '@infopanama/convex'
 
 export default function DashboardPage() {
   const router = useRouter()
+
+  // Obtener estadísticas reales de Convex
+  const stats = useQuery(api.claims.getStats, {})
+  const recentClaims = useQuery(api.claims.list, { limit: 5 })
+  const highRiskClaims = useQuery(api.claims.getHighRisk, { limit: 2 })
+
+  // Loading state
+  if (!stats || !recentClaims) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    )
+  }
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen">
@@ -37,7 +43,7 @@ export default function DashboardPage() {
               12%
             </div>
           </div>
-          <div className="text-3xl font-bold mb-1">{DEMO_STATS.totalClaims}</div>
+          <div className="text-3xl font-bold mb-1">{stats.total}</div>
           <div className="text-sm text-slate-300">Total Verificaciones</div>
         </div>
 
@@ -49,10 +55,10 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-1 text-blue-200 text-xs font-medium">
               <ArrowUpRight className="h-3 w-3" />
-              5
+              {stats.investigating}
             </div>
           </div>
-          <div className="text-3xl font-bold mb-1">{DEMO_STATS.investigating}</div>
+          <div className="text-3xl font-bold mb-1">{stats.investigating}</div>
           <div className="text-sm text-blue-100">En Investigación</div>
         </div>
 
@@ -64,14 +70,14 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-1 text-emerald-400 text-xs font-medium">
               <ArrowUpRight className="h-3 w-3" />
-              8
+              {stats.published}
             </div>
           </div>
-          <div className="text-3xl font-bold mb-1">{DEMO_STATS.published}</div>
+          <div className="text-3xl font-bold mb-1">{stats.published}</div>
           <div className="text-sm text-slate-300">Publicadas</div>
         </div>
 
-        {/* Card 4 - Actores Alto Riesgo */}
+        {/* Card 4 - Claims Alto Riesgo */}
         <div className="bg-gradient-to-br from-slate-800 to-blue-900 rounded-xl p-5 text-white">
           <div className="flex items-center justify-between mb-4">
             <div className="bg-white/10 p-2.5 rounded-lg">
@@ -79,11 +85,11 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-1 text-rose-400 text-xs font-medium">
               <ArrowDownRight className="h-3 w-3" />
-              1
+              {highRiskClaims?.length || 0}
             </div>
           </div>
-          <div className="text-3xl font-bold mb-1">{DEMO_STATS.highRiskActors}</div>
-          <div className="text-sm text-slate-300">Actores Alto Riesgo</div>
+          <div className="text-3xl font-bold mb-1">{highRiskClaims?.length || 0}</div>
+          <div className="text-sm text-slate-300">Claims Alto Riesgo</div>
         </div>
       </div>
 
@@ -101,26 +107,49 @@ export default function DashboardPage() {
             </button>
           </div>
           <div className="divide-y divide-slate-100">
-            {[
-              { id: 1, title: 'Inversión en infraestructura', time: 'Hace 2 horas', status: 'Investigando', statusColor: 'bg-amber-100 text-amber-700' },
-              { id: 2, title: 'Cifras de desempleo', time: 'Hace 3 horas', status: 'En revisión', statusColor: 'bg-blue-100 text-blue-700' },
-              { id: 3, title: 'Nuevo hospital inaugurado', time: 'Hace 5 horas', status: 'Publicado', statusColor: 'bg-emerald-100 text-emerald-700' },
-              { id: 4, title: 'Reducción de impuestos', time: 'Hace 1 día', status: 'Investigando', statusColor: 'bg-amber-100 text-amber-700' },
-              { id: 5, title: 'Presupuesto educativo', time: 'Hace 1 día', status: 'Publicado', statusColor: 'bg-emerald-100 text-emerald-700' },
-            ].map((claim) => (
-              <div
-                key={claim.id}
-                className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                <div>
-                  <p className="text-sm font-medium text-slate-900">{claim.title}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{claim.time}</p>
-                </div>
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${claim.statusColor}`}>
-                  {claim.status}
-                </span>
+            {recentClaims.length === 0 ? (
+              <div className="px-5 py-8 text-center text-slate-500">
+                <p>No hay claims recientes</p>
               </div>
-            ))}
+            ) : (
+              recentClaims.map((claim) => {
+                const getStatusDisplay = (status: string) => {
+                  const statusMap: Record<string, { label: string, color: string }> = {
+                    'new': { label: 'Nueva', color: 'bg-sky-100 text-sky-700' },
+                    'investigating': { label: 'Investigando', color: 'bg-amber-100 text-amber-700' },
+                    'review': { label: 'En revisión', color: 'bg-blue-100 text-blue-700' },
+                    'approved': { label: 'Aprobada', color: 'bg-green-100 text-green-700' },
+                    'rejected': { label: 'Rechazada', color: 'bg-red-100 text-red-700' },
+                    'published': { label: 'Publicado', color: 'bg-emerald-100 text-emerald-700' },
+                  }
+                  return statusMap[status] || { label: status, color: 'bg-gray-100 text-gray-700' }
+                }
+
+                const statusDisplay = getStatusDisplay(claim.status)
+                const timeAgo = new Date(claim._creationTime).toLocaleString('es-PA', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })
+
+                return (
+                  <div
+                    key={claim._id}
+                    onClick={() => router.push(`/admin/dashboard/claims/${claim._id}`)}
+                    className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 transition-colors cursor-pointer"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-slate-900 line-clamp-1">{claim.title}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{timeAgo}</p>
+                    </div>
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusDisplay.color}`}>
+                      {statusDisplay.label}
+                    </span>
+                  </div>
+                )
+              })
+            )}
           </div>
         </div>
 

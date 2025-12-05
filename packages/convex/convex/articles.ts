@@ -1,5 +1,5 @@
 import { v } from 'convex/values'
-import { mutation, query } from './_generated/server'
+import { mutation, query, internalQuery } from './_generated/server'
 
 /**
  * ARTICLES - Gestión de artículos scrapeados de medios
@@ -20,12 +20,14 @@ export const list = query({
   handler: async (ctx, args) => {
     const { sourceId, limit = 20 } = args
 
-    let articlesQuery = ctx.db.query('articles').order('desc')
-
+    // Build query based on filters
+    let articlesQuery
     if (sourceId) {
-      articlesQuery = articlesQuery.withIndex('by_source', (q) =>
+      articlesQuery = ctx.db.query('articles').withIndex('by_source', (q) =>
         q.eq('sourceId', sourceId)
       )
+    } else {
+      articlesQuery = ctx.db.query('articles').order('desc')
     }
 
     return await articlesQuery.take(limit)
@@ -48,7 +50,7 @@ export const getById = query({
 export const search = query({
   args: {
     query: v.string(),
-    sourceId: v.optional(v.string()),
+    sourceId: v.optional(v.id('sources')),
     topics: v.optional(v.array(v.string())),
     limit: v.optional(v.number()),
   },
@@ -386,5 +388,44 @@ export const remove = mutation({
     await ctx.db.delete(args.id)
 
     return args.id
+  },
+})
+
+// ============================================
+// INTERNAL QUERIES (para cron jobs)
+// ============================================
+
+/**
+ * Obtener artículos no analizados por IA (para análisis automático)
+ */
+export const getUnanalyzed = internalQuery({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { limit = 20 } = args
+
+    // Obtener artículos recientes ordenados por fecha
+    const articles = await ctx.db
+      .query('articles')
+      .withIndex('by_date')
+      .order('desc')
+      .take(100) // Tomar más para filtrar
+
+    // Filtrar los que NO tienen entidades asociadas
+    // (indicador de que no han sido analizados)
+    const unanalyzed = []
+    for (const article of articles) {
+      if (unanalyzed.length >= limit) break
+
+      // Verificar si tiene entidades
+      const hasEntities = article.entities && article.entities.length > 0
+
+      if (!hasEntities) {
+        unanalyzed.push(article)
+      }
+    }
+
+    return unanalyzed
   },
 })

@@ -8,6 +8,7 @@
     "crawl:prensa": "tsx src/crawlers/la-prensa.ts",
     "crawl:gaceta": "tsx src/crawlers/gaceta-oficial.ts",
     "crawl:all": "tsx src/index.ts",
+    "crawl:entities": "tsx src/crawl-entities.ts",
     "extract:claims": "tsx src/processors/claim-extractor.ts"
   },
   "dependencies": {

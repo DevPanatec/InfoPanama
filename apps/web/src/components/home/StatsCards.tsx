@@ -5,7 +5,7 @@ import { useQuery } from 'convex/react'
 import { api } from '@infopanama/convex'
 
 export function StatsCards() {
-  const stats = useQuery(api.claims.stats)
+  const stats = useQuery(api.claims.getStats, {})
 
   const cards = [
     {

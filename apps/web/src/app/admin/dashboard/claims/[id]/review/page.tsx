@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeft, CheckCircle, XCircle, Save, Eye, Sparkles, Loader2 } from 'lucide-react'
 import { useQuery, useAction, useMutation } from 'convex/react'
-import { api } from '@infopanama/convex'
-import { Id } from '@infopanama/convex/convex/_generated/dataModel'
+import { api, type Id } from '@infopanama/convex'
 
 export default function ReviewClaimPage() {
   const router = useRouter()
@@ -15,6 +14,8 @@ export default function ReviewClaimPage() {
   // Obtener claim y veredicto de Convex
   const claim = useQuery(api.claims.getById, { id: claimId })
   const verifyClaim = useAction(api.verification.verifyClaim)
+  const updateStatusMutation = useMutation(api.claims.updateStatus)
+  const updateVerdictMutation = useMutation(api.claims.updateVerdict)
 
   const [verdict, setVerdict] = useState<string | null>(null)
   const [editedTitle, setEditedTitle] = useState('')
@@ -58,27 +59,73 @@ export default function ReviewClaimPage() {
     }
   }
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (!verdict) {
       alert('Por favor selecciona un veredicto antes de aprobar')
       return
     }
 
-    // Aquí iría la lógica para aprobar y publicar
-    alert('Verificación aprobada y publicada')
-    router.push('/admin/dashboard/claims')
-  }
+    try {
+      // Actualizar el veredicto
+      await updateVerdictMutation({
+        id: claimId,
+        verdict: verdict as any,
+      })
 
-  const handleSaveDraft = () => {
-    // Aquí iría la lógica para guardar como borrador
-    alert('Cambios guardados como borrador')
-  }
+      // Actualizar el estado a publicado
+      await updateStatusMutation({
+        id: claimId,
+        status: 'published',
+      })
 
-  const handleReject = () => {
-    // Aquí iría la lógica para rechazar
-    if (confirm('¿Estás seguro de que deseas rechazar esta verificación?')) {
-      alert('Verificación rechazada')
+      alert('✅ Verificación aprobada y publicada exitosamente')
       router.push('/admin/dashboard/claims')
+    } catch (error) {
+      console.error('Error al aprobar verificación:', error)
+      alert('❌ Error al aprobar verificación. Verifica los logs.')
+    }
+  }
+
+  const handleSaveDraft = async () => {
+    try {
+      // Solo actualizar el veredicto si se seleccionó uno
+      if (verdict) {
+        await updateVerdictMutation({
+          id: claimId,
+          verdict: verdict as any,
+        })
+      }
+
+      // Actualizar el estado a review (borrador)
+      await updateStatusMutation({
+        id: claimId,
+        status: 'review',
+      })
+
+      alert('💾 Cambios guardados como borrador')
+    } catch (error) {
+      console.error('Error al guardar borrador:', error)
+      alert('❌ Error al guardar borrador. Verifica los logs.')
+    }
+  }
+
+  const handleReject = async () => {
+    if (!confirm('¿Estás seguro de que deseas rechazar esta verificación?')) {
+      return
+    }
+
+    try {
+      // Actualizar el estado a rechazado
+      await updateStatusMutation({
+        id: claimId,
+        status: 'rejected',
+      })
+
+      alert('🚫 Verificación rechazada')
+      router.push('/admin/dashboard/claims')
+    } catch (error) {
+      console.error('Error al rechazar verificación:', error)
+      alert('❌ Error al rechazar verificación. Verifica los logs.')
     }
   }
 

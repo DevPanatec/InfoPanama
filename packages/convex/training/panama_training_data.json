@@ -1,0 +1,368 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "2024-11-29",
+    "description": "Datos de entrenamiento para IA de fact-checking sobre Panamá",
+    "total_examples": 50
+  },
+  "categories": {
+    "economia": [
+      {
+        "claim": "El Canal de Panamá genera el 40% del PIB del país",
+        "verdict": "FALSE",
+        "confidence": 95,
+        "analysis": "La ACP reporta que el Canal aporta entre 3-6% del PIB directamente. Incluyendo efectos indirectos, el impacto total es 20-25%, nunca 40%.",
+        "sources": ["ACP - Reportes Anuales", "MEF Panamá"],
+        "keywords": ["canal", "PIB", "economía", "estadísticas"]
+      },
+      {
+        "claim": "Panamá tiene el dólar estadounidense como moneda oficial",
+        "verdict": "TRUE",
+        "confidence": 100,
+        "analysis": "Desde 1904, Panamá usa el dólar estadounidense como moneda de curso legal. El balboa existe solo en monedas.",
+        "sources": ["Constitución de Panamá", "Banco Nacional de Panamá"],
+        "keywords": ["moneda", "dólar", "balboa", "economía"]
+      },
+      {
+        "claim": "Panamá es considerado un paraíso fiscal",
+        "verdict": "NEEDS_CONTEXT",
+        "confidence": 70,
+        "analysis": "Históricamente sí, pero desde 2016 ha implementado reformas. Ya no está en listas grises de OCDE/GAFI, pero aún tiene legislación favorable para offshore.",
+        "sources": ["OCDE", "GAFI", "Panamá Papers Investigation"],
+        "keywords": ["impuestos", "offshore", "transparencia"]
+      },
+      {
+        "claim": "La Zona Libre de Colón es la segunda zona franca más grande del mundo",
+        "verdict": "TRUE",
+        "confidence": 90,
+        "analysis": "Solo superada por Hong Kong en volumen de reexportación. Mueve más de $10 mil millones anuales.",
+        "sources": ["Zona Libre de Colón - Estadísticas", "World Free Zones Organization"],
+        "keywords": ["comercio", "zona franca", "reexportación"]
+      },
+      {
+        "claim": "Panamá tiene el mayor crecimiento económico de Centroamérica",
+        "verdict": "MIXED",
+        "confidence": 75,
+        "analysis": "Históricamente cierto (2000-2019 promedió 6-7% anual), pero varía por año. Post-COVID otros países han tenido rebotes mayores.",
+        "sources": ["FMI", "CEPAL", "Banco Mundial"],
+        "keywords": ["crecimiento", "PIB", "desarrollo"]
+      }
+    ],
+    "infraestructura": [
+      {
+        "claim": "La Línea 3 del Metro costará más de 3,000 millones de dólares",
+        "verdict": "TRUE",
+        "confidence": 90,
+        "analysis": "El MEF estima el costo en $3,500 millones. El presupuesto aprobado confirma esta cifra.",
+        "sources": ["MEF Panamá", "Metro de Panamá SA"],
+        "keywords": ["metro", "transporte", "presupuesto"]
+      },
+      {
+        "claim": "El Puente Centenario es el puente más largo de Panamá",
+        "verdict": "FALSE",
+        "confidence": 95,
+        "analysis": "El Puente Atlántico (también llamado Puente sobre el Canal) inaugurado en 2019 es más largo con 5.5 km vs 1.05 km del Centenario.",
+        "sources": ["MOP Panamá", "ACP"],
+        "keywords": ["puentes", "infraestructura", "canal"]
+      },
+      {
+        "claim": "Panamá tiene el metro más moderno de Centroamérica",
+        "verdict": "TRUE",
+        "confidence": 95,
+        "analysis": "Es el único sistema de metro en Centroamérica. Inaugurado en 2014, usa tecnología francesa Alstom de última generación.",
+        "sources": ["Metro de Panamá", "Comparativas regionales"],
+        "keywords": ["metro", "transporte", "tecnología"]
+      },
+      {
+        "claim": "La ampliación del Canal se pagó con préstamos extranjeros",
+        "verdict": "FALSE",
+        "confidence": 98,
+        "analysis": "Se financió principalmente con bonos respaldados por peajes futuros del Canal, no con deuda soberana del gobierno.",
+        "sources": ["ACP - Informes Financieros"],
+        "keywords": ["canal", "ampliación", "financiamiento"]
+      }
+    ],
+    "politica": [
+      {
+        "claim": "Panamá no tiene ejército desde 1990",
+        "verdict": "TRUE",
+        "confidence": 100,
+        "analysis": "Las Fuerzas de Defensa fueron abolidas tras la invasión estadounidense de 1989. La Constitución de 1994 lo formalizó.",
+        "sources": ["Constitución de Panamá 1994", "Historia oficial"],
+        "keywords": ["ejército", "defensa", "historia"]
+      },
+      {
+        "claim": "El presidente de Panamá puede ser reelegido inmediatamente",
+        "verdict": "FALSE",
+        "confidence": 100,
+        "analysis": "La Constitución prohíbe la reelección presidencial inmediata. Debe pasar al menos 10 años para volver a postularse.",
+        "sources": ["Constitución de Panamá - Artículo 177"],
+        "keywords": ["elecciones", "presidencia", "reelección"]
+      },
+      {
+        "claim": "Panamá tiene más de 10 partidos políticos registrados",
+        "verdict": "TRUE",
+        "confidence": 90,
+        "analysis": "El Tribunal Electoral registra regularmente entre 8-12 partidos políticos activos según el periodo electoral.",
+        "sources": ["Tribunal Electoral de Panamá"],
+        "keywords": ["partidos", "política", "elecciones"]
+      }
+    ],
+    "salud": [
+      {
+        "claim": "Panamá tiene uno de los sistemas de salud más avanzados de Latinoamérica",
+        "verdict": "MIXED",
+        "confidence": 75,
+        "analysis": "El sector privado (Punta Pacífica, San Fernando) es de clase mundial. El público (CSS, MINSA) tiene deficiencias en áreas rurales.",
+        "sources": ["OMS", "MINSA", "Reportes hospitalarios"],
+        "keywords": ["salud", "hospitales", "CSS"]
+      },
+      {
+        "claim": "La CSS está en crisis financiera",
+        "verdict": "TRUE",
+        "confidence": 85,
+        "analysis": "Múltiples estudios confirman déficit estructural. Sin reformas, se proyecta insolvencia para 2030-2035.",
+        "sources": ["Contraloría", "Estudios actuariales CSS", "BID"],
+        "keywords": ["CSS", "pensiones", "crisis", "finanzas"]
+      },
+      {
+        "claim": "Panamá erradicó la malaria",
+        "verdict": "FALSE",
+        "confidence": 90,
+        "analysis": "Aunque casos han disminuido drásticamente, aún se reportan casos en áreas como Darién y comarcas indígenas.",
+        "sources": ["MINSA - Reportes epidemiológicos", "OPS"],
+        "keywords": ["malaria", "salud pública", "epidemiología"]
+      }
+    ],
+    "educacion": [
+      {
+        "claim": "El gobierno invierte más del 6% del PIB en educación",
+        "verdict": "NEEDS_CONTEXT",
+        "confidence": 85,
+        "analysis": "La Constitución establece 6% como mínimo, pero la ejecución real ha estado entre 3-4% según el Banco Mundial.",
+        "sources": ["Banco Mundial", "Presupuesto General del Estado"],
+        "keywords": ["educación", "presupuesto", "inversión"]
+      },
+      {
+        "claim": "La Universidad de Panamá es la más antigua del país",
+        "verdict": "TRUE",
+        "confidence": 100,
+        "analysis": "Fundada en 1935, es la primera y más grande universidad pública de Panamá.",
+        "sources": ["Universidad de Panamá - Historia oficial"],
+        "keywords": ["universidad", "educación", "historia"]
+      },
+      {
+        "claim": "Panamá tiene una tasa de alfabetización superior al 95%",
+        "verdict": "TRUE",
+        "confidence": 92,
+        "analysis": "Según UNESCO y censos nacionales, la tasa de alfabetización está alrededor del 95-96% en población adulta.",
+        "sources": ["UNESCO", "INEC - Censo Nacional"],
+        "keywords": ["alfabetización", "educación", "estadísticas"]
+      }
+    ],
+    "demografia": [
+      {
+        "claim": "La población indígena representa menos del 5% de la población",
+        "verdict": "FALSE",
+        "confidence": 95,
+        "analysis": "El censo del INEC muestra 12.3% de población indígena (~420,000 personas) en comarcas Guna Yala, Ngäbe-Buglé y Emberá-Wounaan.",
+        "sources": ["INEC - Censo Nacional"],
+        "keywords": ["indígenas", "demografía", "población"]
+      },
+      {
+        "claim": "Más de la mitad de la población vive en la provincia de Panamá",
+        "verdict": "TRUE",
+        "confidence": 90,
+        "analysis": "Aproximadamente 50-55% de los ~4.5 millones de habitantes viven en Panamá y Panamá Oeste.",
+        "sources": ["INEC - Censo 2020"],
+        "keywords": ["población", "urbanización", "demografía"]
+      },
+      {
+        "claim": "Panamá tiene la población más joven de Centroamérica",
+        "verdict": "FALSE",
+        "confidence": 85,
+        "analysis": "Países como Guatemala y Honduras tienen poblaciones más jóvenes. Panamá está en transición demográfica.",
+        "sources": ["CELADE", "Banco Mundial - Indicadores"],
+        "keywords": ["demografía", "edad", "población"]
+      }
+    ],
+    "transporte": [
+      {
+        "claim": "Copa Airlines es la aerolínea más puntual de América Latina",
+        "verdict": "TRUE",
+        "confidence": 92,
+        "analysis": "Ha ganado el premio OAG como aerolínea más puntual de Latinoamérica múltiples años consecutivos.",
+        "sources": ["OAG Punctuality League", "Copa Airlines - Reportes"],
+        "keywords": ["aviación", "copa airlines", "puntualidad"]
+      },
+      {
+        "claim": "El Aeropuerto de Tocumen es el hub más importante de Centroamérica",
+        "verdict": "TRUE",
+        "confidence": 90,
+        "analysis": "Maneja más conexiones internacionales que cualquier otro aeropuerto centroamericano. Más de 15 millones de pasajeros/año.",
+        "sources": ["Tocumen SA", "Estadísticas de aviación regional"],
+        "keywords": ["aeropuerto", "tocumen", "hub"]
+      }
+    ],
+    "medio_ambiente": [
+      {
+        "claim": "Panamá es uno de los países con mayor biodiversidad del mundo",
+        "verdict": "TRUE",
+        "confidence": 95,
+        "analysis": "A pesar de su tamaño, tiene más especies de aves que USA y Canadá juntos. Es corredor biológico clave.",
+        "sources": ["Smithsonian Tropical Research Institute", "ANAM"],
+        "keywords": ["biodiversidad", "ambiente", "especies"]
+      },
+      {
+        "claim": "Panamá genera más del 70% de su electricidad con hidroeléctricas",
+        "verdict": "TRUE",
+        "confidence": 88,
+        "analysis": "Aproximadamente 70-75% de la energía viene de hidroeléctricas, el resto de térmicas y renovables.",
+        "sources": ["ASEP", "ETESA - Estadísticas energéticas"],
+        "keywords": ["energía", "hidroeléctrica", "electricidad"]
+      },
+      {
+        "claim": "El Darién es la selva más impenetrable de América",
+        "verdict": "MIXED",
+        "confidence": 70,
+        "analysis": "Es extremadamente densa y peligrosa, pero 'más impenetrable' es difícil de cuantificar. Sí es uno de los lugares más difíciles.",
+        "sources": ["National Geographic", "Estudios de biodiversidad"],
+        "keywords": ["darién", "selva", "geografía"]
+      }
+    ],
+    "seguridad": [
+      {
+        "claim": "Panamá tiene la tasa de homicidios más baja de Centroamérica",
+        "verdict": "MIXED",
+        "confidence": 80,
+        "analysis": "Tiene tasas bajas comparado con Honduras, El Salvador, Guatemala. Similar a Costa Rica y Nicaragua según el año.",
+        "sources": ["InSight Crime", "Observatorio de Seguridad Pública"],
+        "keywords": ["seguridad", "crimen", "homicidios"]
+      },
+      {
+        "claim": "Panamá es ruta principal del narcotráfico",
+        "verdict": "TRUE",
+        "confidence": 85,
+        "analysis": "Por su ubicación geográfica, es corredor para tráfico de drogas de Sudamérica hacia Norteamérica. Reportado por DEA y ONU.",
+        "sources": ["DEA", "UNODC", "Policía Nacional"],
+        "keywords": ["drogas", "narcotráfico", "seguridad"]
+      }
+    ],
+    "corrupcion": [
+      {
+        "claim": "Los Panamá Papers involucraron más de 200,000 empresas offshore",
+        "verdict": "TRUE",
+        "confidence": 98,
+        "analysis": "La filtración reveló 214,488 entidades offshore creadas a través de Mossack Fonseca entre 1977-2015.",
+        "sources": ["ICIJ - Consorcio Internacional de Periodistas", "Documentos oficiales"],
+        "keywords": ["panama papers", "offshore", "corrupción"]
+      },
+      {
+        "claim": "Panamá está entre los 10 países más corruptos del mundo",
+        "verdict": "FALSE",
+        "confidence": 85,
+        "analysis": "Según Transparency International, está en posición media (~100-110 de 180). Hay corrupción, pero no es top 10.",
+        "sources": ["Transparency International - CPI"],
+        "keywords": ["corrupción", "transparencia", "ranking"]
+      }
+    ],
+    "cultura": [
+      {
+        "claim": "El pollera es el traje típico de Panamá",
+        "verdict": "TRUE",
+        "confidence": 100,
+        "analysis": "La pollera es el vestido tradicional femenino de Panamá, reconocido como símbolo nacional.",
+        "sources": ["Patrimonio Cultural de Panamá"],
+        "keywords": ["cultura", "pollera", "tradiciones"]
+      },
+      {
+        "claim": "El tamborito es el baile nacional de Panamá",
+        "verdict": "TRUE",
+        "confidence": 100,
+        "analysis": "Declarado danza nacional. Tiene raíces africanas y españolas, muy popular en festivales.",
+        "sources": ["INAC - Instituto Nacional de Cultura"],
+        "keywords": ["cultura", "tamborito", "música"]
+      },
+      {
+        "claim": "Panamá celebra el Carnaval más largo del mundo",
+        "verdict": "FALSE",
+        "confidence": 90,
+        "analysis": "El Carnaval de Panamá dura 4 días. Otros países como Brasil tienen celebraciones más extensas.",
+        "sources": ["ATP - Autoridad de Turismo", "Comparativas internacionales"],
+        "keywords": ["carnaval", "festivales", "turismo"]
+      }
+    ],
+    "historia": [
+      {
+        "claim": "Panamá se separó de Colombia en 1903",
+        "verdict": "TRUE",
+        "confidence": 100,
+        "analysis": "El 3 de noviembre de 1903, Panamá se separó de Colombia con apoyo de Estados Unidos para construir el Canal.",
+        "sources": ["Historia oficial de Panamá"],
+        "keywords": ["independencia", "colombia", "historia"]
+      },
+      {
+        "claim": "Estados Unidos invadió Panamá en 1989",
+        "verdict": "TRUE",
+        "confidence": 100,
+        "analysis": "Operación Causa Justa, 20 de diciembre 1989, para capturar a Manuel Noriega. Miles de civiles murieron.",
+        "sources": ["Registros históricos", "ONU"],
+        "keywords": ["invasión", "noriega", "historia"]
+      },
+      {
+        "claim": "El Canal de Panamá fue entregado a Panamá en 1999",
+        "verdict": "TRUE",
+        "confidence": 100,
+        "analysis": "El 31 de diciembre de 1999, Estados Unidos transfirió el control total del Canal a Panamá según Tratados Torrijos-Carter.",
+        "sources": ["Tratados Torrijos-Carter", "ACP"],
+        "keywords": ["canal", "soberanía", "tratados"]
+      }
+    ],
+    "turismo": [
+      {
+        "claim": "Bocas del Toro es el destino turístico más visitado de Panamá",
+        "verdict": "FALSE",
+        "confidence": 85,
+        "analysis": "La Ciudad de Panamá recibe más turistas. Bocas del Toro es popular pero no el #1 en visitantes.",
+        "sources": ["ATP - Estadísticas de turismo"],
+        "keywords": ["turismo", "bocas del toro", "destinos"]
+      },
+      {
+        "claim": "El Casco Viejo es Patrimonio de la Humanidad",
+        "verdict": "TRUE",
+        "confidence": 100,
+        "analysis": "UNESCO lo declaró Patrimonio de la Humanidad en 1997 por su valor histórico y arquitectónico.",
+        "sources": ["UNESCO"],
+        "keywords": ["casco viejo", "unesco", "patrimonio"]
+      }
+    ],
+    "tecnologia": [
+      {
+        "claim": "Panamá tiene la mejor conectividad de internet en Centroamérica",
+        "verdict": "MIXED",
+        "confidence": 75,
+        "analysis": "En áreas urbanas sí tiene buena conectividad. En zonas rurales e indígenas la cobertura es deficiente.",
+        "sources": ["UIT", "Estudios de conectividad regional"],
+        "keywords": ["internet", "tecnología", "conectividad"]
+      },
+      {
+        "claim": "Panamá es hub de cables submarinos de fibra óptica",
+        "verdict": "TRUE",
+        "confidence": 90,
+        "analysis": "Múltiples cables submarinos pasan por Panamá (PAC, ARCOS, MAYA-1), conectando Norte y Sudamérica.",
+        "sources": ["Operadores de telecomunicaciones", "Mapas de cables submarinos"],
+        "keywords": ["fibra óptica", "cables", "telecomunicaciones"]
+      }
+    ],
+    "deportes": [
+      {
+        "claim": "Mariano Rivera es el único panameño en el Salón de la Fama del Béisbol",
+        "verdict": "FALSE",
+        "confidence": 95,
+        "analysis": "Además de Rivera (2019), Rod Carew también está en el Salón de la Fama (1991), aunque nació en Panamá pero se naturalizó estadounidense.",
+        "sources": ["Baseball Hall of Fame"],
+        "keywords": ["béisbol", "deportes", "mariano rivera"]
+      }
+    ]
+  }
+}

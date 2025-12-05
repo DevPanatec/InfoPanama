@@ -36,24 +36,22 @@ export async function crawlLaPrensa(): Promise<ScrapedArticle[]> {
 
       const page = await context.newPage()
       await page.goto(`${BASE_URL}${section}`, {
-        waitUntil: 'networkidle',
-        timeout: 30000,
+        waitUntil: 'domcontentloaded',
+        timeout: 60000,
       })
 
-      // Esperar a que carguen los artículos
-      await page.waitForSelector('article, .article, .story', { timeout: 10000 }).catch(() => {
-        console.log(`⚠️ No se encontraron artículos en ${section}`)
-      })
+      // Esperar a que cargue la página
+      await page.waitForTimeout(3000)
 
       // Obtener el HTML
       const html = await page.content()
       const $ = cheerio.load(html)
 
-      // Buscar enlaces de artículos
+      // Buscar enlaces de artículos (cualquier link que contenga la sección)
       const articleLinks: string[] = []
-      $('a[href*="/noticias/"], a[href*="/notas/"]').each((_, elem) => {
+      $(`a[href*="${section}/"]`).each((_, elem) => {
         const href = $(elem).attr('href')
-        if (href && !articleLinks.includes(href)) {
+        if (href && !articleLinks.includes(href) && href.includes(section) && href.length > section.length + 10) {
           const fullUrl = href.startsWith('http') ? href : `${BASE_URL}${href}`
           articleLinks.push(fullUrl)
         }

@@ -1,0 +1,112 @@
+[
+  {
+    "claim": "Panamá es el país con mayor crecimiento económico de Centroamérica en 2024",
+    "verdict": "NEEDS_CONTEXT",
+    "analysis": "Si bien Panamá históricamente ha mostrado tasas de crecimiento superiores al promedio regional, la afirmación requiere contexto temporal específico y comparación con datos oficiales del FMI o CEPAL para 2024.",
+    "sources": [
+      "Datos del FMI sobre crecimiento económico regional",
+      "Reportes de CEPAL sobre economías centroamericanas"
+    ],
+    "confidence": 70,
+    "category": "Economía"
+  },
+  {
+    "claim": "El Canal de Panamá genera el 40% del PIB del país",
+    "verdict": "FALSE",
+    "analysis": "Esta cifra es incorrecta. Según la Autoridad del Canal de Panamá (ACP), la vía interoceánica aporta aproximadamente entre 3-6% del PIB nacional directamente. Si se consideran efectos indirectos y servicios relacionados, el impacto total puede llegar al 20-25%, pero nunca al 40%.",
+    "sources": [
+      "Reportes financieros de la ACP",
+      "Estudios económicos del MEF de Panamá"
+    ],
+    "confidence": 95,
+    "category": "Economía"
+  },
+  {
+    "claim": "Panamá tiene la tasa de homicidios más baja de Centroamérica",
+    "verdict": "MIXED",
+    "analysis": "Panamá efectivamente tiene tasas de homicidio relativamente bajas comparadas con El Salvador, Honduras o Guatemala. Sin embargo, países como Costa Rica y Nicaragua también muestran tasas similares o inferiores según el año analizado.",
+    "sources": [
+      "InSight Crime - Estadísticas de Centroamérica",
+      "Observatorio de Seguridad Pública de Panamá"
+    ],
+    "confidence": 80,
+    "category": "Seguridad"
+  },
+  {
+    "claim": "La construcción de la Línea 3 del Metro costará más de 3,000 millones de dólares",
+    "verdict": "TRUE",
+    "analysis": "Según anuncios oficiales del gobierno panameño, la Línea 3 del Metro tiene un costo estimado de aproximadamente 3,500 millones de dólares, lo que confirma la afirmación.",
+    "sources": [
+      "Ministerio de Economía y Finanzas de Panamá",
+      "Metro de Panamá - Anuncios oficiales"
+    ],
+    "confidence": 90,
+    "category": "Infraestructura"
+  },
+  {
+    "claim": "Panamá Papers involucró a más de 200,000 empresas offshore",
+    "verdict": "TRUE",
+    "analysis": "La filtración de los Panamá Papers en 2016 efectivamente reveló información de más de 214,000 entidades offshore creadas a través del bufete Mossack Fonseca.",
+    "sources": [
+      "Consorcio Internacional de Periodistas de Investigación (ICIJ)",
+      "Documentos oficiales de Panamá Papers"
+    ],
+    "confidence": 98,
+    "category": "Corrupción"
+  },
+  {
+    "claim": "El gobierno de Panamá invierte más del 6% del PIB en educación",
+    "verdict": "FALSE",
+    "analysis": "Aunque la constitución panameña establece un mínimo del 6% del PIB para educación, en la práctica las cifras reales han estado por debajo en varios años recientes, rondando el 3-4% según reportes del Banco Mundial.",
+    "sources": [
+      "Banco Mundial - Gasto en educación Panamá",
+      "Presupuesto General del Estado de Panamá"
+    ],
+    "confidence": 85,
+    "category": "Educación"
+  },
+  {
+    "claim": "Tokio Marine adquirió ASSA en una transacción de más de 600 millones de dólares",
+    "verdict": "NEEDS_CONTEXT",
+    "analysis": "Tokio Marine efectivamente adquirió ASSA (Aseguradora Ancón), pero las cifras exactas de la transacción no han sido divulgadas públicamente. Los 600 millones mencionados son estimaciones no confirmadas.",
+    "sources": [
+      "Comunicados de prensa de Tokio Marine",
+      "Superintendencia de Seguros de Panamá"
+    ],
+    "confidence": 65,
+    "category": "Negocios"
+  },
+  {
+    "claim": "Panamá tiene uno de los sistemas de salud más avanzados de Latinoamérica",
+    "verdict": "MIXED",
+    "analysis": "Panamá cuenta con infraestructura hospitalaria moderna en la capital (Hospital Punta Pacífica, San Fernando) que atienden pacientes internacionales. Sin embargo, el sistema público de salud presenta deficiencias significativas en áreas rurales e indígenas. La afirmación es parcialmente cierta dependiendo del sector analizado.",
+    "sources": [
+      "OMS - Informes sobre sistemas de salud",
+      "Ministerio de Salud de Panamá (MINSA)"
+    ],
+    "confidence": 75,
+    "category": "Salud"
+  },
+  {
+    "claim": "Copa Airlines es la aerolínea más puntual de América Latina",
+    "verdict": "TRUE",
+    "analysis": "Copa Airlines ha recibido múltiples reconocimientos por puntualidad, incluyendo el premio OAG (Official Aviation Guide) como la aerolínea más puntual de Latinoamérica en varios años consecutivos.",
+    "sources": [
+      "OAG Punctuality League",
+      "Reportes anuales de Copa Airlines"
+    ],
+    "confidence": 92,
+    "category": "Transporte"
+  },
+  {
+    "claim": "La población indígena de Panamá representa menos del 5% de la población total",
+    "verdict": "FALSE",
+    "analysis": "Según el último censo nacional, la población indígena de Panamá representa aproximadamente el 12.3% de la población total (alrededor de 420,000 personas), distribuida principalmente en las comarcas Guna Yala, Ngäbe-Buglé y Emberá-Wounaan.",
+    "sources": [
+      "Instituto Nacional de Estadística y Censo (INEC)",
+      "Censo Nacional de Panamá"
+    ],
+    "confidence": 95,
+    "category": "Demografía"
+  }
+]

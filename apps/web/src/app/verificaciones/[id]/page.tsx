@@ -5,10 +5,17 @@ import Link from 'next/link'
 import { useQuery } from 'convex/react'
 import { api, type Id } from '@infopanama/convex'
 
-export default function ClaimDetailPage({ params }: { params: { id: string } }) {
+export default async function ClaimDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params
+
+  // This component needs to be converted to use client component pattern properly
+  return <ClaimDetailClient id={params.id} />
+}
+
+function ClaimDetailClient({ id }: { id: string }) {
   // Obtener el claim de Convex
   const claim = useQuery(api.claims.getById, {
-    id: params.id as Id<'claims'>
+    id: id as Id<'claims'>
   })
 
   if (!claim) {

@@ -58,7 +58,7 @@ export default function ClaimsPage() {
       published: { className: 'bg-green-500/10 text-green-600', label: 'Publicada' },
     }
 
-    const config = configs[status]
+    const config = configs[status] || configs.new
 
     return (
       <span className={`inline-flex text-xs ${config.className} px-3 py-1 rounded-full font-semibold`}>
@@ -75,7 +75,7 @@ export default function ClaimsPage() {
       CRITICAL: { className: 'bg-red-500/10 text-red-600', label: 'Crítico' },
     }
 
-    const config = configs[level]
+    const config = configs[level] || configs.LOW
 
     return (
       <span className={`inline-flex text-xs ${config.className} px-3 py-1 rounded-full font-semibold`}>

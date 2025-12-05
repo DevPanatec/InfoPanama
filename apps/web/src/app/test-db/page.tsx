@@ -5,7 +5,7 @@ import { api } from '@infopanama/convex'
 
 export default function TestDBPage() {
   const claims = useQuery(api.claims.list, { limit: 10 })
-  const stats = useQuery(api.claims.stats)
+  const stats = useQuery(api.claims.getStats, {})
   const createClaim = useMutation(api.claims.create)
 
   const handleCreateTestClaim = async () => {

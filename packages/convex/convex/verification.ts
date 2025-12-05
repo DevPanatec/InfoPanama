@@ -1,5 +1,5 @@
 import { v } from 'convex/values'
-import { action, internalMutation } from './_generated/server'
+import { action, internalMutation, MutationCtx } from './_generated/server'
 import { getOpenAIClient, getOpenAIModel } from './lib/openai'
 import { generateVerificationPrompt } from './lib/prompts'
 import { api } from './_generated/api'
@@ -10,13 +10,63 @@ import type { Id } from './_generated/dataModel'
  */
 
 /**
+ * Helper function para guardar veredicto (usado internamente)
+ */
+async function saveVerdictHelper(ctx: any, verdictData: any) {
+  const now = Date.now()
+
+  // Verificar si ya existe un veredicto para este claim
+  const existingVerdict = await ctx.db
+    .query('verdicts')
+    .withIndex('by_claim', (q: any) => q.eq('claimId', verdictData.claimId))
+    .order('desc')
+    .first()
+
+  const version = existingVerdict ? existingVerdict.version + 1 : 1
+
+  // Preparar datos del veredicto
+  const finalVerdictData: any = {
+    claimId: verdictData.claimId,
+    verdict: verdictData.verdict,
+    confidenceScore: verdictData.confidenceScore,
+    summary: verdictData.summary,
+    explanation: verdictData.explanation,
+    evidenceSources: [], // Por ahora vacío
+    modelUsed: verdictData.modelUsed,
+    tokensUsed: verdictData.tokensUsed,
+    processingTime: verdictData.processingTime,
+    version,
+    previousVersionId: existingVerdict?._id,
+    createdAt: now,
+    updatedAt: now,
+  }
+
+  // Agregar campos avanzados si están presentes
+  if (verdictData.evidence || verdictData.context || verdictData.redFlags || verdictData.relatedClaims) {
+    finalVerdictData.advancedData = {
+      evidence: verdictData.evidence || [],
+      context: verdictData.context || '',
+      redFlags: verdictData.redFlags || [],
+      relatedClaims: verdictData.relatedClaims || [],
+    }
+  }
+
+  // Crear nuevo veredicto
+  const verdictId = await ctx.db.insert('verdicts', finalVerdictData)
+
+  // Actualizar el claim
+  await ctx.db.patch(verdictData.claimId, {
+    status: 'review',
+    updatedAt: now,
+  })
+
+  return verdictId
+}
+
+/**
  * Acción para verificar un claim usando OpenAI GPT-5 mini
  */
-export const verifyClaim = action({
-  args: {
-    claimId: v.id('claims'),
-  },
-  handler: async (ctx, args) => {
+async function verifyClaimHandler(ctx: any, args: { claimId: Id<'claims'> }) {
     const startTime = Date.now()
 
     // 1. Obtener el claim de la base de datos
@@ -73,25 +123,21 @@ export const verifyClaim = action({
       })
 
       // 4. Guardar el veredicto en la base de datos con datos avanzados
-      const verdictId = await ctx.runMutation(
-        api.verification.saveVerdict,
-        {
-          claimId: args.claimId,
-          verdict: result.verdict,
-          confidenceScore: result.confidenceScore,
-          summary: result.summary,
-          explanation: result.explanation,
-          keyPoints: result.keyPoints || [],
-          modelUsed: model,
-          tokensUsed: response.usage?.total_tokens || 0,
-          processingTime,
-          // Campos opcionales del sistema avanzado
-          evidence: result.evidence || undefined,
-          context: result.context || undefined,
-          redFlags: result.redFlags || undefined,
-          relatedClaims: result.relatedClaims || undefined,
-        }
-      )
+      const verdictId = await saveVerdictHelper(ctx, {
+        claimId: args.claimId,
+        verdict: result.verdict,
+        confidenceScore: result.confidenceScore,
+        summary: result.summary,
+        explanation: result.explanation,
+        keyPoints: result.keyPoints || [],
+        modelUsed: model,
+        tokensUsed: response.usage?.total_tokens || 0,
+        processingTime,
+        evidence: result.evidence || undefined,
+        context: result.context || undefined,
+        redFlags: result.redFlags || undefined,
+        relatedClaims: result.relatedClaims || undefined,
+      })
 
       return {
         success: true,
@@ -114,7 +160,13 @@ export const verifyClaim = action({
         `Error en verificación: ${error instanceof Error ? error.message : 'Error desconocido'}`
       )
     }
+}
+
+export const verifyClaim = action({
+  args: {
+    claimId: v.id('claims'),
   },
+  handler: verifyClaimHandler,
 })
 
 /**
@@ -214,9 +266,7 @@ export const verifyClaimsBatch = action({
 
     for (const claimId of args.claimIds) {
       try {
-        const result = await ctx.runAction(api.verification.verifyClaim, {
-          claimId,
-        })
+        const result = await verifyClaimHandler(ctx, { claimId })
         results.push({ claimId, success: true, result })
       } catch (error) {
         console.error(`Error verificando claim ${claimId}:`, error)

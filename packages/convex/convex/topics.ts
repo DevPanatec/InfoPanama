@@ -21,16 +21,18 @@ export const list = query({
   handler: async (ctx, args) => {
     const { parentId, limit = 100 } = args
 
-    let topicsQuery = ctx.db.query('topics')
-
+    // Si hay filtro de parentId, usar el índice
     if (parentId !== undefined) {
-      // Si parentId es undefined, buscar tópicos raíz (sin padre)
-      topicsQuery = topicsQuery.withIndex('by_parent', (q) =>
-        parentId === null ? q.eq('parentId', undefined) : q.eq('parentId', parentId)
-      )
+      return await ctx.db
+        .query('topics')
+        .withIndex('by_parent', (q) =>
+          parentId === null ? q.eq('parentId', undefined) : q.eq('parentId', parentId)
+        )
+        .take(limit)
     }
 
-    return await topicsQuery.take(limit)
+    // Si no hay filtro, devolver todos
+    return await ctx.db.query('topics').take(limit)
   },
 })
 

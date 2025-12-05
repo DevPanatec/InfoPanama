@@ -27,20 +27,24 @@ export const list = query({
   handler: async (ctx, args) => {
     const { type, isTrusted, limit = 50 } = args
 
-    let sourcesQuery = ctx.db.query('sources')
+    let sources
 
+    // Si hay filtro de tipo, usar el índice
     if (type) {
-      sourcesQuery = sourcesQuery.withIndex('by_type', (q) => q.eq('type', type))
+      sources = await ctx.db
+        .query('sources')
+        .withIndex('by_type', (q) => q.eq('type', type))
+        .take(limit * 2) // Obtener más por si hay filtrado posterior
+    } else {
+      sources = await ctx.db.query('sources').take(limit * 2)
     }
-
-    const sources = await sourcesQuery.take(limit)
 
     // Filtrar por isTrusted si se proporciona
     if (isTrusted !== undefined) {
-      return sources.filter((s) => s.isTrusted === isTrusted)
+      sources = sources.filter((s) => s.isTrusted === isTrusted)
     }
 
-    return sources
+    return sources.slice(0, limit)
   },
 })
 

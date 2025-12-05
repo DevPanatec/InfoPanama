@@ -217,35 +217,65 @@ ATENCIÓN: Esto parece ser NOTICIA RECIENTE o EMERGENCIA:
 export const FEW_SHOT_EXAMPLES = `
 ## EJEMPLOS DE VERIFICACIONES ANTERIORES:
 
-### Ejemplo 1: Claim Falso
-**Afirmación**: "Panamá tiene la tasa de criminalidad más alta de Centroamérica"
+### Ejemplo 1: Claim FALSO - Economía
+**Afirmación**: "El Canal de Panamá genera el 40% del PIB del país"
 **Veredicto**: FALSE
 **Razonamiento**:
-- Datos del Banco Mundial 2023 muestran que Honduras y El Salvador tienen tasas significativamente más altas
-- Panamá reportó 9.2 homicidios por 100k habitantes
-- Honduras: 36.7, El Salvador: 26.1, Guatemala: 17.3
-- Fuente oficial contradice la afirmación directamente
+- Según la Autoridad del Canal de Panamá (ACP), la vía interoceánica aporta entre 3-6% del PIB directamente
+- Incluyendo efectos indirectos y servicios relacionados, el impacto total es del 20-25%
+- La cifra de 40% es significativamente exagerada
+- Fuentes oficiales (ACP, MEF) contradicen directamente esta cifra
 **Confianza**: 95%
 
-### Ejemplo 2: Claim Mixto
-**Afirmación**: "El gobierno construyó 5,000 viviendas en 2023"
+### Ejemplo 2: Claim VERDADERO - Infraestructura
+**Afirmación**: "La construcción de la Línea 3 del Metro costará más de 3,000 millones de dólares"
+**Veredicto**: TRUE
+**Razonamiento**:
+- Anuncios oficiales del MEF estiman el costo en aproximadamente $3,500 millones
+- Presupuesto aprobado por la Asamblea confirma estas cifras
+- Múltiples fuentes oficiales coinciden en el rango de $3,000-3,500 millones
+- La afirmación es correcta y conservadora
+**Confianza**: 90%
+
+### Ejemplo 3: Claim MIXTO - Salud
+**Afirmación**: "Panamá tiene uno de los sistemas de salud más avanzados de Latinoamérica"
 **Veredicto**: MIXED
 **Razonamiento**:
-- MIVIOT reporta 5,247 viviendas "iniciadas" en 2023
-- Solo 2,890 fueron "completadas y entregadas"
-- La afirmación es técnicamente correcta si incluye "iniciadas"
-- Pero engañosa si el público entiende "completadas"
-**Confianza**: 80%
+- El sector privado en Ciudad de Panamá (Hospital Punta Pacífica, San Fernando) tiene infraestructura de clase mundial
+- Sin embargo, el sistema público (MINSA, CSS) presenta deficiencias importantes en áreas rurales
+- La afirmación es cierta para el sector privado urbano, falsa para el sistema público y zonas remotas
+- Depende de qué sector y región se analice
+**Confianza**: 75%
 
-### Ejemplo 3: Necesita Contexto
-**Afirmación**: "Las exportaciones de Panamá aumentaron 15%"
+### Ejemplo 4: Necesita Contexto - Educación
+**Afirmación**: "El gobierno de Panamá invierte más del 6% del PIB en educación"
 **Veredicto**: NEEDS_CONTEXT
 **Razonamiento**:
-- Dato correcto según Contraloría: +15.3% en Q1 2024
-- PERO: Comparado con Q1 2023 que fue excepcionalmente bajo (-8%)
-- Comparado con 2022, el aumento es solo +3.1%
-- Cherry-picking: Eligieron la comparación más favorable
+- La constitución establece un mínimo del 6% del PIB para educación
+- En la práctica, las cifras reales han estado entre 3-4% según el Banco Mundial en años recientes
+- La afirmación confunde lo "establecido por ley" con la "ejecución real"
+- Es técnicamente correcta como meta legal, pero falsa como realidad presupuestaria
 **Confianza**: 85%
+
+### Ejemplo 5: Claim FALSO - Demografía
+**Afirmación**: "La población indígena de Panamá representa menos del 5% de la población total"
+**Veredicto**: FALSE
+**Razonamiento**:
+- Según el último censo del INEC, la población indígena representa el 12.3% (aproximadamente 420,000 personas)
+- Distribuida principalmente en comarcas Guna Yala, Ngäbe-Buglé y Emberá-Wounaan
+- La cifra real es más del doble de lo afirmado
+- Datos oficiales del censo contradicen directamente esta afirmación
+**Confianza**: 95%
+
+### Ejemplo 6: Claim VERDADERO - Transporte
+**Afirmación**: "Copa Airlines es la aerolínea más puntual de América Latina"
+**Veredicto**: TRUE
+**Razonamiento**:
+- Copa Airlines ha recibido el premio OAG (Official Aviation Guide) como la aerolínea más puntual de Latinoamérica en múltiples años consecutivos
+- Reportes anuales de Copa Airlines confirman estos reconocimientos
+- Fuentes independientes (OAG Punctuality League) verifican el desempeño
+- La afirmación está bien respaldada por datos de terceros confiables
+**Confianza**: 92%
 `
 
 /**

@@ -1,5 +1,5 @@
 import { v } from 'convex/values'
-import { mutation, query } from './_generated/server'
+import { internalMutation, mutation, query } from './_generated/server'
 
 /**
  * SNAPSHOTS - Gestión de snapshots de páginas web
@@ -21,15 +21,21 @@ export const list = query({
   handler: async (ctx, args) => {
     const { articleId, limit = 50 } = args
 
-    let snapshotsQuery = ctx.db.query('snapshots').order('desc')
-
+    // Si hay filtro de artículo, usar el índice
     if (articleId) {
-      snapshotsQuery = snapshotsQuery.withIndex('by_article', (q) =>
-        q.eq('articleId', articleId)
-      )
+      const snapshots = await ctx.db
+        .query('snapshots')
+        .withIndex('by_article', (q) => q.eq('articleId', articleId))
+        .collect()
+
+      // Ordenar manualmente por fecha de creación descendente
+      return snapshots
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .slice(0, limit)
     }
 
-    return await snapshotsQuery.take(limit)
+    // Si no hay filtro, usar orden directo
+    return await ctx.db.query('snapshots').order('desc').take(limit)
   },
 })
 
@@ -223,6 +229,30 @@ export const cleanupOld = mutation({
         url: s.url,
         createdAt: s.createdAt,
       })),
+    }
+  },
+})
+
+// ============================================
+// INTERNAL MUTATIONS (solo para cron jobs)
+// ============================================
+
+/**
+ * Registrar evento de crawl para monitoreo
+ * (Usado por el cron job para tracking)
+ */
+export const createCrawlEvent = internalMutation({
+  args: {
+    timestamp: v.number(),
+    status: v.string(),
+    message: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Por ahora solo logeamos, en el futuro podríamos guardar en una tabla de eventos
+    console.log(`[CRAWL EVENT] ${args.status}: ${args.message}`)
+    return {
+      success: true,
+      timestamp: args.timestamp,
     }
   },
 })

@@ -85,7 +85,9 @@ npm install --legacy-peer-deps
 
 # Configurar variables de entorno
 cp .env.example .env.local
-# Editar .env.local con tus credenciales
+# Editar .env.local con tus credenciales:
+#   - OPENAI_API_KEY: Tu API key de OpenAI
+#   - NEXT_PUBLIC_CONVEX_URL: Tu URL de Convex
 
 # Levantar servicios con Docker (opcional - backend)
 docker-compose up -d
@@ -96,6 +98,21 @@ npm run dev
 # - http://localhost:3000 (sitio público)
 # - http://localhost:3000/admin/dashboard (panel admin)
 ```
+
+### 🕷️ Ejecutar el Crawler
+
+El crawler extrae noticias de medios panameños y crea claims automáticamente con IA:
+
+```bash
+# Windows
+run-crawler.bat
+
+# Linux/Mac
+chmod +x run-crawler.sh
+./run-crawler.sh
+```
+
+Ver [CRAWLER_SETUP.md](CRAWLER_SETUP.md) para documentación completa del crawler.
 
 ## 📋 Variables de Entorno
 

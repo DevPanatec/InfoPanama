@@ -35,8 +35,7 @@ export const getFullGraph = query({
         label: actor.name,
         data: {
           ...actor,
-          description: actor.bio || '',
-          mentionCount: actor.articleCount || 0,
+          mentionCount: 0, // TODO: Calculate from relations
         },
       })
     }
@@ -55,18 +54,23 @@ export const getFullGraph = query({
       })
     }
 
-    // Agregar entidades como nodos
+    // Agregar entidades como nodos (SOLO PERSON y ORGANIZATION - ignorar fechas, locaciones, etc)
     for (const entity of entities) {
-      nodes.push({
-        id: entity._id,
-        type: 'entity',
-        label: entity.name,
-        data: {
-          ...entity,
-          description: entity.metadata?.description || '',
-          mentionCount: entity.mentionCount || 0,
-        },
-      })
+      // Filtrar solo entidades relevantes para el grafo OSINT
+      if (entity.type === 'PERSON' || entity.type === 'ORGANIZATION') {
+        nodes.push({
+          id: entity._id,
+          type: 'entity',
+          label: entity.name,
+          data: {
+            ...entity,
+            description: entity.metadata?.description || '',
+            position: entity.metadata?.position || undefined,
+            affiliation: entity.metadata?.affiliation || undefined,
+            mentionCount: entity.mentionCount || 0,
+          },
+        })
+      }
     }
 
     // Crear edges (conexiones)
@@ -340,5 +344,20 @@ export const getGraphStats = query({
         relations.reduce((sum, r) => sum + r.strength, 0) / relations.length ||
         0,
     }
+  },
+})
+
+/**
+ * Eliminar todas las relaciones (para limpiar datos mock)
+ */
+export const deleteAll = mutation({
+  handler: async (ctx) => {
+    const relations = await ctx.db.query('entityRelations').collect()
+
+    for (const relation of relations) {
+      await ctx.db.delete(relation._id)
+    }
+
+    return { deleted: relations.length }
   },
 })

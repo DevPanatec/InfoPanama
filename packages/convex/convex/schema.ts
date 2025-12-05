@@ -797,7 +797,7 @@ export default defineSchema({
 
     // Tipo de relación
     relationType: v.union(
-      v.literal('owns'), // Dueño de medio
+      v.literal('owns'), // Dueño de medio/empresa
       v.literal('works_for'), // Trabaja para
       v.literal('affiliated_with'), // Afiliado con
       v.literal('mentioned_with'), // Mencionado junto a
@@ -806,7 +806,10 @@ export default defineSchema({
       v.literal('participates_in'), // Participa en evento
       v.literal('related_to'), // Relacionado genérico
       v.literal('opposes'), // Se opone a
-      v.literal('supports') // Apoya a
+      v.literal('supports'), // Apoya a
+      v.literal('political_connection'), // Conexión política
+      v.literal('family'), // Conexión familiar
+      v.literal('business') // Conexión de negocios
     ),
 
     // Fuerza de la relación
