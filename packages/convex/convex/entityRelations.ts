@@ -238,7 +238,10 @@ export const upsertRelation = mutation({
       v.literal('participates_in'),
       v.literal('related_to'),
       v.literal('opposes'),
-      v.literal('supports')
+      v.literal('supports'),
+      v.literal('political_connection'),
+      v.literal('family'),
+      v.literal('business')
     ),
     strength: v.number(),
     confidence: v.number(),

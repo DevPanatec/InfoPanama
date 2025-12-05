@@ -1,0 +1,54 @@
+name: Crawler Automático
+
+# Ejecutar 3 veces al día (cada 8 horas)
+on:
+  schedule:
+    # A las 6 AM UTC (2 AM Panamá)
+    - cron: '0 6 * * *'
+    # A las 2 PM UTC (10 AM Panamá)
+    - cron: '0 14 * * *'
+    # A las 10 PM UTC (6 PM Panamá)
+    - cron: '0 22 * * *'
+
+  # También permitir ejecución manual desde GitHub
+  workflow_dispatch:
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Instalar Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Ejecutar crawler de claims
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONVEX_URL: ${{ secrets.CONVEX_URL }}
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+        run: |
+          cd packages/crawler
+          npm run crawl:all
+
+      - name: Notificar resultado
+        if: always()
+        run: |
+          if [ $? -eq 0 ]; then
+            echo "✅ Crawler ejecutado exitosamente"
+          else
+            echo "❌ Crawler falló"
+            exit 1
+          fi

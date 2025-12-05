@@ -9,10 +9,10 @@ import { internal } from './_generated/api'
 
 const crons = cronJobs()
 
-// Crawl de noticias cada 6 horas
+// Crawl de noticias cada 8 horas (3 veces al día)
 crons.interval(
   'crawl-news',
-  { hours: 6 }, // Cada 6 horas
+  { hours: 8 }, // Cada 8 horas (3 veces al día)
   internal.crawlers.crawlAndExtract
 )
 
