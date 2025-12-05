@@ -285,6 +285,8 @@ export default defineSchema({
       position: v.optional(v.string()),
       affiliation: v.optional(v.string()),
       description: v.optional(v.string()),
+      owners: v.optional(v.array(v.string())),
+      connections: v.optional(v.any()),
     })),
 
     createdAt: v.number(),
