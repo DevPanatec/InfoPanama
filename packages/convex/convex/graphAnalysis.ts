@@ -3,9 +3,10 @@ import { action } from './_generated/server'
 import { api } from './_generated/api'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-})
+// TEMPORALMENTE COMENTADO para permitir deploy sin OPENAI_API_KEY
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null as any
 
 /**
  * Función helper para analizar un artículo (lógica compartida)

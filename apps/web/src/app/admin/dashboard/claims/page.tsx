@@ -20,7 +20,9 @@ export default function ClaimsPage() {
 
   // Filtrar claims por búsqueda y nivel de riesgo (status ya filtrado en query)
   const filteredClaims = (allClaims || []).filter((claim) => {
-    const matchesSearch = claim.title.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch =
+      claim.claimText.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (claim.description && claim.description.toLowerCase().includes(searchQuery.toLowerCase()))
     const matchesRisk = !riskFilter || claim.riskLevel === riskFilter
     return matchesSearch && matchesRisk
   })
@@ -182,8 +184,13 @@ export default function ClaimsPage() {
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <td className="px-6 py-4">
-                  <p className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">{claim.title}</p>
-                  <p className="text-xs text-gray-500 mt-1">ID: {claim._id}</p>
+                  <p className="font-semibold text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-2">
+                    "{claim.claimText}"
+                  </p>
+                  {claim.description && (
+                    <p className="text-xs text-gray-500 mt-1 line-clamp-1">{claim.description}</p>
+                  )}
+                  <p className="text-xs text-gray-400 mt-1">ID: {claim._id}</p>
                 </td>
                 <td className="px-6 py-4">{getStatusBadge(claim.status)}</td>
                 <td className="px-6 py-4">{getVerdictBadge(claim.verdict || null)}</td>

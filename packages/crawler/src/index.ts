@@ -138,10 +138,15 @@ async function main() {
   console.log('\n\n🤖 FASE 2: EXTRACCIÓN DE CLAIMS CON IA')
   console.log('='.repeat(60))
 
+  // FILTRAR: Solo extraer claims de La Prensa (noticias), NO de Gaceta Oficial (documentos legales)
+  const newsArticles = articles.filter((article) => article.source === 'La Prensa')
+  console.log(`📰 Filtrando artículos de noticias: ${newsArticles.length} de ${articles.length} artículos`)
+  console.log(`   ⚠️  Excluyendo ${articles.length - newsArticles.length} artículos de Gaceta Oficial (no verificables)`)
+
   let totalClaimsExtracted = 0
 
   try {
-    const results = await extractClaimsFromArticles(articles)
+    const results = await extractClaimsFromArticles(newsArticles)
 
     // FASE 3: GUARDAR EN CONVEX
     console.log('\n\n💾 FASE 3: GUARDANDO EN BASE DE DATOS')

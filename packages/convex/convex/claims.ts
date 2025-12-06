@@ -472,18 +472,15 @@ export const updateImage = mutation({
 })
 
 /**
- * Eliminar claim (soft delete - cambiar a rejected)
+ * Eliminar claim (HARD DELETE - elimina permanentemente)
  */
 export const remove = mutation({
   args: {
     id: v.id('claims'),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.id, {
-      status: 'rejected',
-      isPublic: false,
-      updatedAt: Date.now(),
-    })
+    // HARD DELETE - eliminar permanentemente
+    await ctx.db.delete(args.id)
 
     return args.id
   },
@@ -570,5 +567,37 @@ export const updateVerdict = mutation({
       updatedAt: Date.now(),
     })
     return args.id
+  },
+})
+
+/**
+ * Eliminar claims de Gaceta Oficial Y todos los rejected (documentos legales, no verificables)
+ * HARD DELETE PERMANENTE
+ */
+export const deleteGacetaClaims = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const allClaims = await ctx.db.query('claims').collect()
+
+    let deleted = 0
+    for (const claim of allClaims) {
+      // Eliminar si sourceUrl contiene "gacetaoficial" o si los tags incluyen "Gaceta Oficial" o si está rejected
+      const isGaceta =
+        (claim.sourceUrl && claim.sourceUrl.includes('gacetaoficial')) ||
+        (claim.tags && claim.tags.some((tag: string) => tag === 'Gaceta Oficial')) ||
+        (claim.title && claim.title.includes('Gaceta Oficial')) ||
+        claim.status === 'rejected' // IMPORTANTE: incluir todos los rejected
+
+      if (isGaceta) {
+        // HARD DELETE - eliminar permanentemente
+        await ctx.db.delete(claim._id)
+        deleted++
+      }
+    }
+
+    return {
+      message: `✅ Eliminados PERMANENTEMENTE ${deleted} claims de Gaceta Oficial`,
+      deleted,
+    }
   },
 })
