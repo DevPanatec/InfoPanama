@@ -10,6 +10,9 @@ import 'dotenv/config'
 import { ConvexHttpClient } from 'convex/browser'
 import { crawlLaPrensa } from './crawlers/la-prensa.js'
 import { crawlGacetaOficial } from './crawlers/gaceta-oficial.js'
+import { crawlTVN } from './crawlers/tvn.js'
+import { crawlTelemetro } from './crawlers/telemetro.js'
+import { crawlPanamaAmerica } from './crawlers/panama-america.js'
 import { extractClaimsFromArticles } from './processors/claim-extractor.js'
 import type { ScrapedArticle } from './types/index.js'
 
@@ -54,6 +57,24 @@ const SOURCE_CONFIG: Record<
     name: 'Gaceta Oficial de Panamá',
     url: 'https://www.gacetaoficial.gob.pa',
     type: 'official',
+  },
+  'TVN': {
+    slug: 'tvn',
+    name: 'TVN',
+    url: 'https://www.tvn-2.com',
+    type: 'media',
+  },
+  'Telemetro': {
+    slug: 'telemetro',
+    name: 'Telemetro',
+    url: 'https://www.telemetro.com',
+    type: 'media',
+  },
+  'Panama América': {
+    slug: 'panama-america',
+    name: 'Panama América',
+    url: 'https://www.panamaamerica.com.pa',
+    type: 'media',
   },
 }
 
@@ -123,7 +144,22 @@ async function main() {
     const prensaArticles = await crawlLaPrensa()
     articles = [...articles, ...prensaArticles]
 
-    // Crawl Gaceta Oficial
+    // Crawl TVN
+    console.log('\n📺 Crawling TVN...')
+    const tvnArticles = await crawlTVN()
+    articles = [...articles, ...tvnArticles]
+
+    // Crawl Telemetro
+    console.log('\n📺 Crawling Telemetro...')
+    const telemetroArticles = await crawlTelemetro()
+    articles = [...articles, ...telemetroArticles]
+
+    // Crawl Panama América
+    console.log('\n📰 Crawling Panama América...')
+    const panamaAmericaArticles = await crawlPanamaAmerica()
+    articles = [...articles, ...panamaAmericaArticles]
+
+    // Crawl Gaceta Oficial (pero se filtrará después)
     console.log('\n🏛️  Crawling Gaceta Oficial...')
     const gacetaArticles = await crawlGacetaOficial()
     articles = [...articles, ...gacetaArticles]
@@ -138,9 +174,13 @@ async function main() {
   console.log('\n\n🤖 FASE 2: EXTRACCIÓN DE CLAIMS CON IA')
   console.log('='.repeat(60))
 
-  // FILTRAR: Solo extraer claims de La Prensa (noticias), NO de Gaceta Oficial (documentos legales)
-  const newsArticles = articles.filter((article) => article.source === 'La Prensa')
+  // FILTRAR: Extraer claims de TODOS los medios noticiosos, EXCEPTO Gaceta Oficial (documentos legales)
+  const newsArticles = articles.filter((article) =>
+    article.source !== 'Gaceta Oficial de Panamá' &&
+    !article.url?.includes('gacetaoficial.gob.pa')
+  )
   console.log(`📰 Filtrando artículos de noticias: ${newsArticles.length} de ${articles.length} artículos`)
+  console.log(`   ✅ Procesando medios: La Prensa, TVN, Telemetro, Panama América y otros`)
   console.log(`   ⚠️  Excluyendo ${articles.length - newsArticles.length} artículos de Gaceta Oficial (no verificables)`)
 
   let totalClaimsExtracted = 0
