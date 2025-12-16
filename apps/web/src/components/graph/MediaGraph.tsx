@@ -37,6 +37,7 @@ export function MediaGraph({
   height = '600px',
 }: MediaGraphProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const [focusedSearchNode, setFocusedSearchNode] = useState<string | null>(null)
 
   // Obtener TODOS los nodos del grafo OSINT
   const graphData = useQuery(api.entityRelations.getFullGraph)
@@ -172,23 +173,22 @@ export function MediaGraph({
       .trim()
   }
 
-  // Encontrar nodo por búsqueda
-  const searchedNode = useMemo(() => {
+  // Encontrar TODOS los nodos que coincidan con la búsqueda
+  const searchResults = useMemo(() => {
     if (!filters?.searchQuery || filters.searchQuery.length === 0) {
-      return null
+      return []
     }
 
     const query = normalizeText(filters.searchQuery)
 
-    // IMPORTANTE: Buscar primero en TODOS los nodos (sin filtrar)
-    // para asegurarnos de que el nodo existe en la base de datos
-    const allNodesFromDB = graphData?.nodes || []
-    const existsInDB = allNodesFromDB.find((n) =>
+    // Buscar TODOS los nodos visibles que coincidan
+    const matchingNodes = nodes.filter((n) =>
       normalizeText(n.label).includes(query)
     )
 
-    // Buscar nodo en los nodos VISIBLES (después de filtros)
-    const found = nodes.find((n) =>
+    // También buscar en TODOS los nodos de la BD para saber cuántos están ocultos
+    const allNodesFromDB = graphData?.nodes || []
+    const allMatches = allNodesFromDB.filter((n) =>
       normalizeText(n.label).includes(query)
     )
 
@@ -197,17 +197,17 @@ export function MediaGraph({
       queryNormalized: query,
       totalNodesInDB: allNodesFromDB.length,
       visibleNodesAfterFilters: nodes.length,
-      existsInDB: existsInDB ? `SÍ: "${existsInDB.label}"` : 'NO',
-      foundInVisible: found ? `SÍ: "${found.label}" (${found.id})` : 'NO - OCULTO POR FILTROS',
-      sampleVisibleNodes: nodes.slice(0, 5).map(n => n.label).join(', ')
+      matchingVisible: matchingNodes.length,
+      matchingTotal: allMatches.length,
+      hiddenMatches: allMatches.length - matchingNodes.length,
+      results: matchingNodes.map(n => n.label).join(', ')
     })
 
-    if (existsInDB && !found) {
-      console.warn(`⚠️ El nodo "${existsInDB.label}" existe en la BD pero está OCULTO por filtros activos`)
-    }
-
-    return found || null
+    return matchingNodes
   }, [filters?.searchQuery, nodes, graphData])
+
+  // Primer nodo de los resultados (para hacer focus inicial)
+  const searchedNode = searchResults.length > 0 ? searchResults[0] : null
 
   // Log de búsqueda
   useEffect(() => {
@@ -300,26 +300,20 @@ export function MediaGraph({
     )
   }
 
-  // Verificar si el nodo buscado existe pero está oculto
-  const searchNodeHidden = useMemo(() => {
+  // Calcular nodos ocultos
+  const hiddenMatches = useMemo(() => {
     if (!filters?.searchQuery || filters.searchQuery.length === 0) {
-      return null
+      return 0
     }
 
     const query = normalizeText(filters.searchQuery)
     const allNodesFromDB = graphData?.nodes || []
-    const existsInDB = allNodesFromDB.find((n) =>
-      normalizeText(n.label).includes(query)
-    )
-    const found = nodes.find((n) =>
+    const allMatches = allNodesFromDB.filter((n) =>
       normalizeText(n.label).includes(query)
     )
 
-    if (existsInDB && !found) {
-      return existsInDB.label
-    }
-    return null
-  }, [filters?.searchQuery, nodes, graphData])
+    return allMatches.length - searchResults.length
+  }, [filters?.searchQuery, searchResults, graphData])
 
   // Renderizar grafo
   return (
@@ -330,24 +324,81 @@ export function MediaGraph({
           edges={edges}
           onNodeClick={(nodeId) => setSelectedNodeId(nodeId)}
           height={height}
-          focusNode={searchedNode ? String(searchedNode.id) : undefined}
+          focusNode={focusedSearchNode || (searchedNode ? String(searchedNode.id) : undefined)}
           zoomLevel={filters?.zoomLevel}
         />
 
-        {/* Mensaje cuando el nodo está oculto por filtros */}
-        {filters?.searchQuery && searchNodeHidden && (
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-amber-500 text-white px-4 py-3 rounded-lg shadow-lg border border-amber-600 max-w-md">
-            <p className="text-sm font-medium">
-              ⚠️ El nodo "{searchNodeHidden}" existe pero está oculto por los filtros activos.
-            </p>
-            <p className="text-xs mt-1 opacity-90">
-              Intenta desactivar algunos filtros para verlo.
-            </p>
+        {/* Panel de Resultados de Búsqueda */}
+        {filters?.searchQuery && searchResults.length > 0 && (
+          <div className="absolute top-4 right-4 bg-white border-2 border-blue-500 rounded-lg shadow-2xl w-80 max-h-96 overflow-hidden z-10">
+            <div className="bg-blue-500 text-white px-4 py-3 font-semibold flex items-center justify-between">
+              <span>
+                🔍 {searchResults.length} resultado{searchResults.length !== 1 ? 's' : ''}
+              </span>
+              <button
+                onClick={() => setFocusedSearchNode(null)}
+                className="text-white hover:text-blue-100 transition"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-80">
+              {searchResults.map((node, index) => (
+                <button
+                  key={node.id}
+                  onClick={() => {
+                    setFocusedSearchNode(String(node.id))
+                    setSelectedNodeId(String(node.id))
+                  }}
+                  className={`w-full px-4 py-3 text-left hover:bg-blue-50 transition border-b border-gray-200 ${
+                    focusedSearchNode === String(node.id) ? 'bg-blue-100' : ''
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-3 h-3 rounded-full ${
+                        node.group === 'person'
+                          ? 'bg-blue-500'
+                          : node.group === 'organization'
+                          ? 'bg-purple-500'
+                          : node.group === 'media'
+                          ? 'bg-red-500'
+                          : node.group === 'event'
+                          ? 'bg-green-500'
+                          : 'bg-orange-500'
+                      }`}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 truncate">{node.label}</p>
+                      <p className="text-xs text-gray-500 capitalize">
+                        {node.group === 'person'
+                          ? 'Persona'
+                          : node.group === 'organization'
+                          ? 'Organización'
+                          : node.group === 'media'
+                          ? 'Medio'
+                          : node.group === 'event'
+                          ? 'Evento'
+                          : 'POI'}
+                      </p>
+                    </div>
+                    {focusedSearchNode === String(node.id) && (
+                      <span className="text-blue-500 font-bold">👁️</span>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+            {hiddenMatches > 0 && (
+              <div className="bg-amber-50 border-t border-amber-200 px-4 py-2 text-xs text-amber-800">
+                ⚠️ {hiddenMatches} resultado{hiddenMatches !== 1 ? 's' : ''} oculto{hiddenMatches !== 1 ? 's' : ''} por filtros
+              </div>
+            )}
           </div>
         )}
 
-        {/* Mensaje cuando no se encuentra el nodo */}
-        {filters?.searchQuery && !searchedNode && !searchNodeHidden && (
+        {/* Mensaje cuando no se encuentra ningún nodo */}
+        {filters?.searchQuery && searchResults.length === 0 && (
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg border border-red-600 max-w-md">
             <p className="text-sm font-medium">
               ❌ No se encontró ningún nodo con: "{filters.searchQuery}"
