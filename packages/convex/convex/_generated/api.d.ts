@@ -10,6 +10,7 @@
 
 import type * as actors from "../actors.js";
 import type * as articles from "../articles.js";
+import type * as auditEntities from "../auditEntities.js";
 import type * as auditLogs from "../auditLogs.js";
 import type * as claimRequests from "../claimRequests.js";
 import type * as claims from "../claims.js";
@@ -47,6 +48,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   actors: typeof actors;
   articles: typeof articles;
+  auditEntities: typeof auditEntities;
   auditLogs: typeof auditLogs;
   claimRequests: typeof claimRequests;
   claims: typeof claims;

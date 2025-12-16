@@ -3,36 +3,57 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save, User } from 'lucide-react'
+import { useMutation } from 'convex/react'
+import { api } from '@infopanama/convex'
+import { toast } from 'sonner'
 
 export default function NuevoPerfilPage() {
   const router = useRouter()
   const [name, setName] = useState('')
-  const [type, setType] = useState('politician')
-  const [position, setPosition] = useState('')
+  const [type, setType] = useState('person')
+  const [riskLevel, setRiskLevel] = useState('MEDIUM')
   const [description, setDescription] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
-  const handleSave = () => {
+  const createActor = useMutation(api.actors.create)
+
+  const handleSave = async () => {
     if (!name.trim()) {
-      alert('El nombre es requerido')
-      return
-    }
-    if (!position.trim()) {
-      alert('El cargo/posición es requerido')
+      toast.error('El nombre es requerido', {
+        description: 'Por favor ingresa un nombre para el actor'
+      })
       return
     }
 
     setIsSaving(true)
-    // Simular guardado
-    setTimeout(() => {
+    const toastId = toast.loading('Creando actor...')
+
+    try {
+      const actorId = await createActor({
+        name: name.trim(),
+        type: type as any,
+        riskLevel: riskLevel as any,
+        description: description.trim() || undefined,
+      })
+
+      toast.success('Actor creado correctamente', {
+        id: toastId,
+        description: `${name} ha sido agregado exitosamente`,
+      })
+
+      router.push(`/admin/dashboard/actores/${actorId}`)
+    } catch (error) {
+      console.error('Error al crear actor:', error)
+      toast.error('Error al crear el actor', {
+        id: toastId,
+        description: 'Por favor intenta nuevamente',
+      })
       setIsSaving(false)
-      alert('Perfil creado correctamente')
-      router.push('/admin/dashboard/actores')
-    }, 1000)
+    }
   }
 
   return (
-    <div className="p-8 bg-gradient-to-br from-gray-50 to-purple-50/30 min-h-screen">
+    <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50/30 min-h-screen">
       {/* Header */}
       <div className="mb-8">
         <button
@@ -43,7 +64,7 @@ export default function NuevoPerfilPage() {
           Volver a Perfiles
         </button>
 
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent mb-2">
           Nuevo Perfil
         </h1>
         <p className="text-gray-600">Crear un nuevo perfil para monitorear</p>
@@ -53,7 +74,7 @@ export default function NuevoPerfilPage() {
         <div className="bg-white rounded-2xl p-6 border-2 border-gray-200 shadow-lg space-y-6">
           {/* Avatar Preview */}
           <div className="flex justify-center">
-            <div className="h-24 w-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
+            <div className="h-24 w-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white">
               {name ? (
                 <span className="text-3xl font-bold">{name.charAt(0).toUpperCase()}</span>
               ) : (
@@ -72,39 +93,47 @@ export default function NuevoPerfilPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ej: José Raúl Mulino"
-              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all outline-none"
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
             />
           </div>
 
           {/* Tipo */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Tipo de perfil *
+              Tipo de actor *
             </label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all outline-none"
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
             >
-              <option value="politician">Político</option>
-              <option value="institution">Institución</option>
-              <option value="organization">Organización</option>
-              <option value="media">Medio de Comunicación</option>
+              <option value="person">Persona</option>
+              <option value="group">Grupo</option>
+              <option value="media_outlet">Medio de Comunicación</option>
+              <option value="official">Oficial</option>
+              <option value="verified_account">Cuenta Verificada</option>
+              <option value="troll_network">Red Troll</option>
+              <option value="botnet">Botnet</option>
+              <option value="HB">HB</option>
+              <option value="anonymous">Anónimo</option>
             </select>
           </div>
 
-          {/* Cargo/Posición */}
+          {/* Nivel de Riesgo */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Cargo/Posición *
+              Nivel de Riesgo *
             </label>
-            <input
-              type="text"
-              value={position}
-              onChange={(e) => setPosition(e.target.value)}
-              placeholder="Ej: Presidente de Panamá"
-              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all outline-none"
-            />
+            <select
+              value={riskLevel}
+              onChange={(e) => setRiskLevel(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+            >
+              <option value="LOW">Bajo</option>
+              <option value="MEDIUM">Medio</option>
+              <option value="HIGH">Alto</option>
+              <option value="CRITICAL">Crítico</option>
+            </select>
           </div>
 
           {/* Descripción */}
@@ -126,7 +155,7 @@ export default function NuevoPerfilPage() {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 font-semibold disabled:opacity-50"
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 font-semibold disabled:opacity-50"
             >
               <Save className="h-5 w-5" />
               {isSaving ? 'Guardando...' : 'Crear Perfil'}

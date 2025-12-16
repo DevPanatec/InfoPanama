@@ -5,11 +5,14 @@
 export interface ScrapedArticle {
   title: string
   url: string
+  sourceUrl: string
+  sourceName: string
+  sourceType: 'news_website' | 'social_media' | 'official_document'
   content: string
-  author?: string
-  publishedDate: Date
+  scrapedAt: string
+  publishedDate: string
   imageUrl?: string
-  source: string
+  author?: string
   category?: string
 }
 

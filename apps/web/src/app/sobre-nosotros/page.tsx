@@ -36,7 +36,7 @@ export default function SobreNosotrosPage() {
     {
       icon: Brain,
       title: 'IA Avanzada',
-      description: 'GPT-4.1 y modelos especializados para análisis de texto',
+      description: 'Modelos de inteligencia artificial especializados para análisis de texto',
     },
     {
       icon: Zap,

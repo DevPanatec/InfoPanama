@@ -50,8 +50,8 @@ infopanama/
 
 ### Scraping y Orquestación
 - **Playwright** (scraping dinámico)
-- **ProxyScrape** (rotación de proxies)
-- **Prefect** (orquestación de workflows)
+- **Browserbase** (navegadores cloud con anti-detección e IPs rotativas)
+- **Prefect** (orquestación de workflows - opcional)
 
 ### Infraestructura
 - **DigitalOcean Droplet** (Ubuntu 24.04)
@@ -156,16 +156,56 @@ npm run test:coverage
 
 ## 📦 Deployment
 
+### Arquitectura de Producción
+
+- **Frontend**: Vercel (Next.js App Router con SSR/SSG)
+- **Backend/Database**: Convex (Real-time + File Storage)
+- **Crawlers**: Digital Ocean App Platform (Workers + Cron Jobs)
+- **Scraping Avanzado**: Browserbase (Headless browsers con anti-detección)
+
+### Guías de Despliegue Completas
+
+📚 **Documentación detallada:**
+
+- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Lista completa de verificación
+- **[DEPLOY_DIGITAL_OCEAN.md](DEPLOY_DIGITAL_OCEAN.md)** - Guía paso a paso para Digital Ocean
+- **[BROWSERBASE_SETUP.md](packages/crawler/BROWSERBASE_SETUP.md)** - Configuración de scraping avanzado
+- **[ANTICAPTCHA_SETUP.md](packages/crawler/ANTICAPTCHA_SETUP.md)** - Configuración de captcha solving (opcional)
+- **[scripts/README.md](scripts/README.md)** - Scripts de setup automático
+- **[QUICK_COMMANDS.md](QUICK_COMMANDS.md)** - Referencia rápida de comandos
+
+### Quick Deploy
+
 ```bash
-# Build producción
-npm run build
+# 1. Setup automático de Digital Ocean
+# Windows
+.\scripts\setup-digital-ocean.ps1
 
-# Deploy staging
-npm run deploy:staging
+# macOS/Linux
+./scripts/setup-digital-ocean.sh
 
-# Deploy producción
-npm run deploy:prod
+# 2. Frontend (Vercel)
+# - Conecta tu repo en vercel.com
+# - Configura variables de entorno
+# - Deploy automático en push a main
+
+# 3. Crawlers (Digital Ocean)
+# - Crea app en cloud.digitalocean.com/apps
+# - Configura cron jobs (3x/día)
+# - Ver guía completa en DEPLOY_DIGITAL_OCEAN.md
 ```
+
+### Costos Estimados
+
+| Servicio | Plan | Costo/mes |
+|----------|------|-----------|
+| Vercel | Pro | $20 (o Free) |
+| Convex | Professional | $25 (o Free) |
+| Digital Ocean | Basic | $5 |
+| Browserbase | Hobby | $20 |
+| OpenAI | Pay-as-you-go | ~$5-10 |
+| AntiCaptcha | Pay-as-you-go (opcional) | ~$0-5 |
+| **TOTAL** | | **$30-85/mes** |
 
 ## 🎯 Roadmap MVP (8 Semanas)
 

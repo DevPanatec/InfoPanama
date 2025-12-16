@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { Menu, X, Plus, Bell as BellIcon } from 'lucide-react'
@@ -36,15 +37,21 @@ export function Navbar() {
   }, [isOpen])
 
   return (
-    <nav className="border-b border-slate-700 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 backdrop-blur sticky top-0 z-50 shadow-lg">
+    <nav className="border-b border-slate-200 bg-gradient-to-b from-white to-soft-blue/20 backdrop-blur sticky top-0 z-50 shadow-xl">
       <div className="container mx-auto px-4">
         <div className="flex h-20 items-center justify-between">
           <Link
             href="/"
-            className="text-2xl md:text-3xl font-bold hover:scale-105 transition-transform duration-200 cursor-pointer group"
+            className="hover:opacity-90 transition-opacity duration-200 cursor-pointer"
           >
-            <span className="text-white group-hover:text-blue-100 transition-colors">Verifica</span>
-            <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-cyan-300 transition-all">Pty</span>
+            <Image
+              src="/images/logo.png"
+              alt="VerificaPty"
+              width={180}
+              height={45}
+              className="h-10 w-auto"
+              priority
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -55,8 +62,8 @@ export function Navbar() {
                 href={link.href}
                 className={`text-base font-medium transition ${
                   pathname === link.href
-                    ? 'text-blue-400'
-                    : 'text-slate-300 hover:text-blue-400'
+                    ? 'text-digital-blue'
+                    : 'text-blue-gray hover:text-digital-blue'
                 }`}
               >
                 {link.label}
@@ -90,15 +97,15 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-slate-700 transition"
+            className="md:hidden p-2 rounded-lg hover:bg-soft-blue transition"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? 'Cerrar menú' : 'Abrir menú'}
             aria-expanded={isOpen}
           >
             {isOpen ? (
-              <X className="h-6 w-6 text-white" />
+              <X className="h-6 w-6 text-verifica-blue" />
             ) : (
-              <Menu className="h-6 w-6 text-white" />
+              <Menu className="h-6 w-6 text-verifica-blue" />
             )}
           </button>
         </div>
@@ -114,7 +121,7 @@ export function Navbar() {
 
       {/* Mobile Menu Panel */}
       <div
-        className={`fixed top-20 left-0 right-0 bg-gradient-to-b from-slate-900 to-slate-800 border-b border-slate-700 shadow-xl md:hidden z-50 transform transition-all duration-300 ease-in-out ${
+        className={`fixed top-20 left-0 right-0 bg-white border-b border-slate-200 shadow-xl md:hidden z-50 transform transition-all duration-300 ease-in-out ${
           isOpen
             ? 'translate-y-0 opacity-100'
             : '-translate-y-full opacity-0 pointer-events-none'
@@ -128,8 +135,8 @@ export function Navbar() {
                 href={link.href}
                 className={`px-4 py-3 rounded-lg text-base font-medium transition ${
                   pathname === link.href
-                    ? 'bg-blue-600 text-white'
-                    : 'text-slate-300 hover:bg-slate-700 hover:text-blue-400'
+                    ? 'bg-digital-blue text-white'
+                    : 'text-blue-gray hover:bg-soft-blue hover:text-digital-blue'
                 }`}
                 onClick={() => setIsOpen(false)}
               >
@@ -142,7 +149,7 @@ export function Navbar() {
           <div className="mt-4 pt-4 border-t border-slate-700 space-y-2">
             <Link
               href="/solicitar-verificacion"
-              className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-500 transition"
+              className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-digital-blue text-white font-medium rounded-lg hover:bg-verifica-blue transition"
               onClick={() => setIsOpen(false)}
             >
               <Plus className="h-4 w-4" />

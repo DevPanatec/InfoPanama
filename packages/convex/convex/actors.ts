@@ -76,6 +76,21 @@ export const getById = query({
 })
 
 /**
+ * Obtener actor por slug (para página pública)
+ */
+export const getBySlug = query({
+  args: { slug: v.string() },
+  handler: async (ctx, args) => {
+    const actor = await ctx.db
+      .query('actors')
+      .filter((q) => q.eq(q.field('slug'), args.slug))
+      .first()
+
+    return actor
+  },
+})
+
+/**
  * Buscar actores
  */
 export const search = query({

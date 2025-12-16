@@ -130,8 +130,23 @@ export function MediaGraph({
         // Grosor basado en strength (entre 1 y 5)
         const width = Math.max(1, Math.min(5, (edge.strength || 50) / 20))
 
-        // Etiqueta del tipo de relación
-        const relationLabel = edge.type.replace(/_/g, ' ')
+        // Etiqueta del tipo de relación (traducida al español)
+        const relationLabels: Record<string, string> = {
+          'owns': 'dueño de',
+          'works_for': 'trabaja para',
+          'affiliated_with': 'afiliado con',
+          'mentioned_with': 'mencionado con',
+          'quoted_by': 'citado por',
+          'covers': 'cubre',
+          'participates_in': 'participa en',
+          'related_to': 'relacionado con',
+          'opposes': 'se opone a',
+          'supports': 'apoya a',
+          'political_connection': 'conexión política',
+          'family': 'familia',
+          'business': 'negocios',
+        }
+        const relationLabel = relationLabels[edge.type] || edge.type.replace(/_/g, ' ')
 
         return {
           id: edge.id || `edge-${index}`,

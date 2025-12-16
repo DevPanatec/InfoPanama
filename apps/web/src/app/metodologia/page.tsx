@@ -13,7 +13,7 @@ export default function MetodologiaPage() {
     {
       number: 2,
       title: 'Análisis con IA',
-      description: 'GPT-4.1 y modelos especializados extraen afirmaciones y analizan contenido.',
+      description: 'Modelos de inteligencia artificial avanzados extraen afirmaciones y analizan contenido.',
       icon: Brain,
       color: 'from-blue-600 to-blue-700',
       bgColor: 'bg-blue-50 border-blue-200',

@@ -133,7 +133,7 @@ function ClaimCard({ claim }: { claim: Claim }) {
   return (
     <Link
       href={`/verificaciones/${claim._id}`}
-      className="group flex gap-4 bg-white rounded-xl p-4 border border-slate-200 hover:border-blue-300 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 hover:-translate-y-1"
+      className="group flex gap-4 bg-white rounded-xl p-5 border border-slate-200 hover:border-digital-blue hover:shadow-xl hover:scale-[1.01] transition-all duration-300"
     >
       {/* Thumbnail / Image or Verdict Badge */}
       <div className="flex-shrink-0 relative overflow-hidden rounded-xl">
@@ -171,23 +171,23 @@ function ClaimCard({ claim }: { claim: Claim }) {
         </div>
 
         {/* Title */}
-        <h3 className="font-bold text-slate-800 mb-1.5 group-hover:text-blue-600 transition-colors duration-300 line-clamp-1">
+        <h3 className="font-bold text-deep-blue mb-2 group-hover:text-digital-blue transition-colors duration-300 line-clamp-2 text-lg">
           {claim.title}
         </h3>
 
         {/* Description */}
-        <p className="text-sm text-slate-500 line-clamp-2 mb-2 group-hover:text-slate-700 transition-colors duration-300">
+        <p className="text-sm text-blue-gray line-clamp-2 mb-3 group-hover:text-deep-blue transition-colors duration-300 leading-relaxed">
           {claim.description}
         </p>
 
         {/* Footer */}
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-400 group-hover:text-slate-500 transition-colors duration-300">
+          <span className="text-xs text-blue-gray group-hover:text-verifica-blue transition-colors duration-300 font-medium">
             {timeAgo(claim.publishedAt || claim.createdAt)}
           </span>
           <span className={`text-xs font-bold ${verdictInfo.color} flex items-center gap-1 group-hover:gap-2 transition-all duration-300`}>
             {verdictInfo.label}
-            <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform duration-300" />
+            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
           </span>
         </div>
       </div>

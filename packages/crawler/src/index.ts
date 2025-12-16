@@ -13,7 +13,14 @@ import { crawlGacetaOficial } from './crawlers/gaceta-oficial.js'
 import { crawlTVN } from './crawlers/tvn.js'
 import { crawlTelemetro } from './crawlers/telemetro.js'
 import { crawlPanamaAmerica } from './crawlers/panama-america.js'
+import { crawlFocoInstagram } from './crawlers/foco-instagram.js'
+import { crawlCritica } from './crawlers/critica.js'
+import { crawlLaEstrella } from './crawlers/la-estrella.js'
+import { crawlCapitalFinanciero } from './crawlers/capital-financiero.js'
+import { crawlMetroLibre } from './crawlers/metro-libre.js'
+import { crawlRPCRadio } from './crawlers/rpc-radio.js'
 import { extractClaimsFromArticles } from './processors/claim-extractor.js'
+import { extractActorsFromClaims } from './processors/actor-extractor.js'
 import type { ScrapedArticle } from './types/index.js'
 
 const CONVEX_URL = process.env.CONVEX_URL || process.env.NEXT_PUBLIC_CONVEX_URL
@@ -74,6 +81,42 @@ const SOURCE_CONFIG: Record<
     slug: 'panama-america',
     name: 'Panama América',
     url: 'https://www.panamaamerica.com.pa',
+    type: 'media',
+  },
+  'Foco': {
+    slug: 'foco',
+    name: 'Foco',
+    url: 'https://foco.com.pa',
+    type: 'media',
+  },
+  'Crítica': {
+    slug: 'critica',
+    name: 'Crítica',
+    url: 'https://www.critica.com.pa',
+    type: 'media',
+  },
+  'La Estrella de Panamá': {
+    slug: 'la-estrella',
+    name: 'La Estrella de Panamá',
+    url: 'https://www.laestrella.com.pa',
+    type: 'media',
+  },
+  'El Capital Financiero': {
+    slug: 'capital-financiero',
+    name: 'El Capital Financiero',
+    url: 'https://elcapitalfinanciero.com',
+    type: 'media',
+  },
+  'Metro Libre': {
+    slug: 'metro-libre',
+    name: 'Metro Libre',
+    url: 'https://www.metrolibre.com',
+    type: 'media',
+  },
+  'RPC Radio': {
+    slug: 'rpc-radio',
+    name: 'RPC Radio',
+    url: 'https://www.rpc.com.pa',
     type: 'media',
   },
 }
@@ -159,6 +202,47 @@ async function main() {
     const panamaAmericaArticles = await crawlPanamaAmerica()
     articles = [...articles, ...panamaAmericaArticles]
 
+    // Crawl Crítica
+    console.log('\n📰 Crawling Crítica...')
+    const criticaArticles = await crawlCritica()
+    articles = [...articles, ...criticaArticles]
+
+    // Crawl La Estrella de Panamá
+    console.log('\n📰 Crawling La Estrella de Panamá...')
+    const laEstrellaArticles = await crawlLaEstrella()
+    articles = [...articles, ...laEstrellaArticles]
+
+    // Crawl El Capital Financiero
+    console.log('\n📰 Crawling El Capital Financiero...')
+    const capitalArticles = await crawlCapitalFinanciero()
+    articles = [...articles, ...capitalArticles]
+
+    // Crawl Metro Libre
+    console.log('\n📰 Crawling Metro Libre...')
+    const metroLibreArticles = await crawlMetroLibre()
+    articles = [...articles, ...metroLibreArticles]
+
+    // Crawl RPC Radio
+    console.log('\n📻 Crawling RPC Radio...')
+    const rpcArticles = await crawlRPCRadio()
+    articles = [...articles, ...rpcArticles]
+
+    // Crawl Foco (sitio web) - DESACTIVADO: dominio foco.com.pa no existe
+    // TODO: Verificar dominio correcto de Foco o eliminar si solo usan Instagram
+    // console.log('\n📰 Crawling Foco (sitio web)...')
+    // const focoArticles = await crawlFoco()
+    // articles = [...articles, ...focoArticles]
+
+    // Crawl Foco Instagram
+    console.log('\n📸 Crawling Foco Instagram (@focopanama)...')
+    try {
+      const focoIGArticles = await crawlFocoInstagram()
+      articles = [...articles, ...focoIGArticles]
+    } catch (error) {
+      console.error('⚠️  Error crawling Instagram (puede requerir configuración):', error)
+      console.log('   Continuando sin posts de Instagram...')
+    }
+
     // Crawl Gaceta Oficial (pero se filtrará después)
     console.log('\n🏛️  Crawling Gaceta Oficial...')
     const gacetaArticles = await crawlGacetaOficial()
@@ -176,14 +260,15 @@ async function main() {
 
   // FILTRAR: Extraer claims de TODOS los medios noticiosos, EXCEPTO Gaceta Oficial (documentos legales)
   const newsArticles = articles.filter((article) =>
-    article.source !== 'Gaceta Oficial de Panamá' &&
+    article.sourceName !== 'Gaceta Oficial de Panamá' &&
     !article.url?.includes('gacetaoficial.gob.pa')
   )
   console.log(`📰 Filtrando artículos de noticias: ${newsArticles.length} de ${articles.length} artículos`)
-  console.log(`   ✅ Procesando medios: La Prensa, TVN, Telemetro, Panama América y otros`)
+  console.log(`   ✅ Procesando medios: La Prensa, TVN, Telemetro, Panama América, Crítica, La Estrella, Capital Financiero, Metro Libre, RPC Radio, Foco y otros`)
   console.log(`   ⚠️  Excluyendo ${articles.length - newsArticles.length} artículos de Gaceta Oficial (no verificables)`)
 
   let totalClaimsExtracted = 0
+  let totalActorsCreated = 0
 
   try {
     const results = await extractClaimsFromArticles(newsArticles)
@@ -194,16 +279,16 @@ async function main() {
 
     for (const { article, claims } of results) {
       console.log(`\n📝 Procesando "${article.title.substring(0, 50)}..."`)
-      console.log(`   Fuente: ${article.source}`)
+      console.log(`   Fuente: ${article.sourceName}`)
 
       // Primero obtener o crear la fuente
       let articleId = null
       try {
         // Obtener o crear source
-        const source = await getOrCreateSource(article.source)
+        const source = await getOrCreateSource(article.sourceName)
 
         if (!source || !source._id) {
-          throw new Error(`No se pudo obtener sourceId para ${article.source}`)
+          throw new Error(`No se pudo obtener sourceId para ${article.sourceName}`)
         }
 
         console.log(`   📄 Guardando artículo en base de datos...`)
@@ -219,9 +304,10 @@ async function main() {
           htmlContent: article.content, // En el futuro podríamos guardar HTML
           sourceId: source._id,
           author: article.author,
-          publishedDate: article.publishedDate.getTime(),
+          publishedDate: new Date(article.publishedDate).getTime(),
           topics: article.category ? [article.category] : [],
           contentHash: contentHash,
+          imageUrl: article.imageUrl, // ✅ Agregar imagen del artículo
         })
 
         console.log(`   ✅ Artículo guardado: ${articleId}`)
@@ -239,26 +325,46 @@ async function main() {
         continue
       }
 
+      // EXTRACCIÓN AUTOMÁTICA DE ACTORES
+      console.log(`   👥 Extrayendo actores de ${claims.length} claims...`)
+      const actorMap = await extractActorsFromClaims(claims, article.title)
+
+      const actorsCreatedInArticle = Array.from(actorMap.values()).filter(id => id !== null).length
+      if (actorsCreatedInArticle > 0) {
+        totalActorsCreated += actorsCreatedInArticle
+      }
+
       // Guardar cada claim en Convex
-      for (const claim of claims) {
+      for (let i = 0; i < claims.length; i++) {
+        const claim = claims[i]
+        const actorId = actorMap.get(i)
+
         try {
-          // Crear el claim en Convex
-          const claimId = await createClaim({
+          // Crear el claim en Convex con actorId si se encontró/creó uno
+          const claimData: any = {
             title: `${claim.speaker ? claim.speaker + ': ' : ''}"${claim.text.substring(0, 80)}..."`,
             description: claim.context,
             claimText: claim.text,
             category: claim.category,
-            tags: [article.source, article.category || 'General'],
+            tags: [article.sourceName, article.category || 'General'],
             riskLevel: claim.riskLevel,
             sourceType: 'auto_extracted',
             sourceUrl: article.url,
+            imageUrl: article.imageUrl, // ✅ Agregar imagen del artículo al claim
             isPublic: true,
             isFeatured: claim.riskLevel === 'HIGH' || claim.riskLevel === 'CRITICAL',
-            autoPublished: false, // Requiere revisión manual
-            status: 'new', // Nuevo claim para revisión
-          })
+            autoPublished: true, // ✅ Auto-publicar para mostrar en landing
+            status: 'published', // ✅ Publicar directamente (cambiar a 'new' si quieres revisión manual)
+          }
 
-          console.log(`   ✅ Claim creado: ${claimId}`)
+          // Agregar actorId si existe
+          if (actorId) {
+            claimData.actorId = actorId
+          }
+
+          const claimId = await createClaim(claimData)
+
+          console.log(`   ✅ Claim creado: ${claimId}${actorId ? ' (con actor asociado)' : ''}`)
           totalClaimsExtracted++
         } catch (error) {
           console.error(`   ❌ Error guardando claim:`, error)
@@ -281,13 +387,15 @@ async function main() {
   console.log('='.repeat(60))
   console.log(`📰 Artículos scrapeados: ${articles.length}`)
   console.log(`🔍 Claims extraídos: ${totalClaimsExtracted}`)
+  console.log(`👥 Actores creados/actualizados: ${totalActorsCreated}`)
   console.log(`⏱️  Tiempo total: ${duration}s`)
   console.log('='.repeat(60))
 
   console.log('\n💡 Próximos pasos:')
-  console.log('1. Revisar los claims en http://localhost:3000/admin')
-  console.log('2. Aprobar claims para verificación automática')
-  console.log('3. Publicar verificaciones en el homepage')
+  console.log('1. Revisar los claims en http://localhost:3000/admin/dashboard/claims')
+  console.log('2. Verificar actores creados en http://localhost:3000/admin/dashboard/actores')
+  console.log('3. Aprobar claims para verificación automática')
+  console.log('4. Publicar verificaciones en el homepage')
 
   process.exit(0)
 }

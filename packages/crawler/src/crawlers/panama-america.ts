@@ -48,8 +48,22 @@ export async function crawlPanamaAmerica(): Promise<ScrapedArticle[]> {
       $('a[href*="/nacion/"], a[href*="/economia/"], a[href*="/sociedad/"], a[href*="/deportes/"]').each((_, elem) => {
         const href = $(elem).attr('href')
         if (href && !articleLinks.includes(href) && href.length > 20) {
+          // Filtrar URLs malformadas
+          if (
+            href.includes('mailto:') ||
+            href.includes('javascript:') ||
+            href.includes('#') ||
+            href.includes('.com.pa/') === false
+          ) {
+            return // Skip this URL
+          }
+
           const fullUrl = href.startsWith('http') ? href : `${BASE_URL}${href}`
-          articleLinks.push(fullUrl)
+
+          // Validar que la URL sea válida
+          if (fullUrl.startsWith(BASE_URL) && !fullUrl.includes('mailto')) {
+            articleLinks.push(fullUrl)
+          }
         }
       })
 

@@ -55,7 +55,7 @@ export default function AuditPage() {
     const type = action.split('.')[0]
     const configs: Record<string, { color: string; icon: typeof FileEdit }> = {
       claim: { color: 'bg-blue-500/10 text-blue-500', icon: FileEdit },
-      actor: { color: 'bg-purple-500/10 text-purple-500', icon: Shield },
+      actor: { color: 'bg-slate-500/10 text-slate-500', icon: Shield },
       verdict: { color: 'bg-green-500/10 text-green-500', icon: FileEdit },
       user: { color: 'bg-orange-500/10 text-orange-500', icon: User },
       config: { color: 'bg-red-500/10 text-red-500', icon: Shield },
@@ -93,7 +93,7 @@ export default function AuditPage() {
 
         <div className="bg-card rounded-lg p-6 border border-border">
           <div className="flex items-center gap-3 mb-2">
-            <User className="h-8 w-8 text-purple-500" />
+            <User className="h-8 w-8 text-amber-500" />
             <div className="text-3xl font-bold">
               {new Set(DEMO_AUDIT_LOGS.map((l) => l.user)).size}
             </div>

@@ -1,134 +1,85 @@
 'use client'
 
-import { Newspaper, TrendingUp, Plus, Search, CheckCircle } from 'lucide-react'
+import { Newspaper, TrendingUp, Plus, Search, CheckCircle, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { NewSourceModal } from '@/components/admin/NewSourceModal'
-
-const DEMO_FUENTES = [
-  // Medios de comunicación (credibilidad más baja)
-  {
-    id: '1',
-    name: 'TVN Noticias',
-    type: 'media',
-    isTrusted: false,
-    credibilityScore: 68,
-    articleCount: 1234,
-    lastScraped: '2024-01-15 10:30',
-  },
-  {
-    id: '2',
-    name: 'La Prensa',
-    type: 'media',
-    isTrusted: true,
-    credibilityScore: 72,
-    articleCount: 2456,
-    lastScraped: '2024-01-15 10:25',
-  },
-  {
-    id: '3',
-    name: 'Telemetro',
-    type: 'media',
-    isTrusted: false,
-    credibilityScore: 65,
-    articleCount: 1567,
-    lastScraped: '2024-01-15 09:15',
-  },
-  {
-    id: '4',
-    name: 'Mi Diario',
-    type: 'media',
-    isTrusted: false,
-    credibilityScore: 58,
-    articleCount: 987,
-    lastScraped: '2024-01-15 09:00',
-  },
-  {
-    id: '5',
-    name: 'Panamá América',
-    type: 'media',
-    isTrusted: false,
-    credibilityScore: 62,
-    articleCount: 1345,
-    lastScraped: '2024-01-15 08:45',
-  },
-  {
-    id: '6',
-    name: 'Critica',
-    type: 'media',
-    isTrusted: false,
-    credibilityScore: 55,
-    articleCount: 1123,
-    lastScraped: '2024-01-15 08:30',
-  },
-  // Fuentes oficiales (credibilidad alta)
-  {
-    id: '7',
-    name: 'Presidencia de la República',
-    type: 'official',
-    isTrusted: true,
-    credibilityScore: 95,
-    articleCount: 456,
-    lastScraped: '2024-01-15 08:15',
-  },
-  {
-    id: '8',
-    name: 'Ministerio de Salud (MINSA)',
-    type: 'official',
-    isTrusted: true,
-    credibilityScore: 94,
-    articleCount: 567,
-    lastScraped: '2024-01-15 08:00',
-  },
-  {
-    id: '9',
-    name: 'Ministerio de Economía y Finanzas (MEF)',
-    type: 'official',
-    isTrusted: true,
-    credibilityScore: 93,
-    articleCount: 423,
-    lastScraped: '2024-01-15 07:45',
-  },
-  {
-    id: '10',
-    name: 'Asamblea Nacional',
-    type: 'official',
-    isTrusted: true,
-    credibilityScore: 92,
-    articleCount: 389,
-    lastScraped: '2024-01-15 07:30',
-  },
-]
+import { useQuery, useMutation } from 'convex/react'
+import { api } from '@infopanama/convex'
+import { toast } from 'sonner'
 
 export default function FuentesPage() {
   const router = useRouter()
-  const [fuentes, setFuentes] = useState(DEMO_FUENTES)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [trustFilter, setTrustFilter] = useState('')
 
-  const handleNewSource = (newSource: { name: string; type: string; isTrusted: boolean; credibilityScore: number }) => {
-    const source = {
-      id: String(fuentes.length + 1),
-      name: newSource.name,
-      type: newSource.type,
-      isTrusted: newSource.isTrusted,
-      credibilityScore: newSource.credibilityScore,
-      articleCount: 0,
-      lastScraped: new Date().toLocaleString('es-PA', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      }),
-    }
-    setFuentes([source, ...fuentes])
+  // Queries a Convex
+  const allSources = useQuery(api.sources.list, { limit: 100 })
+  const stats = useQuery(api.sources.stats)
+  const createSource = useMutation(api.sources.create)
+
+  // Loading state
+  if (!allSources || !stats) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    )
   }
 
-  const filteredFuentes = fuentes.filter((fuente) => {
-    const matchesSearch = fuente.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const handleNewSource = async (newSource: {
+    name: string
+    slug: string
+    url: string
+    type: string
+    isTrusted: boolean
+    credibilityScore: number
+  }) => {
+    const toastId = toast.loading('Creando fuente...')
+
+    try {
+      await createSource({
+        name: newSource.name,
+        slug: newSource.slug,
+        url: newSource.url,
+        type: newSource.type as any,
+        isTrusted: newSource.isTrusted,
+        credibilityScore: newSource.credibilityScore,
+      })
+
+      toast.success('Fuente creada correctamente', {
+        id: toastId,
+        description: `${newSource.name} ha sido agregada exitosamente`,
+      })
+    } catch (error) {
+      console.error('Error al crear fuente:', error)
+      toast.error('Error al crear la fuente', {
+        id: toastId,
+        description: 'Verifica que el slug no exista o intenta nuevamente.',
+      })
+    }
+  }
+
+  // Helper para badge de tipo
+  const getTypeBadge = (type: string) => {
+    const configs: Record<string, { color: string; label: string }> = {
+      media: { color: 'bg-blue-500/10 text-blue-600', label: 'Medio' },
+      official: { color: 'bg-slate-500/10 text-slate-600', label: 'Oficial' },
+      social_media: { color: 'bg-purple-500/10 text-purple-600', label: 'Red Social' },
+    }
+    const config = configs[type] || { color: 'bg-gray-500/10 text-gray-600', label: type }
+    return (
+      <span className={`inline-flex text-xs px-3 py-1 rounded-full font-semibold ${config.color}`}>
+        {config.label}
+      </span>
+    )
+  }
+
+  // Filtrado local
+  const filteredFuentes = allSources.filter((fuente) => {
+    const matchesSearch = fuente.name?.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesType = !typeFilter || fuente.type === typeFilter
     const matchesTrust = !trustFilter ||
       (trustFilter === 'trusted' && fuente.isTrusted) ||
@@ -141,7 +92,7 @@ export default function FuentesPage() {
       {/* Header con gradiente */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent mb-2">
+          <h1 data-tutorial="sources-title" className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-blue-700 bg-clip-text text-transparent mb-2">
             Fuentes de Información
           </h1>
           <p className="text-slate-600 text-lg">
@@ -149,6 +100,7 @@ export default function FuentesPage() {
           </p>
         </div>
         <button
+          data-tutorial="new-source-button"
           onClick={() => setIsModalOpen(true)}
           className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 transition-all flex items-center gap-2 font-semibold"
         >
@@ -172,12 +124,8 @@ export default function FuentesPage() {
               <div className="bg-blue-500/10 p-3 rounded-xl">
                 <Newspaper className="h-6 w-6 text-blue-600" />
               </div>
-              <div className="flex items-center gap-1 text-xs font-semibold text-blue-600">
-                <TrendingUp className="h-3 w-3" />
-                +2
-              </div>
             </div>
-            <div className="text-3xl font-bold text-blue-600 mb-1">{fuentes.length}</div>
+            <div className="text-3xl font-bold text-blue-600 mb-1">{stats.total}</div>
             <div className="text-sm text-gray-600 font-medium">Total Fuentes</div>
           </div>
         </div>
@@ -189,32 +137,24 @@ export default function FuentesPage() {
               <div className="bg-green-500/10 p-3 rounded-xl">
                 <TrendingUp className="h-6 w-6 text-green-600" />
               </div>
-              <div className="flex items-center gap-1 text-xs font-semibold text-green-600">
-                <TrendingUp className="h-3 w-3" />
-                +234
-              </div>
             </div>
             <div className="text-3xl font-bold text-green-600 mb-1">
-              {fuentes.reduce((sum, f) => sum + f.articleCount, 0)}
+              {stats.totalArticles.toLocaleString()}
             </div>
             <div className="text-sm text-gray-600 font-medium">Artículos Totales</div>
           </div>
         </div>
 
         <div className="group relative bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500 to-purple-600 opacity-10 rounded-full blur-2xl group-hover:opacity-20 transition-opacity"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-500 to-green-600 opacity-10 rounded-full blur-2xl group-hover:opacity-20 transition-opacity"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
-              <div className="bg-purple-500/10 p-3 rounded-xl">
-                <CheckCircle className="h-6 w-6 text-purple-600" />
-              </div>
-              <div className="flex items-center gap-1 text-xs font-semibold text-purple-600">
-                <TrendingUp className="h-3 w-3" />
-                100%
+              <div className="bg-green-500/10 p-3 rounded-xl">
+                <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
             </div>
-            <div className="text-3xl font-bold text-purple-600 mb-1">
-              {fuentes.filter((f) => f.isTrusted).length}
+            <div className="text-3xl font-bold text-green-600 mb-1">
+              {stats.trusted}
             </div>
             <div className="text-sm text-gray-600 font-medium">Fuentes Confiables</div>
           </div>
@@ -231,6 +171,7 @@ export default function FuentesPage() {
           <option value="">Todos los tipos</option>
           <option value="media">Medio</option>
           <option value="official">Oficial</option>
+          <option value="social_media">Red Social</option>
         </select>
 
         <select
@@ -256,7 +197,7 @@ export default function FuentesPage() {
       </div>
 
       {/* Table con diseño mejorado */}
-      <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden shadow-lg">
+      <div data-tutorial="sources-list" className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden shadow-lg">
         <table className="w-full">
           <thead className="bg-gradient-to-r from-gray-50 to-green-50/50">
             <tr>
@@ -271,7 +212,7 @@ export default function FuentesPage() {
           <tbody>
             {filteredFuentes.map((fuente, index) => (
               <tr
-                key={fuente.id}
+                key={fuente._id}
                 className="border-t border-gray-100 hover:bg-green-50/30 transition-colors group"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
@@ -285,16 +226,10 @@ export default function FuentesPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">ID: {fuente.id}</p>
+                  <p className="text-xs text-gray-500 mt-1">ID: {fuente._id}</p>
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`inline-flex text-xs px-3 py-1 rounded-full font-semibold ${
-                    fuente.type === 'official'
-                      ? 'bg-purple-500/10 text-purple-600'
-                      : 'bg-blue-500/10 text-blue-600'
-                  }`}>
-                    {fuente.type === 'official' ? 'Oficial' : 'Medio'}
-                  </span>
+                  {getTypeBadge(fuente.type)}
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
@@ -313,11 +248,20 @@ export default function FuentesPage() {
                   </span>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600 font-medium">
-                  {fuente.lastScraped}
+                  {fuente.lastScraped
+                    ? new Date(fuente.lastScraped).toLocaleString('es-PA', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
+                    : 'Nunca'
+                  }
                 </td>
                 <td className="px-6 py-4 text-right">
                   <button
-                    onClick={() => router.push(`/admin/dashboard/fuentes/${fuente.id}/editar`)}
+                    onClick={() => router.push(`/admin/dashboard/fuentes/${fuente._id}/editar`)}
                     className="text-sm text-green-600 hover:text-green-700 font-semibold hover:underline"
                   >
                     Editar

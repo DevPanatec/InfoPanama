@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { useQuery } from 'convex/react'
+import { api } from '@/convex/_generated/api'
+import type { Id } from '@/convex/_generated/dataModel'
 import {
   ArrowLeft,
   Search,
@@ -13,10 +16,11 @@ import {
   Database,
   Brain,
   AlertTriangle,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from 'lucide-react'
 
-// Demo data del proceso de investigación
+// Demo data del proceso de investigación (FALLBACK)
 const DEMO_PROCESO = {
   claimId: '1',
   title: 'Gobierno anuncia nueva inversión en infraestructura de $500 millones',
@@ -183,7 +187,71 @@ export default function ProcesoInvestigacionPage() {
   const params = useParams()
   const [expandedStep, setExpandedStep] = useState<number | null>(null)
 
-  const proceso = DEMO_PROCESO
+  const claimId = params.id as Id<'claims'>
+
+  // Obtener el claim
+  const claim = useQuery(api.claims.getById, { id: claimId })
+
+  // Obtener el veredicto más reciente
+  const verdict = useQuery(api.verdicts.getByClaimId, { claimId })
+
+  // Obtener los pasos de investigación
+  const investigationSteps = useQuery(api.verification.getInvestigationSteps, { claimId })
+
+  // Loading state
+  if (claim === undefined || investigationSteps === undefined) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
+          <p className="text-gray-600">Cargando proceso de investigación...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Si no hay claim, mostrar error
+  if (!claim) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <p className="text-gray-600">Claim no encontrado</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Si no hay pasos de investigación, usar demo data como fallback
+  const hasRealData = investigationSteps && investigationSteps.length > 0
+
+  // Transformar datos reales al formato esperado
+  const proceso = hasRealData ? {
+    claimId: claim._id,
+    title: claim.title,
+    startTime: investigationSteps[0]?.timestamp
+      ? new Date(investigationSteps[0].timestamp).toLocaleString('es-PA')
+      : 'N/A',
+    endTime: investigationSteps[investigationSteps.length - 1]?.timestamp
+      ? new Date(investigationSteps[investigationSteps.length - 1].timestamp).toLocaleString('es-PA')
+      : 'N/A',
+    duration: investigationSteps[0] && investigationSteps[investigationSteps.length - 1]
+      ? `${Math.round((investigationSteps[investigationSteps.length - 1].timestamp - investigationSteps[0].timestamp) / 1000)} seg`
+      : 'N/A',
+    verdict: verdict?.verdict || claim.verdict || 'UNPROVEN',
+    confidence: verdict?.confidenceScore || 0,
+    steps: investigationSteps.map(step => ({
+      id: step.stepNumber,
+      type: step.stepType,
+      title: step.title,
+      timestamp: new Date(step.timestamp).toLocaleTimeString('es-PA'),
+      duration: `${Math.round(step.duration / 1000)} seg`,
+      status: step.status,
+      description: step.description,
+      details: step.details,
+      findings: step.findings
+    }))
+  } : DEMO_PROCESO
 
   const getStepIcon = (type: string) => {
     const icons: Record<string, typeof Search> = {
@@ -194,7 +262,12 @@ export default function ProcesoInvestigacionPage() {
       data_verification: CheckCircle,
       context_analysis: Brain,
       contradiction_check: AlertTriangle,
-      conclusion: CheckCircle
+      conclusion: CheckCircle,
+      preparation: Database,
+      source_search: Database,
+      ai_analysis: Brain,
+      evidence_evaluation: CheckCircle,
+      verdict_determination: CheckCircle
     }
     return icons[type] || Search
   }
@@ -202,13 +275,18 @@ export default function ProcesoInvestigacionPage() {
   const getStepColor = (type: string) => {
     const colors: Record<string, string> = {
       identification: 'bg-blue-500',
-      search_official: 'bg-purple-500',
+      search_official: 'bg-slate-500',
       document_analysis: 'bg-indigo-500',
       search_media: 'bg-orange-500',
       data_verification: 'bg-green-500',
       context_analysis: 'bg-cyan-500',
       contradiction_check: 'bg-yellow-500',
-      conclusion: 'bg-emerald-500'
+      conclusion: 'bg-emerald-500',
+      preparation: 'bg-indigo-500',
+      source_search: 'bg-slate-500',
+      ai_analysis: 'bg-cyan-500',
+      evidence_evaluation: 'bg-green-500',
+      verdict_determination: 'bg-emerald-500'
     }
     return colors[type] || 'bg-gray-500'
   }
@@ -225,10 +303,28 @@ export default function ProcesoInvestigacionPage() {
           Volver a Revisión
         </button>
 
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-          Proceso de Investigación
-        </h1>
-        <p className="text-gray-600">Timeline detallado del análisis realizado por la IA</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent mb-2">
+              Proceso de Investigación
+            </h1>
+            <p className="text-gray-600">Timeline detallado del análisis realizado por la IA</p>
+          </div>
+
+          {/* Indicador de tipo de datos */}
+          {!hasRealData && (
+            <div className="bg-amber-100 border border-amber-300 text-amber-800 px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              <span>Mostrando datos de demostración</span>
+            </div>
+          )}
+          {hasRealData && (
+            <div className="bg-green-100 border border-green-300 text-green-800 px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              <span>Datos reales de verificación</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Resumen */}
@@ -321,8 +417,26 @@ export default function ProcesoInvestigacionPage() {
                 {isExpanded && (
                   <div className="px-4 pb-4 pt-2 border-t border-gray-100">
                     <div className="ml-16 space-y-3">
-                      {/* Renderizar detalles según el tipo de paso */}
-                      {step.type === 'identification' && step.details && (
+                      {/* Si hay findings (datos reales), mostrar eso primero */}
+                      {(step as any).findings && (
+                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                          <p className="text-sm font-medium text-blue-900 mb-2">Hallazgos:</p>
+                          <p className="text-sm text-blue-800 whitespace-pre-line">{(step as any).findings}</p>
+                        </div>
+                      )}
+
+                      {/* Si hay details (objeto), mostrar según el tipo */}
+                      {step.details && typeof step.details === 'object' && (
+                        <div className="bg-gray-50 p-4 rounded-lg border">
+                          <p className="text-sm font-medium text-gray-900 mb-2">Detalles técnicos:</p>
+                          <pre className="text-xs text-gray-600 overflow-auto">
+                            {JSON.stringify(step.details, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+
+                      {/* Renderizar detalles específicos según el tipo de paso (solo para mock data) */}
+                      {step.type === 'identification' && step.details && step.details.source && (
                         <div className="space-y-2 text-sm">
                           <p><span className="font-medium">Fuente:</span> {step.details.source}</p>
                           <p><span className="font-medium">Declarante:</span> {step.details.speaker}</p>

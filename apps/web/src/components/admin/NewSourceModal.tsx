@@ -8,6 +8,8 @@ interface NewSourceModalProps {
   onClose: () => void
   onSubmit: (source: {
     name: string
+    slug: string
+    url: string
     type: string
     isTrusted: boolean
     credibilityScore: number
@@ -16,6 +18,7 @@ interface NewSourceModalProps {
 
 export function NewSourceModal({ isOpen, onClose, onSubmit }: NewSourceModalProps) {
   const [name, setName] = useState('')
+  const [url, setUrl] = useState('')
   const [type, setType] = useState('media')
   const [isTrusted, setIsTrusted] = useState(true)
   const [credibilityScore, setCredibilityScore] = useState(75)
@@ -24,9 +27,18 @@ export function NewSourceModal({ isOpen, onClose, onSubmit }: NewSourceModalProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (name.trim()) {
-      onSubmit({ name, type, isTrusted, credibilityScore })
+    if (name.trim() && url.trim()) {
+      // Generar slug desde el nombre
+      const slug = name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+
+      onSubmit({ name, slug, url, type, isTrusted, credibilityScore })
       setName('')
+      setUrl('')
       setType('media')
       setIsTrusted(true)
       setCredibilityScore(75)
@@ -52,13 +64,27 @@ export function NewSourceModal({ isOpen, onClose, onSubmit }: NewSourceModalProp
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Nombre de la Fuente
+              Nombre de la Fuente *
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ej: La Prensa"
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all outline-none"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              URL de la Fuente *
+            </label>
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://www.laprensa.com.pa"
               className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all outline-none"
               required
             />
@@ -76,6 +102,7 @@ export function NewSourceModal({ isOpen, onClose, onSubmit }: NewSourceModalProp
               >
                 <option value="media">Medio</option>
                 <option value="official">Oficial</option>
+                <option value="social_media">Red Social</option>
               </select>
             </div>
 

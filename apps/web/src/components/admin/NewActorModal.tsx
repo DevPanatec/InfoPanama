@@ -38,7 +38,7 @@ export function NewActorModal({ isOpen, onClose, onSubmit }: NewActorModalProps)
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 animate-scale-in">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
             Nuevo Actor
           </h2>
           <button
@@ -59,7 +59,7 @@ export function NewActorModal({ isOpen, onClose, onSubmit }: NewActorModalProps)
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ej: Juan Pérez"
-              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all outline-none"
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
               required
             />
           </div>
@@ -72,7 +72,7 @@ export function NewActorModal({ isOpen, onClose, onSubmit }: NewActorModalProps)
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all outline-none"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
               >
                 <option value="person">Persona</option>
                 <option value="group">Grupo</option>
@@ -88,7 +88,7 @@ export function NewActorModal({ isOpen, onClose, onSubmit }: NewActorModalProps)
               <select
                 value={riskLevel}
                 onChange={(e) => setRiskLevel(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all outline-none"
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
               >
                 <option value="LOW">Bajo</option>
                 <option value="MEDIUM">Medio</option>
@@ -105,7 +105,7 @@ export function NewActorModal({ isOpen, onClose, onSubmit }: NewActorModalProps)
             <select
               value={kyaStatus}
               onChange={(e) => setKyaStatus(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all outline-none"
+              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
             >
               <option value="verified">Verificado</option>
               <option value="suspicious">Sospechoso</option>
@@ -124,7 +124,7 @@ export function NewActorModal({ isOpen, onClose, onSubmit }: NewActorModalProps)
             </button>
             <button
               type="submit"
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold hover:shadow-lg hover:-translate-y-0.5 transition-all"
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold hover:shadow-lg hover:-translate-y-0.5 transition-all"
             >
               Crear Actor
             </button>

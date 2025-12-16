@@ -28,23 +28,23 @@ export default function HomePage() {
   const categories = useQuery(api.claims.getCategories, {})
   const recentActivity: any[] | undefined = undefined // TODO: Implementar query
   return (
-    <main className="min-h-screen bg-slate-50">
-      {/* Hero Section - Más compacto estilo Snopes */}
+    <main className="min-h-screen bg-soft-blue/30">
+      {/* Hero Section */}
       <Hero />
 
       {/* Main Content - Layout 2 columnas */}
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-12 max-w-7xl">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Column - Verificaciones */}
           <div className="lg:col-span-2">
             {/* Section Header */}
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-slate-800">
+              <h2 className="text-3xl font-bold text-deep-blue">
                 Últimas Verificaciones
               </h2>
               <Link
                 href="/verificaciones"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 group"
+                className="text-sm text-digital-blue hover:text-verifica-blue font-semibold flex items-center gap-1 group"
               >
                 Ver todas
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -58,10 +58,10 @@ export default function HomePage() {
             <div className="mt-8 text-center">
               <Link
                 href="/verificaciones"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-500 hover:to-blue-600 transition shadow-lg shadow-blue-600/30"
+                className="inline-flex items-center gap-2 px-8 py-3.5 bg-digital-blue text-white rounded-xl font-semibold hover:bg-verifica-blue transition-all shadow-lg hover:shadow-xl hover:scale-105 transform duration-300"
               >
                 Ver Más Verificaciones
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-5 w-5" />
               </Link>
             </div>
           </div>
@@ -86,18 +86,18 @@ export default function HomePage() {
             </div> */}
 
             {/* Categories */}
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-              <h3 className="font-semibold text-slate-800 mb-4">
+            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <h3 className="font-bold text-deep-blue mb-4 text-lg">
                 Categorías
               </h3>
               {!categories ? (
                 <div className="flex flex-wrap gap-2">
                   {[...Array(5)].map((_, i) => (
-                    <div key={i} className="animate-pulse h-8 w-24 bg-slate-200 rounded-full" />
+                    <div key={i} className="animate-pulse h-8 w-24 bg-soft-blue rounded-full" />
                   ))}
                 </div>
               ) : categories.length === 0 ? (
-                <p className="text-sm text-slate-500 text-center py-4">
+                <p className="text-sm text-blue-gray text-center py-4">
                   No hay categorías disponibles
                 </p>
               ) : (
@@ -108,10 +108,10 @@ export default function HomePage() {
                       href={`/verificaciones?category=${encodeURIComponent(cat.name)}`}
                       className={`px-3 py-1.5 rounded-full text-sm font-medium ${
                         CATEGORY_COLORS[index % CATEGORY_COLORS.length]
-                      } hover:opacity-80 transition capitalize`}
+                      } hover:opacity-90 hover:scale-105 transition-all capitalize`}
                     >
                       {cat.name}
-                      <span className="ml-1 opacity-60">({cat.count})</span>
+                      <span className="ml-1 opacity-70">({cat.count})</span>
                     </Link>
                   ))}
                 </div>

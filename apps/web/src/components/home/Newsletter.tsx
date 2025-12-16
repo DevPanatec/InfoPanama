@@ -54,10 +54,10 @@ export function Newsletter() {
   }
 
   return (
-    <div className="bg-gradient-to-br from-slate-900 to-blue-900 rounded-2xl p-6 text-white">
-      <h3 className="font-semibold mb-2">Suscríbete</h3>
-      <p className="text-sm text-slate-300 mb-4">
-        Recibe las últimas verificaciones en tu correo.
+    <div className="bg-gradient-to-br from-verifica-blue to-deep-blue rounded-2xl p-6 text-white shadow-lg">
+      <h3 className="font-bold mb-2 text-lg">Suscríbete al Boletín</h3>
+      <p className="text-sm text-soft-blue mb-4">
+        Recibe las últimas verificaciones y análisis directamente en tu correo.
       </p>
 
       <form onSubmit={handleSubmit}>
@@ -68,13 +68,13 @@ export function Newsletter() {
           placeholder="tu@email.com"
           readOnly={!!user}
           disabled={status === 'loading' || status === 'success'}
-          className="w-full px-4 py-2.5 rounded-lg bg-white/10 border border-white/20 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3 disabled:opacity-50 disabled:cursor-not-allowed read-only:bg-white/5"
+          className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-blue-gray focus:outline-none focus:ring-2 focus:ring-digital-blue focus:border-digital-blue mb-3 disabled:opacity-50 disabled:cursor-not-allowed read-only:bg-white/5 transition-all"
         />
 
         <button
           type="submit"
           disabled={status === 'loading' || status === 'success'}
-          className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-3 bg-digital-blue hover:bg-white hover:text-verifica-blue rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:scale-105 transform duration-300"
         >
           {status === 'loading' ? 'Suscribiendo...' : status === 'success' ? '✓ Suscrito' : 'Suscribirse'}
         </button>
@@ -82,7 +82,7 @@ export function Newsletter() {
 
       {message && (
         <p
-          className={`text-xs mt-2 ${
+          className={`text-xs mt-3 font-medium ${
             status === 'error' ? 'text-red-300' : 'text-emerald-300'
           }`}
         >

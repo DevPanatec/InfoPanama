@@ -7,13 +7,18 @@
     "dev": "tsx watch src/index.ts",
     "crawl:prensa": "tsx src/crawlers/la-prensa.ts",
     "crawl:gaceta": "tsx src/crawlers/gaceta-oficial.ts",
+    "crawl:metro": "tsx src/crawlers/metro-libre.ts",
+    "crawl:rpc": "tsx src/crawlers/rpc-radio.ts",
+    "crawl:capital": "tsx src/crawlers/capital-financiero.ts",
     "crawl:all": "tsx src/index.ts",
     "crawl:entities": "tsx src/crawl-entities.ts",
+    "crawl:orphans": "tsx src/crawl-orphans.ts",
     "extract:claims": "tsx src/processors/claim-extractor.ts"
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.12",
     "playwright": "^1.48.2",
+    "playwright-core": "^1.48.2",
     "convex": "^1.17.2",
     "dotenv": "^16.4.5",
     "openai": "^4.73.0"

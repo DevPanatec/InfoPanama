@@ -5,38 +5,38 @@ import { Sparkles, Shield, Heart, ArrowRight } from 'lucide-react'
 
 export function Footer() {
   return (
-    <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 text-white overflow-hidden">
+    <footer className="relative bg-gradient-to-br from-verifica-blue via-deep-blue to-verifica-blue text-white overflow-hidden">
       {/* Decorative background */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-600 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl animate-pulse [animation-delay:1s]"></div>
+        <div className="absolute top-0 left-0 w-96 h-96 bg-digital-blue rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-digital-blue rounded-full blur-3xl animate-pulse [animation-delay:1s]"></div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+      <div className="container mx-auto px-4 py-8 relative z-10 max-w-7xl">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-6">
           {/* About */}
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="h-5 w-5 text-blue-400" />
-              <h3 className="text-lg font-bold">InfoPanama</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="h-5 w-5 text-digital-blue" />
+              <h3 className="text-xl font-bold">VerificaPty</h3>
             </div>
-            <p className="text-gray-300 text-sm mb-3 leading-relaxed">
-              Verificación de información con IA para Panamá.
+            <p className="text-soft-blue text-sm mb-4 leading-relaxed">
+              Plataforma de verificación de información basada en evidencia y transparencia para Panamá.
             </p>
-            <div className="flex items-center gap-2 text-blue-400">
+            <div className="flex items-center gap-2 text-digital-blue">
               <Shield className="h-4 w-4" />
-              <span className="text-xs font-semibold">Verificación Oficial</span>
+              <span className="text-xs font-semibold">Fact-Checking Profesional</span>
             </div>
           </div>
 
           {/* Links */}
           <div>
-            <h3 className="font-bold mb-2 text-sm">Navegación</h3>
-            <ul className="space-y-1.5 text-xs">
+            <h3 className="font-bold mb-3 text-sm">Navegación</h3>
+            <ul className="space-y-2 text-sm">
               <li>
                 <button
                   onClick={() => (window.location.href = '/verificaciones')}
-                  className="text-gray-300 hover:text-white hover:translate-x-1 transition-all flex items-center gap-2 group"
+                  className="text-soft-blue hover:text-white hover:translate-x-1 transition-all flex items-center gap-2 group"
                 >
                   <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   Verificaciones
@@ -45,7 +45,7 @@ export function Footer() {
               <li>
                 <button
                   onClick={() => (window.location.href = '/medios')}
-                  className="text-gray-300 hover:text-white hover:translate-x-1 transition-all flex items-center gap-2 group"
+                  className="text-soft-blue hover:text-white hover:translate-x-1 transition-all flex items-center gap-2 group"
                 >
                   <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   Medios
@@ -54,7 +54,7 @@ export function Footer() {
               <li>
                 <button
                   onClick={() => (window.location.href = '/actores')}
-                  className="text-gray-300 hover:text-white hover:translate-x-1 transition-all flex items-center gap-2 group"
+                  className="text-soft-blue hover:text-white hover:translate-x-1 transition-all flex items-center gap-2 group"
                 >
                   <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   Actores
@@ -65,16 +65,16 @@ export function Footer() {
 
           {/* Info */}
           <div>
-            <h3 className="font-bold mb-2 text-sm">Información</h3>
-            <ul className="space-y-1.5 text-xs">
+            <h3 className="font-bold mb-3 text-sm">Información</h3>
+            <ul className="space-y-2 text-sm">
               <li>
-                <a href="/metodologia" className="text-gray-300 hover:text-white hover:translate-x-1 transition-all flex items-center gap-2 group">
+                <a href="/metodologia" className="text-soft-blue hover:text-white hover:translate-x-1 transition-all flex items-center gap-2 group">
                   <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   Metodología
                 </a>
               </li>
               <li>
-                <a href="/sobre-nosotros" className="text-gray-300 hover:text-white hover:translate-x-1 transition-all flex items-center gap-2 group">
+                <a href="/sobre-nosotros" className="text-soft-blue hover:text-white hover:translate-x-1 transition-all flex items-center gap-2 group">
                   <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                   Sobre Nosotros
                 </a>
@@ -84,22 +84,22 @@ export function Footer() {
         </div>
 
         {/* Separator */}
-        <div className="border-t border-white/10 mb-3"></div>
+        <div className="border-t border-soft-blue/20 mb-4"></div>
 
         {/* Copyright */}
         <div className="text-center">
-          <div className="flex items-center justify-center gap-3 text-xs text-gray-400">
-            <span>© {new Date().getFullYear()} InfoPanama</span>
+          <div className="flex items-center justify-center gap-3 text-sm text-soft-blue/80">
+            <span>© {new Date().getFullYear()} VerificaPty</span>
             <span>•</span>
             <div className="flex items-center gap-1.5">
               <span>Hecho con</span>
-              <Heart className="h-3 w-3 text-red-400" fill="currentColor" />
+              <Heart className="h-3 w-3 text-digital-blue" fill="currentColor" />
               <span>para Panamá</span>
             </div>
             <span>•</span>
             <Link
               href="/admin/dashboard"
-              className="text-gray-500 hover:text-gray-300 transition-colors"
+              className="text-blue-gray hover:text-white transition-colors"
             >
               Admin
             </Link>
@@ -108,7 +108,7 @@ export function Footer() {
       </div>
 
       {/* Bottom shine effect */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-400 to-transparent"></div>
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-digital-blue to-transparent"></div>
     </footer>
   )
 }

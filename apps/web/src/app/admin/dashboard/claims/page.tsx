@@ -1,16 +1,19 @@
 'use client'
 
-import { CheckCircle2, XCircle, HelpCircle, Search } from 'lucide-react'
+import { CheckCircle2, XCircle, HelpCircle, Search, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery } from 'convex/react'
+import { useQuery, useMutation } from 'convex/react'
 import { api } from '@infopanama/convex'
+import { NewClaimModal } from '@/components/admin/NewClaimModal'
+import { toast } from 'sonner'
 
 export default function ClaimsPage() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'new' | 'investigating' | 'review' | 'approved' | 'rejected' | 'published' | ''>('')
   const [riskFilter, setRiskFilter] = useState('')
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Obtener claims reales de Convex
   const allClaims = useQuery(api.claims.list, {
@@ -18,11 +21,69 @@ export default function ClaimsPage() {
     limit: 100
   })
 
+  const createClaim = useMutation(api.claims.create)
+
+  const handleNewClaim = async (claimData: {
+    title: string
+    description: string
+    claimText: string
+    sourceType: string
+    sourceUrl?: string
+    imageUrl?: string
+    riskLevel: string
+    category?: string
+    actorId?: any
+    sourceId?: any
+  }) => {
+    const toastId = toast.loading('Creando verificación...')
+
+    try {
+      const claimId = await createClaim({
+        title: claimData.title,
+        description: claimData.description,
+        claimText: claimData.claimText,
+        sourceType: claimData.sourceType as any,
+        sourceUrl: claimData.sourceUrl,
+        imageUrl: claimData.imageUrl,
+        riskLevel: claimData.riskLevel as any,
+        category: claimData.category,
+        actorId: claimData.actorId,
+        sourceId: claimData.sourceId,
+        status: 'new',
+      })
+
+      toast.success('Verificación creada correctamente', {
+        id: toastId,
+        description: 'Redirigiendo a la página de revisión...',
+      })
+
+      router.push(`/admin/dashboard/claims/${claimId}/review`)
+    } catch (error) {
+      console.error('Error al crear verificación:', error)
+      toast.error('Error al crear verificación', {
+        id: toastId,
+        description: 'Por favor, verifica los logs e intenta nuevamente.',
+      })
+    }
+  }
+
   // Filtrar claims por búsqueda y nivel de riesgo (status ya filtrado en query)
   const filteredClaims = (allClaims || []).filter((claim) => {
-    const matchesSearch =
-      claim.claimText.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (claim.description && claim.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    if (!searchQuery && !riskFilter) return true
+
+    const query = searchQuery.toLowerCase().trim()
+
+    // Buscar en múltiples campos
+    const matchesSearch = !query || (
+      claim.claimText.toLowerCase().includes(query) ||
+      (claim.title && claim.title.toLowerCase().includes(query)) ||
+      (claim.description && claim.description.toLowerCase().includes(query)) ||
+      (claim.sourceUrl && claim.sourceUrl.toLowerCase().includes(query)) ||
+      (claim.tags && claim.tags.some(tag => tag.toLowerCase().includes(query))) ||
+      // Buscar en el ID del claim también
+      claim._id.toLowerCase().includes(query)
+    )
+
     const matchesRisk = !riskFilter || claim.riskLevel === riskFilter
     return matchesSearch && matchesRisk
   })
@@ -56,7 +117,7 @@ export default function ClaimsPage() {
     const configs: Record<string, { className: string; label: string }> = {
       new: { className: 'bg-blue-500/10 text-blue-600', label: 'Nueva' },
       investigating: { className: 'bg-yellow-500/10 text-yellow-600', label: 'Investigando' },
-      review: { className: 'bg-purple-500/10 text-purple-600', label: 'En Revisión' },
+      review: { className: 'bg-amber-500/10 text-amber-600', label: 'En Revisión' },
       published: { className: 'bg-green-500/10 text-green-600', label: 'Publicada' },
     }
 
@@ -104,12 +165,25 @@ export default function ClaimsPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+            <h1 data-tutorial="claims-title" className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent mb-2">
               Verificaciones
             </h1>
             <p className="text-gray-600 text-lg">Revisión y gestión de verificaciones generadas por IA</p>
           </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 font-semibold"
+          >
+            <Plus className="h-5 w-5" />
+            Nueva Verificación
+          </button>
         </div>
+
+        <NewClaimModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleNewClaim}
+        />
         <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
           <div className="flex items-start gap-3">
             <div className="bg-blue-500 p-2 rounded-lg flex-shrink-0">
@@ -125,9 +199,35 @@ export default function ClaimsPage() {
         </div>
       </div>
 
+      {/* Contador de resultados */}
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-sm text-gray-600">
+          Mostrando <span className="font-bold text-gray-900">{filteredClaims.length}</span> de{' '}
+          <span className="font-bold text-gray-900">{allClaims.length}</span> verificaciones
+          {searchQuery && (
+            <span className="ml-2 text-blue-600">
+              • Búsqueda: "<span className="font-semibold">{searchQuery}</span>"
+            </span>
+          )}
+        </p>
+        {(searchQuery || statusFilter || riskFilter) && (
+          <button
+            onClick={() => {
+              setSearchQuery('')
+              setStatusFilter('')
+              setRiskFilter('')
+            }}
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline"
+          >
+            Limpiar filtros
+          </button>
+        )}
+      </div>
+
       {/* Filters con diseño mejorado */}
       <div className="mb-6 flex gap-4">
         <select
+          data-tutorial="claims-status-filter"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as any)}
           className="px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-white hover:border-blue-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-medium text-sm"
@@ -140,6 +240,7 @@ export default function ClaimsPage() {
         </select>
 
         <select
+          data-tutorial="claims-risk-filter"
           value={riskFilter}
           onChange={(e) => setRiskFilter(e.target.value)}
           className="px-4 py-2.5 rounded-xl border-2 border-gray-200 bg-white hover:border-blue-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-medium text-sm"
@@ -154,17 +255,18 @@ export default function ClaimsPage() {
         <div className="flex-1 relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
+            data-tutorial="claims-search"
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar verificaciones..."
+            placeholder="Buscar por nombre, palabra clave, fuente, etiqueta... (ej: Sicarelli, Hombres de Blanco)"
             className="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-gray-200 bg-white hover:border-blue-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20 font-medium text-sm"
           />
         </div>
       </div>
 
       {/* Table con diseño mejorado */}
-      <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden shadow-lg">
+      <div data-tutorial="claims-list" className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden shadow-lg">
         <table className="w-full">
           <thead className="bg-gradient-to-r from-gray-50 to-blue-50/50">
             <tr>
@@ -177,7 +279,28 @@ export default function ClaimsPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredClaims.map((claim, index) => (
+            {filteredClaims.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-16 text-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <Search className="h-12 w-12 text-gray-300 mb-4" />
+                    <p className="text-lg font-semibold text-gray-600 mb-2">
+                      {searchQuery
+                        ? `No se encontraron resultados para "${searchQuery}"`
+                        : 'No hay verificaciones que coincidan con los filtros'
+                      }
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {searchQuery
+                        ? 'Intenta con otro término de búsqueda'
+                        : 'Ajusta los filtros o limpia la búsqueda'
+                      }
+                    </p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              filteredClaims.map((claim, index) => (
               <tr
                 key={claim._id}
                 className="border-t border-gray-100 hover:bg-blue-50/30 transition-colors group"
@@ -223,7 +346,8 @@ export default function ClaimsPage() {
                   )}
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>

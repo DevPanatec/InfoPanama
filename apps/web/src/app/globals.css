@@ -2,27 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+
+  .animate-spin-slow {
+    animation: spin-slow 20s linear infinite;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out;
+  }
+
+  .delay-700 {
+    animation-delay: 700ms;
+  }
+}
+
 @layer base {
   :root {
+    /* Paleta oficial VerificaPty */
+    --verifica-blue: #0A3D62;        /* Azul Verifica - Principal */
+    --digital-blue: #1E90FF;          /* Azul Digital - Secundario */
+    --soft-blue: #E6F0FA;             /* Azul Suave - Fondo */
+    --deep-blue: #082A45;             /* Azul Profundo - Títulos/Footer */
+    --blue-gray: #6C7A89;             /* Gris azulado - Texto secundario */
+
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 210 55% 13%;        /* --deep-blue */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 210 55% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 210 55% 13%;
+    --primary: 210 72% 21%;           /* --verifica-blue */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 100% 56%;        /* --digital-blue */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 60% 95%;             /* --soft-blue */
+    --muted-foreground: 210 13% 48%;  /* --blue-gray */
+    --accent: 210 60% 95%;
+    --accent-foreground: 210 72% 21%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 60% 95%;
+    --input: 210 60% 95%;
+    --ring: 210 100% 56%;
     --radius: 0.5rem;
   }
 
@@ -111,6 +165,37 @@
     }
   }
 
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
   .animate-fade-in {
     animation: fade-in 0.3s ease-out forwards;
     will-change: opacity;
@@ -133,6 +218,28 @@
 
   .animate-gradient {
     animation: gradient 8s ease infinite;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.3s ease-out forwards;
+    will-change: opacity, transform;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.4s ease-out forwards;
+    will-change: opacity, transform;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(
+      to right,
+      #f6f7f8 0%,
+      #edeef1 20%,
+      #f6f7f8 40%,
+      #f6f7f8 100%
+    );
+    background-size: 1000px 100%;
   }
 
   /* Efectos de glassmorphism */

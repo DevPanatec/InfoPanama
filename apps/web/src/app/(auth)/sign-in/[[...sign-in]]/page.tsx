@@ -81,7 +81,7 @@ export default function SignInPage() {
               <div>
                 <h3 className="font-semibold text-white">Verificación con IA</h3>
                 <p className="text-blue-100">
-                  Análisis automatizado usando GPT-5 mini entrenado con datos de Panamá
+                  Análisis automatizado usando inteligencia artificial entrenada con datos de Panamá
                 </p>
               </div>
             </div>

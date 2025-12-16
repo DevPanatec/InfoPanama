@@ -94,6 +94,29 @@ export const findByArticle = query({
 })
 
 /**
+ * Encontrar entidades por claim (via su artículo asociado)
+ */
+export const findByClaim = query({
+  args: { claimId: v.id('claims') },
+  handler: async (ctx, args) => {
+    // Obtener el claim
+    const claim = await ctx.db.get(args.claimId)
+    if (!claim) return []
+
+    // Si el claim tiene articleId, buscar entidades por artículo
+    if (claim.articleId) {
+      const allEntities = await ctx.db.query('entities').collect()
+      return allEntities.filter((entity) =>
+        entity.mentionedIn.includes(claim.articleId!)
+      )
+    }
+
+    // Si no tiene articleId, retornar vacío
+    return []
+  },
+})
+
+/**
  * Buscar entidades
  */
 export const search = query({

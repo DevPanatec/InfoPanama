@@ -10,6 +10,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Paleta oficial VerificaPty
+        'verifica-blue': '#0A3D62',
+        'digital-blue': '#1E90FF',
+        'soft-blue': '#E6F0FA',
+        'deep-blue': '#082A45',
+        'blue-gray': '#6C7A89',
+
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

@@ -294,6 +294,7 @@ export const create = mutation({
     title: v.string(),
     description: v.string(),
     claimText: v.string(),
+    imageUrl: v.optional(v.string()),
     category: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
     sourceType: v.union(
@@ -329,6 +330,7 @@ export const create = mutation({
       title: args.title,
       description: args.description,
       claimText: args.claimText,
+      imageUrl: args.imageUrl,
       status: args.status || 'new',
       category: args.category,
       tags: args.tags || [],
