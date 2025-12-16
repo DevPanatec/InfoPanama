@@ -209,6 +209,21 @@ export function MediaGraph({
   // Primer nodo de los resultados (para hacer focus inicial)
   const searchedNode = searchResults.length > 0 ? searchResults[0] : null
 
+  // Calcular nodos ocultos (ANTES de los returns)
+  const hiddenMatches = useMemo(() => {
+    if (!filters?.searchQuery || filters.searchQuery.length === 0) {
+      return 0
+    }
+
+    const query = normalizeText(filters.searchQuery)
+    const allNodesFromDB = graphData?.nodes || []
+    const allMatches = allNodesFromDB.filter((n) =>
+      normalizeText(n.label).includes(query)
+    )
+
+    return allMatches.length - searchResults.length
+  }, [filters?.searchQuery, searchResults, graphData])
+
   // Log de búsqueda
   useEffect(() => {
     if (filters?.searchQuery && filters.searchQuery.length > 0) {
@@ -299,21 +314,6 @@ export function MediaGraph({
       </div>
     )
   }
-
-  // Calcular nodos ocultos
-  const hiddenMatches = useMemo(() => {
-    if (!filters?.searchQuery || filters.searchQuery.length === 0) {
-      return 0
-    }
-
-    const query = normalizeText(filters.searchQuery)
-    const allNodesFromDB = graphData?.nodes || []
-    const allMatches = allNodesFromDB.filter((n) =>
-      normalizeText(n.label).includes(query)
-    )
-
-    return allMatches.length - searchResults.length
-  }, [filters?.searchQuery, searchResults, graphData])
 
   // Renderizar grafo
   return (
