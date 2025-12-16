@@ -163,28 +163,38 @@ export function MediaGraph({
     return { nodes: visNodes, edges: visEdges }
   }, [graphData, filters])
 
+  // Función auxiliar para normalizar texto (quitar acentos y convertir a minúsculas)
+  const normalizeText = (text: string) => {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Eliminar diacríticos
+      .trim()
+  }
+
   // Encontrar nodo por búsqueda
   const searchedNode = useMemo(() => {
     if (!filters?.searchQuery || filters.searchQuery.length === 0) {
       return null
     }
 
-    const query = filters.searchQuery.toLowerCase().trim()
+    const query = normalizeText(filters.searchQuery)
 
     // IMPORTANTE: Buscar primero en TODOS los nodos (sin filtrar)
     // para asegurarnos de que el nodo existe en la base de datos
     const allNodesFromDB = graphData?.nodes || []
     const existsInDB = allNodesFromDB.find((n) =>
-      n.label.toLowerCase().includes(query)
+      normalizeText(n.label).includes(query)
     )
 
     // Buscar nodo en los nodos VISIBLES (después de filtros)
     const found = nodes.find((n) =>
-      n.label.toLowerCase().includes(query)
+      normalizeText(n.label).includes(query)
     )
 
     console.log('🔍 Búsqueda detallada:', {
       query: filters.searchQuery,
+      queryNormalized: query,
       totalNodesInDB: allNodesFromDB.length,
       visibleNodesAfterFilters: nodes.length,
       existsInDB: existsInDB ? `SÍ: "${existsInDB.label}"` : 'NO',
@@ -290,18 +300,63 @@ export function MediaGraph({
     )
   }
 
+  // Verificar si el nodo buscado existe pero está oculto
+  const searchNodeHidden = useMemo(() => {
+    if (!filters?.searchQuery || filters.searchQuery.length === 0) {
+      return null
+    }
+
+    const query = normalizeText(filters.searchQuery)
+    const allNodesFromDB = graphData?.nodes || []
+    const existsInDB = allNodesFromDB.find((n) =>
+      normalizeText(n.label).includes(query)
+    )
+    const found = nodes.find((n) =>
+      normalizeText(n.label).includes(query)
+    )
+
+    if (existsInDB && !found) {
+      return existsInDB.label
+    }
+    return null
+  }, [filters?.searchQuery, nodes, graphData])
+
   // Renderizar grafo
   return (
-    <div className="flex" style={{ height }}>
+    <div className="relative flex" style={{ height }}>
       <div className="flex-1">
         <NetworkGraph
           nodes={nodes}
           edges={edges}
           onNodeClick={(nodeId) => setSelectedNodeId(nodeId)}
           height={height}
-          focusNode={searchedNode?.id as string | undefined}
+          focusNode={searchedNode ? String(searchedNode.id) : undefined}
           zoomLevel={filters?.zoomLevel}
         />
+
+        {/* Mensaje cuando el nodo está oculto por filtros */}
+        {filters?.searchQuery && searchNodeHidden && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-amber-500 text-white px-4 py-3 rounded-lg shadow-lg border border-amber-600 max-w-md">
+            <p className="text-sm font-medium">
+              ⚠️ El nodo "{searchNodeHidden}" existe pero está oculto por los filtros activos.
+            </p>
+            <p className="text-xs mt-1 opacity-90">
+              Intenta desactivar algunos filtros para verlo.
+            </p>
+          </div>
+        )}
+
+        {/* Mensaje cuando no se encuentra el nodo */}
+        {filters?.searchQuery && !searchedNode && !searchNodeHidden && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg border border-red-600 max-w-md">
+            <p className="text-sm font-medium">
+              ❌ No se encontró ningún nodo con: "{filters.searchQuery}"
+            </p>
+            <p className="text-xs mt-1 opacity-90">
+              Verifica el nombre o intenta con otra búsqueda.
+            </p>
+          </div>
+        )}
       </div>
       {selectedNodeId && (
         <NodeDetailsPanel
