@@ -32,6 +32,15 @@ interface MediaGraphProps {
   height?: string
 }
 
+// Función auxiliar para normalizar texto (FUERA del componente para evitar problemas con hooks)
+const normalizeText = (text: string) => {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Eliminar diacríticos
+    .trim()
+}
+
 export function MediaGraph({
   filters,
   height = '600px',
@@ -163,15 +172,6 @@ export function MediaGraph({
 
     return { nodes: visNodes, edges: visEdges }
   }, [graphData, filters])
-
-  // Función auxiliar para normalizar texto (quitar acentos y convertir a minúsculas)
-  const normalizeText = (text: string) => {
-    return text
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Eliminar diacríticos
-      .trim()
-  }
 
   // Encontrar TODOS los nodos que coincidan con la búsqueda
   const searchResults = useMemo(() => {
@@ -343,7 +343,7 @@ export function MediaGraph({
               </button>
             </div>
             <div className="overflow-y-auto max-h-80">
-              {searchResults.map((node, index) => (
+              {searchResults.map((node) => (
                 <button
                   key={node.id}
                   onClick={() => {
