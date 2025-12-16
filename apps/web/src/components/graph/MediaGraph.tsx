@@ -209,6 +209,16 @@ export function MediaGraph({
   // Primer nodo de los resultados (para hacer focus inicial)
   const searchedNode = searchResults.length > 0 ? searchResults[0] : null
 
+  // Auto-focus en el primer resultado cuando cambia la búsqueda
+  useEffect(() => {
+    if (searchedNode && filters?.searchQuery) {
+      setFocusedSearchNode(String(searchedNode.id))
+      console.log('🎯 Auto-focus en primer resultado:', searchedNode.label, searchedNode.id)
+    } else if (!filters?.searchQuery) {
+      setFocusedSearchNode(null)
+    }
+  }, [searchedNode, filters?.searchQuery])
+
   // Calcular nodos ocultos (ANTES de los returns)
   const hiddenMatches = useMemo(() => {
     if (!filters?.searchQuery || filters.searchQuery.length === 0) {
