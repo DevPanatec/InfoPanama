@@ -142,7 +142,9 @@ export default function MediaGraphPage() {
       {/* Header */}
       <div className="mb-4 md:mb-6">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-2">
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Grafo OSINT de Entidades</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900" data-tutorial="dashboard-title">
+            Grafo OSINT de Entidades
+          </h1>
           <div className="flex flex-wrap gap-2 w-full lg:w-auto">
             <GraphFilters
               onFiltersChange={setFilters}
