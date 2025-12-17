@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
-import { useQuery } from 'convex/react'
+import { useEffect, useState, useMemo, useRef } from 'react'
+import { useQuery, useMutation } from 'convex/react'
 import { api } from '@infopanama/convex'
 import { NetworkGraph } from './NetworkGraph'
 import { NodeDetailsPanel } from './NodeDetailsPanel'
-import { Loader2, Building2 } from 'lucide-react'
+import { Loader2, Building2, Maximize2, Minimize2 } from 'lucide-react'
 import type { GraphFilterOptions } from './GraphFilters'
 
 interface NetworkNode {
@@ -47,9 +47,33 @@ export function MediaGraph({
 }: MediaGraphProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [focusedSearchNode, setFocusedSearchNode] = useState<string | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Obtener TODOS los nodos del grafo OSINT
   const graphData = useQuery(api.entityRelations.getFullGraph)
+
+  // Mutaciones para marcar entidades
+  const markForReview = useMutation(api.entities.markForReview)
+  const unmarkForReview = useMutation(api.entities.unmarkForReview)
+
+  // Handler para marcar/desmarcar nodo para revisión
+  const handleMarkForReview = async (nodeId: string) => {
+    try {
+      const entity = graphData?.nodes.find(n => n._id === nodeId)
+      if (!entity) return
+
+      if (entity.markedForReview) {
+        await unmarkForReview({ entityId: nodeId as any })
+        console.log('✅ Entidad desmarcada para revisión:', entity.label)
+      } else {
+        await markForReview({ entityId: nodeId as any, requestedBy: 'user' })
+        console.log('✅ Entidad marcada para revisión:', entity.label)
+      }
+    } catch (error) {
+      console.error('Error al marcar/desmarcar entidad:', error)
+    }
+  }
 
   // Transformar y filtrar datos de Convex a formato Vis.js
   const { nodes, edges } = useMemo(() => {
@@ -325,22 +349,66 @@ export function MediaGraph({
     )
   }
 
+  // Función para toggle fullscreen
+  const toggleFullscreen = () => {
+    if (!containerRef.current) return
+
+    if (!isFullscreen) {
+      // Entrar en fullscreen
+      if (containerRef.current.requestFullscreen) {
+        containerRef.current.requestFullscreen()
+      }
+    } else {
+      // Salir de fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+      }
+    }
+  }
+
+  // Listener para detectar cambios de fullscreen
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [])
+
   // Renderizar grafo
   return (
-    <div className="relative flex" style={{ height }}>
+    <div
+      ref={containerRef}
+      className={`relative flex ${isFullscreen ? 'bg-gray-900' : ''}`}
+      style={{ height: isFullscreen ? '100vh' : height }}
+    >
+      {/* Botón de Fullscreen */}
+      <button
+        onClick={toggleFullscreen}
+        className="absolute top-4 left-4 z-20 bg-white hover:bg-gray-100 border border-gray-300 rounded-lg p-2 shadow-lg transition-all duration-200"
+        title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+      >
+        {isFullscreen ? (
+          <Minimize2 className="h-5 w-5 text-gray-700" />
+        ) : (
+          <Maximize2 className="h-5 w-5 text-gray-700" />
+        )}
+      </button>
+
       <div className="flex-1">
         <NetworkGraph
           nodes={nodes}
           edges={edges}
           onNodeClick={(nodeId) => setSelectedNodeId(nodeId)}
-          height={height}
-          focusNode={focusedSearchNode || (searchedNode ? String(searchedNode.id) : undefined)}
+          height={isFullscreen ? '100vh' : height}
+          focusNode={focusedSearchNode ? focusedSearchNode : undefined}
           zoomLevel={filters?.zoomLevel}
         />
 
-        {/* Panel de Resultados de Búsqueda */}
+        {/* Panel de Resultados de Búsqueda - Responsive */}
         {filters?.searchQuery && searchResults.length > 0 && (
-          <div className="absolute top-4 right-4 bg-white border-2 border-blue-500 rounded-lg shadow-2xl w-80 max-h-96 overflow-hidden z-10">
+          <div className="absolute top-2 right-2 md:top-4 md:right-4 bg-white border-2 border-blue-500 rounded-lg shadow-2xl w-[calc(100%-1rem)] sm:w-80 max-h-[50vh] md:max-h-96 overflow-hidden z-10">
             <div className="bg-blue-500 text-white px-4 py-3 font-semibold flex items-center justify-between">
               <span>
                 🔍 {searchResults.length} resultado{searchResults.length !== 1 ? 's' : ''}
@@ -423,6 +491,8 @@ export function MediaGraph({
         <NodeDetailsPanel
           node={nodeDetails}
           onClose={() => setSelectedNodeId(null)}
+          onMarkForReview={handleMarkForReview}
+          markedForReview={selectedNode?.markedForReview || false}
         />
       )}
     </div>

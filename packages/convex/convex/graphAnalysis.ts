@@ -1,387 +1,361 @@
 import { v } from 'convex/values'
-import { action } from './_generated/server'
-import { api } from './_generated/api'
+import { action, internalAction } from './_generated/server'
+import { internal } from './_generated/api'
 import OpenAI from 'openai'
 
-// TEMPORALMENTE COMENTADO para permitir deploy sin OPENAI_API_KEY
-const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-  : null as any
+/**
+ * GRAPH ANALYSIS - Análisis de grafos con IA
+ */
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+})
 
 /**
- * Función helper para analizar un artículo (lógica compartida)
+ * Analizar artículo y extraer entidades y relaciones
  */
-async function analyzeArticleHelper(ctx: any, articleId: string) {
-  // Obtener el artículo
-  const article = await ctx.runQuery(api.articles.getById, {
-    id: articleId,
-  })
-
-  if (!article) {
-    throw new Error('Article not found')
-  }
-
-  // Preparar el prompt para GPT
-  const prompt = `Analiza el siguiente artículo y extrae todas las relaciones entre entidades (personas, organizaciones, medios, eventos).
-
-Artículo:
-Título: ${article.title}
-Contenido: ${article.content || ''}
-URL: ${article.url}
-
-Identifica:
-1. Todas las entidades mencionadas (personas, organizaciones, medios)
-2. Las relaciones entre ellas (trabaja para, es dueño de, apoya, se opone, etc.)
-3. La fuerza de cada relación (0-100) basada en qué tan explícita y significativa es
-4. El sentimiento de la relación (-100 a 100, negativo = conflicto, positivo = apoyo)
-
-CRITICAL INSTRUCTIONS:
-1. Los medios de comunicación son tipo ORGANIZATION, no MEDIA
-2. SOLO usa estos tipos de relación (NO inventes otros):
-   - owns, works_for, affiliated_with, mentioned_with, quoted_by, covers, participates_in, related_to, opposes, supports
-3. Si una relación no encaja exactamente, usa "related_to" como fallback
-
-Responde ÚNICAMENTE con un JSON válido sin markdown, con el siguiente formato:
-{
-  "entities": [
-    {"name": "Nombre", "type": "PERSON|ORGANIZATION|LOCATION|EVENT|DATE|OTHER"},
-    ...
-  ],
-  "relations": [
-    {
-      "source": "Nombre Entidad 1",
-      "sourceType": "PERSON|ORGANIZATION|LOCATION|EVENT|DATE|OTHER",
-      "target": "Nombre Entidad 2",
-      "targetType": "PERSON|ORGANIZATION|LOCATION|EVENT|DATE|OTHER",
-      "relationType": "owns|works_for|affiliated_with|mentioned_with|quoted_by|covers|related_to|opposes|supports",
-      "strength": 75,
-      "confidence": 85,
-      "sentiment": 50,
-      "context": "Breve explicación de la relación"
-    },
-    ...
-  ]
-}`
-
-  try {
-    // Llamar a OpenAI
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // Usar gpt-4o-mini explícitamente (no gpt-5 reasoning models)
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Eres un experto analista de medios especializado en identificar relaciones entre entidades políticas, mediáticas y sociales. Respondes únicamente con JSON válido.',
-        },
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-      max_completion_tokens: 4000,
-    })
-
-    // Para modelos de razonamiento (o1, gpt-5), el contenido puede estar vacío si finish_reason es 'length'
-    let content = response.choices[0]?.message?.content
-
-    // Si no hay contenido pero hay reasoning, el modelo se cortó
-    if (!content && response.choices[0]?.finish_reason === 'length') {
-      throw new Error('Model response was cut off due to token limit. Try increasing max_completion_tokens.')
-    }
-    if (!content) {
-      console.error('OpenAI response:', JSON.stringify(response, null, 2))
-      throw new Error('No response from OpenAI')
-    }
-
-    console.log('OpenAI raw response:', content.substring(0, 200))
-
-    // Parsear respuesta
-    let analysis
-    try {
-      analysis = JSON.parse(content)
-    } catch (parseError: any) {
-      console.error('Failed to parse OpenAI response:', parseError.message)
-      console.error('Raw content:', content)
-      throw new Error(`Invalid JSON from OpenAI: ${parseError.message}`)
-    }
-
-    // Crear/actualizar entidades en la base de datos
-    const entityMap = new Map<string, string>() // nombre -> id
-
-    for (const entity of analysis.entities) {
-      // Buscar si la entidad ya existe
-      const existing = await ctx.runQuery(api.entities.findByName, {
-        name: entity.name,
-      })
-
-      if (existing) {
-        entityMap.set(entity.name, existing._id)
-        // Agregar mención al artículo
-        await ctx.runMutation(api.entities.addMention, {
-          entityId: existing._id,
-          articleId: articleId,
-        })
-      } else {
-        // Crear nueva entidad
-        const normalized = entity.name.toLowerCase().trim()
-        const newEntityId = await ctx.runMutation(api.entities.create, {
-          name: entity.name,
-          normalizedName: normalized,
-          type: entity.type,
-        })
-        // Agregar mención al artículo
-        await ctx.runMutation(api.entities.addMention, {
-          entityId: newEntityId,
-          articleId: articleId,
-        })
-        entityMap.set(entity.name, newEntityId)
-      }
-    }
-
-    // Crear relaciones
-    const createdRelations: any[] = []
-    for (const relation of analysis.relations) {
-      const sourceId = entityMap.get(relation.source)
-      const targetId = entityMap.get(relation.target)
-
-      if (!sourceId || !targetId) {
-        console.warn(
-          `Skipping relation: missing entity IDs for ${relation.source} -> ${relation.target}`
-        )
-        continue
-      }
-
-      // Mapear tipo de entidad a tipo del grafo
-      const mapEntityType = (type: string) => {
-        if (type === 'PERSON') return 'entity'
-        if (type === 'ORGANIZATION') return 'entity'
-        if (type === 'MEDIA') return 'source'
-        return 'entity'
-      }
-
-      const relationId = await ctx.runMutation(
-        api.entityRelations.upsertRelation,
-        {
-          sourceId,
-          sourceType: mapEntityType(relation.sourceType) as any,
-          targetId,
-          targetType: mapEntityType(relation.targetType) as any,
-          relationType: relation.relationType,
-          strength: relation.strength,
-          confidence: relation.confidence,
-          context: relation.context,
-          evidenceArticleIds: [articleId],
-        }
-      )
-
-      createdRelations.push(relationId as any)
-    }
-
-    return {
-      success: true,
-      entitiesFound: analysis.entities.length,
-      relationsCreated: createdRelations.length,
-      analysis: analysis,
-    }
-  } catch (error) {
-    console.error('Error analyzing article:', error)
-    throw new Error(`Failed to analyze article: ${error}`)
-  }
-}
-
-/**
- * Analizar un artículo para extraer relaciones entre entidades
- */
-export const analyzeArticleForRelations = action({
+export const analyzeArticle = internalAction({
   args: {
     articleId: v.id('articles'),
   },
   handler: async (ctx, args) => {
-    return await analyzeArticleHelper(ctx, args.articleId)
+    // Obtener el artículo
+    const article = await ctx.runQuery(internal.articles.getById, {
+      id: args.articleId,
+    })
+
+    if (!article) {
+      return { success: false, error: 'Article not found' }
+    }
+
+    try {
+      // Prompt para OpenAI
+      const prompt = `Analiza el siguiente artículo de noticias de Panamá y extrae:
+1. Entidades (personas, organizaciones, lugares, eventos)
+2. Relaciones entre entidades
+3. Tipo de cada relación (dueño_de, trabaja_para, afiliado_con, mencionado_con, citado_por, participa_en)
+
+Artículo:
+Título: ${article.title}
+Contenido: ${article.content.substring(0, 3000)}
+
+Retorna un JSON con este formato:
+{
+  "entities": [
+    { "name": "Nombre", "type": "PERSON|ORGANIZATION|LOCATION|EVENT", "metadata": { "position": "cargo opcional", "description": "descripción opcional" } }
+  ],
+  "relations": [
+    { "source": "Nombre A", "target": "Nombre B", "type": "tipo_relacion", "strength": 50-100, "context": "contexto de la relación" }
+  ]
+}`
+
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'Eres un experto en análisis de noticias y extracción de entidades. Retorna siempre JSON válido.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.3,
+      })
+
+      const content = completion.choices[0]?.message?.content
+      if (!content) {
+        return { success: false, error: 'No response from OpenAI' }
+      }
+
+      const analysis = JSON.parse(content)
+
+      // Guardar entidades y relaciones
+      const entityIds = new Map<string, string>()
+
+      // Crear/actualizar entidades
+      for (const entity of analysis.entities || []) {
+        const normalizedName = entity.name.toLowerCase().trim()
+
+        // Buscar si ya existe
+        const existing = await ctx.runQuery(internal.entities.findByName, {
+          name: normalizedName,
+        })
+
+        let entityId: string
+        if (existing) {
+          entityId = existing._id
+          // Agregar mención
+          await ctx.runMutation(internal.entities.addMention, {
+            entityId: existing._id,
+            articleId: args.articleId,
+          })
+        } else {
+          // Crear nueva entidad
+          entityId = await ctx.runMutation(internal.entities.create, {
+            name: entity.name,
+            normalizedName,
+            type: entity.type,
+            metadata: entity.metadata,
+          })
+
+          // Agregar mención
+          await ctx.runMutation(internal.entities.addMention, {
+            entityId,
+            articleId: args.articleId,
+          })
+        }
+
+        entityIds.set(entity.name, entityId)
+      }
+
+      // Crear relaciones
+      for (const relation of analysis.relations || []) {
+        const sourceId = entityIds.get(relation.source)
+        const targetId = entityIds.get(relation.target)
+
+        if (sourceId && targetId) {
+          await ctx.runMutation(internal.entityRelations.create, {
+            sourceId,
+            targetId,
+            type: relation.type,
+            strength: relation.strength || 50,
+            context: relation.context,
+            articleId: args.articleId,
+          })
+        }
+      }
+
+      return {
+        success: true,
+        entitiesCount: analysis.entities?.length || 0,
+        relationsCount: analysis.relations?.length || 0,
+      }
+    } catch (error) {
+      console.error('Error analyzing article:', error)
+      return { success: false, error: String(error) }
+    }
   },
 })
 
 /**
- * Analizar múltiples artículos en batch
+ * Analizar batch de artículos
  */
 export const analyzeBatchArticles = action({
   args: {
     articleIds: v.array(v.id('articles')),
   },
   handler: async (ctx, args) => {
-    const results: any[] = []
+    console.log('🔬 Analizando batch de artículos:', args.articleIds.length)
+
+    let successful = 0
+    let failed = 0
 
     for (const articleId of args.articleIds) {
       try {
-        const result = await analyzeArticleHelper(ctx, articleId)
-        results.push({ articleId, ...result })
-      } catch (error) {
-        results.push({
+        const result = await ctx.runAction(internal.graphAnalysis.analyzeArticle, {
           articleId,
-          success: false,
-          error: String(error),
         })
+
+        if (result.success) {
+          successful++
+        } else {
+          failed++
+        }
+
+        // Pequeño delay para evitar rate limits
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+      } catch (error) {
+        console.error(`Error analyzing article ${articleId}:`, error)
+        failed++
       }
     }
 
-    return {
-      total: args.articleIds.length,
-      successful: results.filter((r: any) => r.success).length,
-      failed: results.filter((r: any) => !r.success).length,
-      results,
-    }
+    return { successful, failed, total: args.articleIds.length }
   },
 })
 
 /**
- * Generar relaciones automáticas por co-mención
- * Conecta entidades que aparecen juntas en el mismo artículo
+ * Generar relaciones por co-menciones
  */
-export const generateCoMentionRelations: any = action({
-  args: {
-    articleIds: v.optional(v.array(v.id('articles'))),
-  },
-  handler: async (ctx, args) => {
-    console.log('🔄 Iniciando generación de co-menciones...')
+export const generateCoMentionRelations = action({
+  args: {},
+  handler: async (ctx) => {
+    console.log('🔗 Generando relaciones por co-menciones...')
 
-    // Si no se especifican artículos, obtener todos
-    const articles = args.articleIds
-      ? await Promise.all(
-          args.articleIds.map((id) => ctx.runQuery(api.articles.getById, { id }))
-        )
-      : await ctx.runQuery(api.articles.list, { limit: 100 })
+    try {
+      // Obtener todos los artículos
+      const articles = await ctx.runQuery(internal.articles.list, { limit: 1000 })
 
-    if (!articles || articles.length === 0) {
-      return {
-        success: false,
-        message: 'No hay artículos para procesar',
-        articlesProcessed: 0,
-        relationsCreated: 0,
-      }
-    }
+      let relationsCreated = 0
+      const entityPairs = new Map<string, number>()
 
-    console.log(`📄 Procesando ${articles.length} artículos...`)
+      for (const article of articles) {
+        // Obtener entidades mencionadas en este artículo
+        const entities = await ctx.runQuery(internal.entities.findByArticle, {
+          articleId: article._id,
+        })
 
-    let totalRelationsCreated = 0
-    const relationStats = new Map<string, number>() // Para contar co-menciones
+        // Crear relaciones entre cada par de entidades mencionadas juntas
+        for (let i = 0; i < entities.length; i++) {
+          for (let j = i + 1; j < entities.length; j++) {
+            const entity1 = entities[i]
+            const entity2 = entities[j]
 
-    for (const article of articles) {
-      if (!article) continue
+            // Ordenar los IDs para evitar duplicados (A-B vs B-A)
+            const pairKey = [entity1._id, entity2._id].sort().join('-')
 
-      // Obtener todas las entidades que mencionan este artículo
-      const entities = await ctx.runQuery(api.entities.findByArticle, {
-        articleId: article._id,
-      })
-
-      if (entities.length < 2) {
-        console.log(`⏭️  Artículo ${article._id}: solo ${entities.length} entidad(es), saltando`)
-        continue
-      }
-
-      console.log(`🔗 Artículo ${article._id}: ${entities.length} entidades encontradas`)
-
-      // Crear relaciones entre cada par de entidades
-      for (let i = 0; i < entities.length; i++) {
-        for (let j = i + 1; j < entities.length; j++) {
-          const entity1 = entities[i]
-          const entity2 = entities[j]
-
-          // Crear clave única para el par (ordenada alfabéticamente)
-          const pairKey = [entity1._id, entity2._id].sort().join('|')
-          const currentCount = relationStats.get(pairKey) || 0
-          relationStats.set(pairKey, currentCount + 1)
-
-          // Calcular strength basado en frecuencia de co-mención
-          // Primera mención = 30, cada mención adicional suma 10 (máximo 100)
-          const strength = Math.min(100, 30 + currentCount * 10)
-
-          // Confidence aumenta con más co-menciones
-          const confidence = Math.min(95, 60 + currentCount * 5)
-
-          try {
-            await ctx.runMutation(api.entityRelations.upsertRelation, {
-              sourceId: entity1._id,
-              sourceType: 'entity',
-              targetId: entity2._id,
-              targetType: 'entity',
-              relationType: 'mentioned_with',
-              strength,
-              confidence,
-              context: `Co-mencionados en: ${article.title}`,
-              evidenceArticleIds: [article._id],
-            })
-
-            totalRelationsCreated++
-          } catch (error) {
-            console.error(`Error creando relación ${entity1.name} <-> ${entity2.name}:`, error)
+            // Incrementar contador de co-menciones
+            const currentCount = entityPairs.get(pairKey) || 0
+            entityPairs.set(pairKey, currentCount + 1)
           }
         }
       }
-    }
 
-    console.log(`✅ Co-menciones completadas: ${totalRelationsCreated} relaciones creadas`)
+      // Crear relaciones basadas en co-menciones
+      for (const [pairKey, mentionCount] of entityPairs.entries()) {
+        const [sourceId, targetId] = pairKey.split('-')
 
-    return {
-      success: true,
-      articlesProcessed: articles.length,
-      relationsCreated: totalRelationsCreated,
-      uniquePairs: relationStats.size,
+        // Solo crear relación si hay al menos 2 co-menciones
+        if (mentionCount >= 2) {
+          try {
+            // Verificar si ya existe una relación
+            const existing = await ctx.runQuery(internal.entityRelations.getRelation, {
+              sourceId,
+              targetId,
+            })
+
+            if (!existing) {
+              // Calcular strength basado en número de co-menciones
+              const strength = Math.min(100, 30 + mentionCount * 10)
+
+              await ctx.runMutation(internal.entityRelations.create, {
+                sourceId,
+                targetId,
+                type: 'mentioned_with',
+                strength,
+                context: `Co-mencionados ${mentionCount} veces`,
+              })
+
+              relationsCreated++
+            }
+          } catch (error) {
+            console.error(`Error creating relation ${pairKey}:`, error)
+          }
+        }
+      }
+
+      return {
+        success: true,
+        relationsCreated,
+        uniquePairs: entityPairs.size,
+        articlesProcessed: articles.length,
+        message: `Se crearon ${relationsCreated} relaciones de co-mención`,
+      }
+    } catch (error) {
+      console.error('Error generating co-mention relations:', error)
+      return {
+        success: false,
+        message: `Error: ${error}`,
+      }
     }
   },
 })
 
 /**
- * Obtener sugerencias de relaciones usando IA
+ * Obtener sugerencias de relaciones para una entidad usando IA
  */
-export const suggestRelations = action({
+export const getSuggestedRelations = action({
   args: {
-    entityId: v.string(),
-    entityName: v.string(),
-    entityType: v.string(),
+    entityId: v.id('entities'),
   },
-  handler: async (_ctx, args) => {
-    const prompt = `Basándote en tu conocimiento sobre Panamá y el contexto político/mediático, sugiere posibles relaciones para:
+  handler: async (ctx, args) => {
+    try {
+      // Obtener la entidad
+      const entity = await ctx.runQuery(internal.entities.getById, {
+        id: args.entityId,
+      })
 
-Entidad: ${args.entityName}
-Tipo: ${args.entityType}
+      if (!entity) {
+        throw new Error('Entity not found')
+      }
 
-Sugiere:
-1. Entidades relacionadas (personas, organizaciones, medios)
-2. Tipo de relación
-3. Nivel de confianza de que esta relación existe (0-100)
+      // Obtener artículos donde se menciona esta entidad
+      const articles = []
+      for (const articleId of entity.mentionedIn.slice(0, 5)) {
+        // Máximo 5 artículos
+        const article = await ctx.runQuery(internal.articles.getById, {
+          id: articleId,
+        })
+        if (article) {
+          articles.push(article)
+        }
+      }
 
-Responde ÚNICAMENTE con un JSON válido sin markdown:
+      // Obtener relaciones existentes
+      const existingRelations = await ctx.runQuery(
+        internal.entityRelations.getEntityRelations,
+        { entityId: args.entityId }
+      )
+
+      // Preparar contexto para la IA
+      const articlesContext = articles
+        .map(
+          (a) => `
+Título: ${a.title}
+Contenido: ${a.content.substring(0, 1000)}...
+`
+        )
+        .join('\n---\n')
+
+      const existingContext = existingRelations
+        .map((r) => `- Relación con ${r.target.label}: ${r.type}`)
+        .join('\n')
+
+      const prompt = `Analiza la siguiente entidad y sugiere nuevas relaciones que podrían existir pero no están registradas:
+
+Entidad: ${entity.name}
+Tipo: ${entity.type}
+
+Relaciones existentes:
+${existingContext || 'Ninguna'}
+
+Contexto de artículos donde se menciona:
+${articlesContext}
+
+Basándote en el contexto, sugiere nuevas relaciones posibles con otras entidades que aparecen en los artículos.
+
+Retorna un JSON con este formato:
 {
   "suggestions": [
     {
-      "targetName": "Nombre de la entidad relacionada",
-      "targetType": "PERSON|ORGANIZATION|MEDIA|EVENT",
-      "relationType": "owns|works_for|affiliated_with|covers|supports|opposes",
-      "confidence": 75,
-      "reasoning": "Breve explicación de por qué esta relación es probable"
+      "targetEntity": "Nombre de la entidad relacionada",
+      "relationType": "tipo_relacion",
+      "confidence": 0-100,
+      "reason": "razón por la que sugieres esta relación",
+      "evidence": "cita del artículo que respalda esta relación"
     }
   ]
 }`
 
-    try {
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini', // Usar gpt-4o-mini explícitamente (no gpt-5 reasoning models)
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4',
         messages: [
           {
             role: 'system',
             content:
-              'Eres un experto en política y medios de Panamá. Conoces las relaciones entre figuras políticas, medios de comunicación y organizaciones.',
+              'Eres un experto en análisis de relaciones y entidades en contextos políticos y de medios. Retorna siempre JSON válido.',
           },
-          {
-            role: 'user',
-            content: prompt,
-          },
+          { role: 'user', content: prompt },
         ],
-        max_completion_tokens: 2000,
+        response_format: { type: 'json_object' },
+        temperature: 0.4,
       })
 
-      let content = response.choices[0]?.message?.content
-      if (!content && response.choices[0]?.finish_reason === 'length') {
+      const content = completion.choices[0]?.message?.content
+      const finishReason = completion.choices[0]?.finish_reason
+
+      if (finishReason === 'length') {
         throw new Error('Model response was cut off due to token limit')
       }
       if (!content) {
@@ -393,6 +367,133 @@ Responde ÚNICAMENTE con un JSON válido sin markdown:
     } catch (error) {
       console.error('Error getting suggestions:', error)
       throw new Error(`Failed to get suggestions: ${error}`)
+    }
+  },
+})
+
+/**
+ * Reanalizar entidades marcadas para revisión
+ * Esta acción busca todas las entidades marcadas y rehace el análisis de IA
+ * para encontrar nuevas relaciones
+ */
+export const reanalyzeMarkedEntities = action({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { limit = 10 } = args
+
+    console.log('🔄 Reanalizando entidades marcadas para revisión...')
+
+    try {
+      // Obtener entidades marcadas
+      const markedEntities = await ctx.runQuery(internal.entities.getMarkedForReview, {
+        limit,
+      })
+
+      if (markedEntities.length === 0) {
+        return {
+          success: true,
+          message: 'No hay entidades marcadas para revisión',
+          processed: 0,
+          newRelations: 0,
+        }
+      }
+
+      console.log(`📋 Encontradas ${markedEntities.length} entidades marcadas`)
+
+      let processed = 0
+      let totalNewRelations = 0
+
+      for (const entity of markedEntities) {
+        try {
+          console.log(`🔍 Analizando: ${entity.name}`)
+
+          // Obtener sugerencias de la IA
+          const suggestions = await ctx.runAction(
+            internal.graphAnalysis.getSuggestedRelations,
+            { entityId: entity._id }
+          )
+
+          // Procesar cada sugerencia
+          for (const suggestion of suggestions.suggestions || []) {
+            // Solo procesar sugerencias con alta confianza
+            if (suggestion.confidence >= 60) {
+              // Buscar o crear la entidad target
+              const targetEntityName = suggestion.targetEntity.toLowerCase().trim()
+              let targetEntity = await ctx.runQuery(internal.entities.findByName, {
+                name: targetEntityName,
+              })
+
+              if (!targetEntity) {
+                // Crear la entidad si no existe
+                const targetEntityId = await ctx.runMutation(internal.entities.create, {
+                  name: suggestion.targetEntity,
+                  normalizedName: targetEntityName,
+                  type: 'OTHER', // Tipo por defecto
+                })
+                targetEntity = await ctx.runQuery(internal.entities.getById, {
+                  id: targetEntityId,
+                })
+              }
+
+              if (targetEntity) {
+                // Verificar si ya existe esta relación
+                const existingRelation = await ctx.runQuery(
+                  internal.entityRelations.getRelation,
+                  {
+                    sourceId: entity._id,
+                    targetId: targetEntity._id,
+                  }
+                )
+
+                if (!existingRelation) {
+                  // Crear nueva relación
+                  await ctx.runMutation(internal.entityRelations.create, {
+                    sourceId: entity._id,
+                    targetId: targetEntity._id,
+                    type: suggestion.relationType,
+                    strength: suggestion.confidence,
+                    context: suggestion.reason,
+                  })
+
+                  totalNewRelations++
+                  console.log(
+                    `✅ Nueva relación: ${entity.name} -> ${targetEntity.name} (${suggestion.relationType})`
+                  )
+                }
+              }
+            }
+          }
+
+          // Desmarcar la entidad después de procesarla
+          await ctx.runMutation(internal.entities.unmarkForReview, {
+            entityId: entity._id,
+          })
+
+          processed++
+
+          // Delay para evitar rate limits
+          await new Promise((resolve) => setTimeout(resolve, 2000))
+        } catch (error) {
+          console.error(`Error procesando entidad ${entity.name}:`, error)
+        }
+      }
+
+      return {
+        success: true,
+        message: `Se procesaron ${processed} entidades y se encontraron ${totalNewRelations} nuevas relaciones`,
+        processed,
+        newRelations: totalNewRelations,
+      }
+    } catch (error) {
+      console.error('Error reanalizando entidades:', error)
+      return {
+        success: false,
+        message: `Error: ${error}`,
+        processed: 0,
+        newRelations: 0,
+      }
     }
   },
 })

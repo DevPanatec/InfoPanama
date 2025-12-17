@@ -289,6 +289,11 @@ export default defineSchema({
       connections: v.optional(v.any()),
     })),
 
+    // Marcado para revisión de IA
+    markedForReview: v.optional(v.boolean()),
+    reviewRequestedAt: v.optional(v.number()),
+    reviewRequestedBy: v.optional(v.string()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })

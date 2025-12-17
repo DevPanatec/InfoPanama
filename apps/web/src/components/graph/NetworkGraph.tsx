@@ -147,7 +147,7 @@ export function NetworkGraph({
         dragView: true,
       },
       layout: {
-        improvedLayout: true,
+        improvedLayout: true, // Rehabilitado para mejor distribución de nodos
         randomSeed: 42,
       },
     }
@@ -203,50 +203,58 @@ export function NetworkGraph({
           return
         }
 
-        // IMPORTANTE: Desactivar física temporalmente para que el zoom se mantenga
+        // IMPORTANTE: Desactivar física para que el zoom se mantenga
         networkRef.current.setOptions({ physics: { enabled: false } })
-        console.log('⏸️  Física desactivada temporalmente')
+        console.log('⏸️  Física desactivada para mantener zoom')
 
         // Deseleccionar todo
         networkRef.current.unselectAll()
 
-        // Centrar y hacer zoom GRANDE en el nodo
-        networkRef.current.focus(focusNode, {
-          scale: 5.0,  // Zoom MUY grande para enfoque total en el nodo
-          offset: { x: 0, y: 0 },
-          locked: false,
-          animation: {
-            duration: 1000,
-            easingFunction: 'easeInOutQuad',
-          },
-        })
-
-        console.log('✅ Focus aplicado correctamente')
-
-        // Seleccionar el nodo visualmente después de la animación
+        // Esperar a que el grafo esté estabilizado
         setTimeout(() => {
-          if (networkRef.current) {
-            networkRef.current.selectNodes([focusNode])
-            console.log('✅ Nodo seleccionado visualmente')
+          if (!networkRef.current) return
 
-            // Reactivar física después de 2 segundos
+          // Obtener la posición del nodo
+          const positions = networkRef.current.getPositions([focusNode])
+          const nodePosition = positions[focusNode]
+
+          if (nodePosition) {
+            console.log('📍 Posición del nodo:', nodePosition)
+
+            // Usar moveTo para centrar y hacer zoom moderado
+            networkRef.current.moveTo({
+              position: { x: nodePosition.x, y: nodePosition.y },
+              scale: 1.5, // Zoom moderado - muestra el nodo y su contexto
+              offset: { x: 0, y: 0 },
+              animation: {
+                duration: 1000,
+                easingFunction: 'easeInOutQuad',
+              },
+            })
+
+            console.log('✅ Zoom aplicado correctamente con moveTo()')
+
+            // Seleccionar el nodo visualmente después de la animación
             setTimeout(() => {
               if (networkRef.current) {
-                networkRef.current.setOptions({ physics: { enabled: true } })
-                console.log('▶️  Física reactivada')
+                networkRef.current.selectNodes([focusNode])
+                console.log('✅ Nodo seleccionado visualmente')
               }
-            }, 2000)
+            }, 1100)
+          } else {
+            console.error('❌ No se pudo obtener la posición del nodo')
           }
-        }, 1100)
+        }, 500) // Esperar 500ms para que el grafo se estabilice
       } catch (error) {
         console.error('❌ Error al centrar en nodo:', error)
         console.log('Nodo ID:', focusNode)
         console.log('Nodos disponibles:', nodes.slice(0, 5))
       }
     } else if (!focusNode && networkRef.current) {
-      // Si no hay búsqueda activa, deseleccionar todo y asegurar que física esté activa
+      // Si no hay búsqueda activa, deseleccionar todo y reactivar física
       networkRef.current.unselectAll()
       networkRef.current.setOptions({ physics: { enabled: true } })
+      console.log('▶️  Física reactivada - sin búsqueda activa')
     }
   }, [focusNode, nodes])
 
@@ -270,7 +278,7 @@ export function NetworkGraph({
         },
       })
     }
-  }, [zoomLevel, focusNode])
+  }, [zoomLevel]) // REMOVIDO focusNode de las dependencias
 
   return (
     <div className="relative w-full">

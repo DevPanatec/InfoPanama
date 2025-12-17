@@ -1,6 +1,6 @@
 'use client'
 
-import { X, User, Building2, Newspaper, Calendar, Star, ExternalLink } from 'lucide-react'
+import { X, User, Building2, Newspaper, Calendar, Star, ExternalLink, Flag } from 'lucide-react'
 
 interface Evidence {
   type: 'source' | 'document' | 'mention'
@@ -37,9 +37,11 @@ interface NodeDetails {
 interface NodeDetailsPanelProps {
   node: NodeDetails | null
   onClose: () => void
+  onMarkForReview?: (nodeId: string) => void
+  markedForReview?: boolean
 }
 
-export function NodeDetailsPanel({ node, onClose }: NodeDetailsPanelProps) {
+export function NodeDetailsPanel({ node, onClose, onMarkForReview, markedForReview = false }: NodeDetailsPanelProps) {
   if (!node) return null
 
   const getNodeIcon = () => {
@@ -93,12 +95,27 @@ export function NodeDetailsPanel({ node, onClose }: NodeDetailsPanelProps) {
             <p className="text-sm text-gray-400">{getNodeTypeLabel()}</p>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-white transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {onMarkForReview && (
+            <button
+              onClick={() => onMarkForReview(node.id)}
+              className={`p-2 rounded-lg transition-all ${
+                markedForReview
+                  ? 'bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30'
+                  : 'text-gray-400 hover:text-yellow-500 hover:bg-gray-700'
+              }`}
+              title={markedForReview ? 'Marcado para revisión' : 'Marcar para revisión de IA'}
+            >
+              <Flag className={`w-5 h-5 ${markedForReview ? 'fill-current' : ''}`} />
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Content */}

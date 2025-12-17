@@ -472,3 +472,67 @@ export const remove = mutation({
     return args.id
   },
 })
+
+/**
+ * Marcar entidad para revisión de IA
+ */
+export const markForReview = mutation({
+  args: {
+    entityId: v.id('entities'),
+    requestedBy: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const entity = await ctx.db.get(args.entityId)
+    if (!entity) {
+      throw new Error('Entity not found')
+    }
+
+    await ctx.db.patch(args.entityId, {
+      markedForReview: true,
+      reviewRequestedAt: Date.now(),
+      reviewRequestedBy: args.requestedBy || 'unknown',
+      updatedAt: Date.now(),
+    })
+
+    return args.entityId
+  },
+})
+
+/**
+ * Desmarcar entidad de revisión
+ */
+export const unmarkForReview = mutation({
+  args: { entityId: v.id('entities') },
+  handler: async (ctx, args) => {
+    const entity = await ctx.db.get(args.entityId)
+    if (!entity) {
+      throw new Error('Entity not found')
+    }
+
+    await ctx.db.patch(args.entityId, {
+      markedForReview: false,
+      updatedAt: Date.now(),
+    })
+
+    return args.entityId
+  },
+})
+
+/**
+ * Obtener entidades marcadas para revisión
+ */
+export const getMarkedForReview = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { limit = 50 } = args
+
+    const allEntities = await ctx.db.query('entities').collect()
+
+    return allEntities
+      .filter((e) => e.markedForReview === true)
+      .sort((a, b) => (b.reviewRequestedAt || 0) - (a.reviewRequestedAt || 0))
+      .slice(0, limit)
+  },
+})

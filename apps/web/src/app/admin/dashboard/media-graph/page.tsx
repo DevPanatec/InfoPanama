@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { MediaGraph } from '@/components/graph/MediaGraph'
 import { GraphFilters, type GraphFilterOptions } from '@/components/graph/GraphFilters'
-import { Download, Plus, Sparkles, Loader2, Link2 } from 'lucide-react'
+import { Download, Plus, Sparkles, Loader2, Link2, RefreshCw } from 'lucide-react'
 import { useAction, useQuery } from 'convex/react'
 import { api } from '@infopanama/convex'
 
@@ -18,6 +18,7 @@ export default function MediaGraphPage() {
   })
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isGeneratingCoMentions, setIsGeneratingCoMentions] = useState(false)
+  const [isReanalyzing, setIsReanalyzing] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<string | null>(null)
   const hasAutoAnalyzed = useRef(false)
 
@@ -25,8 +26,10 @@ export default function MediaGraphPage() {
   const analyzeBatch = useAction(api.graphAnalysis.analyzeBatchArticles)
   // @ts-ignore - Function has 'any' type to avoid circular dependencies
   const generateCoMentions = useAction(api.graphAnalysis.generateCoMentionRelations)
+  const reanalyzeMarked = useAction(api.graphAnalysis.reanalyzeMarkedEntities)
   const articles = useQuery(api.articles.list, { limit: 10 })
   const graphStats = useQuery(api.entityRelations.getGraphStats)
+  const markedEntities = useQuery(api.entities.getMarkedForReview, { limit: 50 })
 
   const handleAnalyzeWithAI = async () => {
     console.log('🔍 handleAnalyzeWithAI llamado', { articles: articles?.length })
@@ -86,6 +89,39 @@ export default function MediaGraphPage() {
     }
   }
 
+  const handleReanalyzeMarked = async () => {
+    console.log('🔄 Reanalizando entidades marcadas...')
+
+    if (!markedEntities || markedEntities.length === 0) {
+      setAnalysisResult('No hay entidades marcadas para revisión')
+      setTimeout(() => setAnalysisResult(null), 3000)
+      return
+    }
+
+    setIsReanalyzing(true)
+    setAnalysisResult(null)
+
+    try {
+      const result = await reanalyzeMarked({ limit: 10 })
+      console.log('✅ Resultado del reanálisis:', result)
+
+      if (result.success) {
+        setAnalysisResult(
+          `✓ Reanálisis completado: ${result.processed} entidades procesadas, ${result.newRelations} nuevas relaciones encontradas`
+        )
+      } else {
+        setAnalysisResult(result.message || 'Error al reanalizar entidades')
+      }
+      setTimeout(() => setAnalysisResult(null), 6000)
+    } catch (error) {
+      console.error('Error reanalizando entidades:', error)
+      setAnalysisResult('Error al reanalizar entidades')
+      setTimeout(() => setAnalysisResult(null), 3000)
+    } finally {
+      setIsReanalyzing(false)
+    }
+  }
+
   // Auto-analizar si no hay datos en el grafo
   useEffect(() => {
     if (
@@ -102,12 +138,12 @@ export default function MediaGraphPage() {
   }, [graphStats, articles, isAnalyzing, handleAnalyzeWithAI])
 
   return (
-    <div className="p-8 bg-slate-50 min-h-screen">
+    <div className="p-4 md:p-8 bg-slate-50 min-h-screen">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-3xl font-bold text-slate-900">Grafo OSINT de Entidades</h1>
-          <div className="flex gap-2">
+      <div className="mb-4 md:mb-6">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Grafo OSINT de Entidades</h1>
+          <div className="flex flex-wrap gap-2 w-full lg:w-auto">
             <GraphFilters
               onFiltersChange={setFilters}
               stats={graphStats}
@@ -117,44 +153,67 @@ export default function MediaGraphPage() {
             <button
               onClick={handleAnalyzeWithAI}
               disabled={isAnalyzing || !articles || articles.length === 0}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition flex items-center gap-2"
+              className="px-3 md:px-4 py-2 bg-blue-600 text-white rounded-lg text-xs md:text-sm font-medium hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition flex items-center gap-2 flex-1 lg:flex-none justify-center"
             >
               {isAnalyzing ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Analizando...
+                  <span className="hidden sm:inline">Analizando...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="h-4 w-4" />
-                  Analizar con IA
+                  <span className="hidden sm:inline">Analizar con IA</span>
                 </>
               )}
             </button>
             <button
               onClick={handleGenerateCoMentions}
               disabled={isGeneratingCoMentions}
-              className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition flex items-center gap-2"
+              className="px-3 md:px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs md:text-sm font-medium hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition flex items-center gap-2 flex-1 lg:flex-none justify-center"
             >
               {isGeneratingCoMentions ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Generando...
+                  <span className="hidden sm:inline">Generando...</span>
                 </>
               ) : (
                 <>
                   <Link2 className="h-4 w-4" />
-                  Generar Co-menciones
+                  <span className="hidden sm:inline">Co-menciones</span>
                 </>
               )}
             </button>
-            <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Nueva Relación
+            <button
+              onClick={handleReanalyzeMarked}
+              disabled={isReanalyzing || !markedEntities || markedEntities.length === 0}
+              className="px-3 md:px-4 py-2 bg-amber-600 text-white rounded-lg text-xs md:text-sm font-medium hover:bg-amber-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition flex items-center gap-2 flex-1 lg:flex-none justify-center relative"
+              title={`Reanalizar ${markedEntities?.length || 0} entidades marcadas`}
+            >
+              {isReanalyzing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="hidden sm:inline">Reanalizando...</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4" />
+                  <span className="hidden sm:inline">Reanalizar</span>
+                  {markedEntities && markedEntities.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {markedEntities.length}
+                    </span>
+                  )}
+                </>
+              )}
             </button>
-            <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition flex items-center gap-2">
+            <button className="px-3 md:px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs md:text-sm font-medium text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 flex-1 lg:flex-none justify-center">
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Nueva</span>
+            </button>
+            <button className="px-3 md:px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs md:text-sm font-medium text-slate-700 hover:bg-slate-50 transition flex items-center gap-2 flex-1 lg:flex-none justify-center">
               <Download className="h-4 w-4" />
-              Exportar
+              <span className="hidden sm:inline">Exportar</span>
             </button>
           </div>
         </div>
@@ -208,11 +267,11 @@ export default function MediaGraphPage() {
         </p>
       </div>
 
-      {/* Graph - Fullscreen estilo Obsidian */}
+      {/* Graph - Responsive y adaptable */}
       <div className="rounded-lg overflow-hidden shadow-2xl">
         <MediaGraph
           filters={filters}
-          height="calc(100vh - 200px)"
+          height="calc(100vh - 280px)"
         />
       </div>
     </div>
