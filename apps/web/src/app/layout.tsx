@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { Navbar } from '@/components/layout/Navbar'
+import { ConditionalNavbar } from '@/components/layout/ConditionalNavbar'
 import { ToastProvider } from '@/components/ui/Toast'
 import { LoadingBar } from '@/components/LoadingBar'
 import { ConvexClientProvider } from '@/components/providers/ConvexClientProvider'
@@ -60,7 +60,7 @@ export default function RootLayout({
           <ConvexClientProvider>
             <ToastProvider>
               <LoadingBar />
-              <Navbar />
+              <ConditionalNavbar />
               {children}
             </ToastProvider>
           </ConvexClientProvider>
