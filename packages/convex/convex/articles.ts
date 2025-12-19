@@ -429,3 +429,26 @@ export const getUnanalyzed = internalQuery({
     return unanalyzed
   },
 })
+
+/**
+ * ELIMINAR TODOS LOS ARTÍCULOS - Para limpiar la base de datos
+ */
+export const deleteAll = mutation({
+  args: {},
+  handler: async (ctx, args) => {
+    const allArticles = await ctx.db.query('articles').collect()
+
+    let deleted = 0
+    for (const article of allArticles) {
+      await ctx.db.delete(article._id)
+      deleted++
+    }
+
+    console.log(`🗑️ Eliminados ${deleted} artículos de la base de datos`)
+
+    return {
+      message: `✅ Eliminados TODOS los artículos: ${deleted}`,
+      deleted,
+    }
+  },
+})

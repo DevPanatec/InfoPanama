@@ -152,10 +152,12 @@ async function scrapeArticle(context: any, url: string): Promise<ScrapedArticle 
     const dateText =
       $('time').first().attr('datetime') ||
       $('.date').first().text().trim() ||
-      $('meta[property="article:published_time"]').attr('content') ||
-      new Date().toISOString()
+      $('meta[property="article:published_time"]').attr('content')
 
-    const publishedDate = new Date(dateText)
+    let publishedDate = new Date(dateText || new Date())
+    if (isNaN(publishedDate.getTime())) {
+      publishedDate = new Date()
+    }
 
     // Extraer imagen
     const imageUrl =
@@ -172,11 +174,14 @@ async function scrapeArticle(context: any, url: string): Promise<ScrapedArticle 
     return {
       title,
       url,
+      sourceUrl: url,
+      sourceName: 'TVN',
+      sourceType: 'news_website' as const,
       content: content.trim(),
-      author,
-      publishedDate,
+      scrapedAt: new Date().toISOString(),
+      publishedDate: publishedDate.toISOString(),
       imageUrl,
-      source: 'TVN',
+      author,
       category,
     }
   } catch (error) {

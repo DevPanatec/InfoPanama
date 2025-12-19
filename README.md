@@ -112,7 +112,7 @@ chmod +x run-crawler.sh
 ./run-crawler.sh
 ```
 
-Ver [CRAWLER_SETUP.md](CRAWLER_SETUP.md) para documentación completa del crawler.
+Ver [CRAWLER_SETUP.md](docs/CRAWLER_SETUP.md) para documentación completa del crawler.
 
 ## 📋 Variables de Entorno
 
@@ -167,12 +167,12 @@ npm run test:coverage
 
 📚 **Documentación detallada:**
 
-- **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** - Lista completa de verificación
-- **[DEPLOY_DIGITAL_OCEAN.md](DEPLOY_DIGITAL_OCEAN.md)** - Guía paso a paso para Digital Ocean
+- **[DEPLOYMENT_CHECKLIST.md](docs/DEPLOYMENT_CHECKLIST.md)** - Lista completa de verificación
+- **[DEPLOY_DIGITAL_OCEAN.md](docs/DEPLOY_DIGITAL_OCEAN.md)** - Guía paso a paso para Digital Ocean
 - **[BROWSERBASE_SETUP.md](packages/crawler/BROWSERBASE_SETUP.md)** - Configuración de scraping avanzado
 - **[ANTICAPTCHA_SETUP.md](packages/crawler/ANTICAPTCHA_SETUP.md)** - Configuración de captcha solving (opcional)
 - **[scripts/README.md](scripts/README.md)** - Scripts de setup automático
-- **[QUICK_COMMANDS.md](QUICK_COMMANDS.md)** - Referencia rápida de comandos
+- **[QUICK_COMMANDS.md](docs/QUICK_COMMANDS.md)** - Referencia rápida de comandos
 
 ### Quick Deploy
 
@@ -221,13 +221,17 @@ npm run test:coverage
 
 ## 📚 Documentación
 
-Ver la carpeta [`/docs`](/docs) para documentación detallada:
+📂 **Toda la documentación está en la carpeta [`/docs`](./docs/)**
 
-- [Arquitectura del Sistema](/docs/architecture.md)
-- [Guía de Desarrollo](/docs/development.md)
-- [API Reference](/docs/api.md)
-- [Metodología de Verificación](/docs/methodology.md)
-- [Debida Diligencia](/docs/due-diligence.md)
+**Documentos clave:**
+- 🚀 [GETTING_STARTED.md](./docs/GETTING_STARTED.md) - Guía para empezar
+- ⚡ [CONVEX_OPTIMIZATIONS.md](./docs/CONVEX_OPTIMIZATIONS.md) - Optimizaciones de Convex (NUEVO)
+- 🕷️ [CRAWLER_SETUP.md](./docs/CRAWLER_SETUP.md) - Setup de crawlers
+- 🚢 [DEPLOY_DIGITAL_OCEAN.md](./docs/DEPLOY_DIGITAL_OCEAN.md) - Guía de deployment
+- 📊 [ESTADO_ACTUAL_SISTEMA.md](./docs/ESTADO_ACTUAL_SISTEMA.md) - Estado del sistema
+- 🔐 [CREDENTIALS_GUIDE.md](./docs/CREDENTIALS_GUIDE.md) - Todas las credenciales
+
+**Ver índice completo:** [docs/README.md](./docs/README.md)
 
 ## 🔐 Seguridad
 

@@ -89,6 +89,8 @@ export default defineSchema({
     .index('by_risk', ['riskLevel'])
     .index('by_created', ['createdAt'])
     .index('by_category', ['category'])
+    .index('by_published', ['status', 'isPublic', 'publishedAt']) // Índice compuesto optimizado
+    .index('by_featured', ['isFeatured', 'isPublic', 'publishedAt']) // Para queries de featured
     .searchIndex('search_claims', {
       searchField: 'claimText',
       filterFields: ['status', 'category', 'riskLevel'],
@@ -248,6 +250,11 @@ export default defineSchema({
     logo: v.optional(v.string()),
     description: v.optional(v.string()),
 
+    // Marcado para revisión de IA
+    markedForReview: v.optional(v.boolean()),
+    reviewRequestedAt: v.optional(v.number()),
+    reviewRequestedBy: v.optional(v.string()),
+
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -376,6 +383,11 @@ export default defineSchema({
     // Flags
     isMonitored: v.boolean(),
     isBlocked: v.boolean(),
+
+    // Marcado para revisión de IA
+    markedForReview: v.optional(v.boolean()),
+    reviewRequestedAt: v.optional(v.number()),
+    reviewRequestedBy: v.optional(v.string()),
 
     createdAt: v.number(),
     updatedAt: v.number(),

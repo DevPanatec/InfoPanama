@@ -37,7 +37,7 @@ export function Navbar() {
   }, [isOpen])
 
   return (
-    <nav className="border-b border-slate-200 bg-gradient-to-b from-white to-soft-blue/20 backdrop-blur sticky top-0 z-50 shadow-xl">
+    <nav className="border-b border-digital-blue/30 bg-gradient-to-b from-verifica-blue/80 via-soft-blue/30 to-white backdrop-blur sticky top-0 z-50 shadow-xl">
       <div className="container mx-auto px-4">
         <div className="flex h-20 items-center justify-between">
           <Link
@@ -62,8 +62,8 @@ export function Navbar() {
                 href={link.href}
                 className={`text-base font-medium transition ${
                   pathname === link.href
-                    ? 'text-digital-blue'
-                    : 'text-blue-gray hover:text-digital-blue'
+                    ? 'text-deep-blue font-semibold'
+                    : 'text-verifica-blue hover:text-deep-blue'
                 }`}
               >
                 {link.label}
@@ -97,7 +97,7 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-soft-blue transition"
+            className="md:hidden p-2 rounded-lg hover:bg-verifica-blue/10 transition"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? 'Cerrar menú' : 'Abrir menú'}
             aria-expanded={isOpen}

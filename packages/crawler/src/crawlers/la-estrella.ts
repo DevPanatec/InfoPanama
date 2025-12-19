@@ -191,6 +191,12 @@ async function scrapeArticle(context: any, url: string): Promise<ScrapedArticle 
       publishedDate = new Date()
     }
 
+    // Extraer imagen
+    const imageUrl =
+      $('.article-image img').first().attr('src') ||
+      $('meta[property="og:image"]').attr('content') ||
+      undefined
+
     // Determinar categoría desde la URL
     let category = 'General'
     if (url.includes('/politica')) category = 'política'
@@ -203,12 +209,15 @@ async function scrapeArticle(context: any, url: string): Promise<ScrapedArticle 
     return {
       title,
       url,
+      sourceUrl: url,
+      sourceName: 'La Estrella de Panamá',
+      sourceType: 'news_website' as const,
       content,
-      source: 'La Estrella de Panamá',
+      scrapedAt: new Date().toISOString(),
+      publishedDate: publishedDate.toISOString(),
+      imageUrl,
       author,
-      publishedDate,
       category,
-      scrapedAt: new Date(),
     }
   } catch (error) {
     await page.close()

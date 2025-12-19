@@ -68,9 +68,12 @@ export async function crawlGacetaOficial(): Promise<ScrapedArticle[]> {
           articles.push({
             title: `Gaceta Oficial - ${link.split('/').pop()}`,
             url: link,
+            sourceUrl: link,
+            sourceName: 'Gaceta Oficial de Panamá',
+            sourceType: 'official_document' as const,
             content: 'Documento PDF de la Gaceta Oficial de Panamá',
-            publishedDate: new Date(),
-            source: 'Gaceta Oficial',
+            scrapedAt: new Date().toISOString(),
+            publishedDate: new Date().toISOString(),
             category: 'Oficial',
           })
           console.log(`📋 PDF registrado: ${link}`)
@@ -140,9 +143,12 @@ async function scrapePublication(context: any, url: string): Promise<ScrapedArti
     return {
       title,
       url,
+      sourceUrl: url,
+      sourceName: 'Gaceta Oficial de Panamá',
+      sourceType: 'official_document' as const,
       content: content.trim() || 'Contenido de publicación oficial',
-      publishedDate,
-      source: 'Gaceta Oficial',
+      scrapedAt: new Date().toISOString(),
+      publishedDate: publishedDate.toISOString(),
       category: 'Oficial',
     }
   } catch (error) {
@@ -163,7 +169,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       articles.slice(0, 3).forEach((article, i) => {
         console.log(`\n${i + 1}. ${article.title}`)
         console.log(`   URL: ${article.url}`)
-        console.log(`   Fuente: ${article.source}`)
+        console.log(`   Fuente: ${article.sourceName}`)
       })
     })
     .catch(console.error)

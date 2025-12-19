@@ -191,21 +191,18 @@ export function NetworkGraph({
   // Efecto para centrar en nodo buscado
   useEffect(() => {
     if (focusNode && networkRef.current) {
-      console.log('🎯 NetworkGraph: Intentando centrar en nodo:', focusNode)
+      console.log('🎯 NetworkGraph: Intentando centrar en nodo:', focusNode, typeof focusNode)
+      console.log('📋 Nodos disponibles:', nodes.map(n => ({ id: n.id, tipo: typeof n.id, label: n.label })))
 
       try {
-        // Verificar que el nodo existe
-        const nodeExists = nodes.find(n => n.id === focusNode)
+        // Verificar que el nodo existe (probar con conversión de tipos)
+        const nodeExists = nodes.find(n => String(n.id) === String(focusNode))
         console.log('🔎 Nodo existe en dataset:', nodeExists ? 'SÍ' : 'NO', nodeExists)
 
         if (!nodeExists) {
           console.error('❌ El nodo no existe en el dataset de vis-network')
           return
         }
-
-        // IMPORTANTE: Desactivar física para que el zoom se mantenga
-        networkRef.current.setOptions({ physics: { enabled: false } })
-        console.log('⏸️  Física desactivada para mantener zoom')
 
         // Deseleccionar todo
         networkRef.current.unselectAll()
@@ -214,9 +211,11 @@ export function NetworkGraph({
         setTimeout(() => {
           if (!networkRef.current) return
 
-          // Obtener la posición del nodo
-          const positions = networkRef.current.getPositions([focusNode])
-          const nodePosition = positions[focusNode]
+          // Obtener la posición del nodo (asegurar que usamos el mismo tipo de ID)
+          const nodeId = nodeExists.id // Usar el ID del nodo que encontramos
+          const positions = networkRef.current.getPositions([nodeId])
+          const nodePosition = positions[nodeId]
+          console.log('🔍 Buscando posiciones para:', nodeId, 'Resultado:', positions)
 
           if (nodePosition) {
             console.log('📍 Posición del nodo:', nodePosition)
@@ -237,24 +236,19 @@ export function NetworkGraph({
             // Seleccionar el nodo visualmente después de la animación
             setTimeout(() => {
               if (networkRef.current) {
-                networkRef.current.selectNodes([focusNode])
-                console.log('✅ Nodo seleccionado visualmente')
+                networkRef.current.selectNodes([nodeId])
+                console.log('✅ Nodo seleccionado visualmente:', nodeId)
               }
             }, 1100)
           } else {
             console.error('❌ No se pudo obtener la posición del nodo')
           }
-        }, 500) // Esperar 500ms para que el grafo se estabilice
+        }, 300) // Esperar 300ms para que el grafo se estabilice
       } catch (error) {
         console.error('❌ Error al centrar en nodo:', error)
         console.log('Nodo ID:', focusNode)
         console.log('Nodos disponibles:', nodes.slice(0, 5))
       }
-    } else if (!focusNode && networkRef.current) {
-      // Si no hay búsqueda activa, deseleccionar todo y reactivar física
-      networkRef.current.unselectAll()
-      networkRef.current.setOptions({ physics: { enabled: true } })
-      console.log('▶️  Física reactivada - sin búsqueda activa')
     }
   }, [focusNode, nodes])
 

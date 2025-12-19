@@ -1,11 +1,10 @@
 'use client'
 
-import { Hero } from '@/components/home/Hero'
-import { RecentClaims } from '@/components/home/RecentClaims'
-import { Newsletter } from '@/components/home/Newsletter'
+import { FeaturedClaims } from '@/components/home/FeaturedClaims'
+import { LatestClaims } from '@/components/home/LatestClaims'
 import { Footer } from '@/components/layout/Footer'
 import { ScrollToTop } from '@/components/ScrollToTop'
-import { TrendingUp, Clock, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { useQuery } from 'convex/react'
 import { api } from '@infopanama/convex'
@@ -23,131 +22,119 @@ const CATEGORY_COLORS = [
 ]
 
 export default function HomePage() {
-  // Obtener datos de Convex
-  const trendingTopics: any[] | undefined = undefined // TODO: Implementar query
+  // OPTIMIZADO: Una sola query trae featured + latest
+  const homePageData = useQuery(api.claims.getHomePageClaims, {
+    featuredLimit: 4,
+    latestLimit: 5,
+  })
   const categories = useQuery(api.claims.getCategories, {})
-  const recentActivity: any[] | undefined = undefined // TODO: Implementar query
   return (
-    <main className="min-h-screen bg-soft-blue/30">
-      {/* Hero Section */}
-      <Hero />
-
-      {/* Main Content - Layout 2 columnas */}
-      <div className="container mx-auto px-4 py-12 max-w-7xl">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Column - Verificaciones */}
-          <div className="lg:col-span-2">
-            {/* Section Header */}
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-deep-blue">
-                Últimas Verificaciones
-              </h2>
-              <Link
-                href="/verificaciones"
-                className="text-sm text-digital-blue hover:text-verifica-blue font-semibold flex items-center gap-1 group"
-              >
-                Ver todas
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-
-            {/* Claims List */}
-            <RecentClaims />
-
-            {/* Load More Button */}
-            <div className="mt-8 text-center">
-              <Link
-                href="/verificaciones"
-                className="inline-flex items-center gap-2 px-8 py-3.5 bg-digital-blue text-white rounded-xl font-semibold hover:bg-verifica-blue transition-all shadow-lg hover:shadow-xl hover:scale-105 transform duration-300"
-              >
-                Ver Más Verificaciones
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Trending Topics - TODO: Implementar */}
-            {/* <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-              <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-blue-600" />
-                Más Buscados
-              </h3>
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="animate-pulse flex gap-3">
-                    <div className="w-6 h-6 bg-slate-200 rounded-full" />
-                    <div className="flex-1 h-6 bg-slate-200 rounded" />
-                    <div className="w-8 h-6 bg-slate-200 rounded" />
-                  </div>
-                ))}
+    <>
+      <main className="min-h-screen bg-white">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          {/* Layout de 2 columnas: Featured + Latest */}
+          <div className="grid lg:grid-cols-[1.5fr,1fr] gap-8 mb-12">
+            {/* FEATURED SECTION */}
+            <div>
+              <div className="relative inline-block mb-6">
+                <div className="bg-gradient-to-r from-amber-400 to-amber-500 text-white px-8 py-3 font-bold text-xl skew-x-[-5deg] shadow-lg">
+                  <span className="inline-block skew-x-[5deg]">Destacado</span>
+                </div>
+                <div className="absolute top-0 right-0 w-0 h-0 border-t-[48px] border-t-transparent border-l-[20px] border-l-amber-500 transform translate-x-full"></div>
               </div>
-            </div> */}
 
-            {/* Categories */}
-            <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-              <h3 className="font-bold text-deep-blue mb-4 text-lg">
-                Categorías
-              </h3>
-              {!categories ? (
-                <div className="flex flex-wrap gap-2">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="animate-pulse h-8 w-24 bg-soft-blue rounded-full" />
-                  ))}
-                </div>
-              ) : categories.length === 0 ? (
-                <p className="text-sm text-blue-gray text-center py-4">
-                  No hay categorías disponibles
-                </p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {categories.map((cat: { name: string; count: number }, index: number) => (
-                    <Link
-                      key={cat.name}
-                      href={`/verificaciones?category=${encodeURIComponent(cat.name)}`}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium ${
-                        CATEGORY_COLORS[index % CATEGORY_COLORS.length]
-                      } hover:opacity-90 hover:scale-105 transition-all capitalize`}
-                    >
-                      {cat.name}
-                      <span className="ml-1 opacity-70">({cat.count})</span>
-                    </Link>
-                  ))}
-                </div>
-              )}
+              <div className="grid md:grid-cols-2 gap-6">
+                {homePageData ? (
+                  <FeaturedClaims claims={homePageData.featured} />
+                ) : (
+                  // Loading skeleton
+                  <>
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="animate-pulse bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <div className="w-full h-48 bg-slate-200" />
+                        <div className="p-5 space-y-3">
+                          <div className="h-4 bg-slate-200 rounded w-1/3" />
+                          <div className="h-6 bg-slate-200 rounded w-3/4" />
+                          <div className="h-4 bg-slate-200 rounded w-full" />
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
             </div>
 
-            {/* Recent Activity - TODO: Implementar */}
-            {/* <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-              <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Actividad Reciente
-              </h3>
+            {/* LATEST SECTION */}
+            <div>
+              <div className="relative inline-block mb-6">
+                <div className="bg-gradient-to-r from-amber-400 to-amber-500 text-white px-8 py-3 font-bold text-xl skew-x-[-5deg] shadow-lg">
+                  <span className="inline-block skew-x-[5deg]">Últimas</span>
+                </div>
+                <div className="absolute top-0 right-0 w-0 h-0 border-t-[48px] border-t-transparent border-l-[20px] border-l-amber-500 transform translate-x-full"></div>
+              </div>
+
               <div className="space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="animate-pulse flex gap-3">
-                    <div className="w-2 h-2 bg-slate-200 rounded-full mt-1.5" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-slate-200 rounded w-3/4" />
-                      <div className="h-3 bg-slate-200 rounded w-1/2" />
-                    </div>
-                  </div>
+                {homePageData ? (
+                  <LatestClaims claims={homePageData.latest} />
+                ) : (
+                  // Loading skeleton
+                  <>
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="animate-pulse flex gap-3 pb-4 border-b border-slate-200">
+                        <div className="w-24 h-20 bg-slate-200 rounded-lg flex-shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-slate-200 rounded w-3/4" />
+                          <div className="h-3 bg-slate-200 rounded w-1/2" />
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Ver todas las verificaciones */}
+          <div className="text-center mb-12">
+            <Link
+              href="/verificaciones"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-digital-blue text-white rounded-xl font-semibold hover:bg-verifica-blue transition-all shadow-lg hover:shadow-xl hover:scale-105 transform duration-300"
+            >
+              Ver Todas las Verificaciones
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </div>
+
+          {/* Categorías horizontales */}
+          {categories && categories.length > 0 && (
+            <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+              <h3 className="font-bold text-deep-blue mb-4 text-lg">
+                Explorar por Categoría
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat: { name: string; count: number }, index: number) => (
+                  <Link
+                    key={cat.name}
+                    href={`/verificaciones?category=${encodeURIComponent(cat.name)}`}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                      CATEGORY_COLORS[index % CATEGORY_COLORS.length]
+                    } hover:opacity-90 hover:scale-105 transition-all capitalize`}
+                  >
+                    {cat.name}
+                    <span className="ml-1 opacity-70">({cat.count})</span>
+                  </Link>
                 ))}
               </div>
-            </div> */}
-
-            {/* Newsletter */}
-            <Newsletter />
-          </div>
+            </div>
+          )}
         </div>
-      </div>
+      </main>
 
       {/* Footer */}
       <Footer />
 
       {/* Scroll to Top Button */}
       <ScrollToTop />
-    </main>
+    </>
   )
 }

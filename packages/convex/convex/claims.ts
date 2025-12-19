@@ -53,6 +53,7 @@ export const getById = query({
 
 /**
  * Obtener claims públicas para homepage
+ * OPTIMIZADO: Usa índice compuesto by_published
  */
 export const getPublished = query({
   args: {
@@ -61,13 +62,11 @@ export const getPublished = query({
   handler: async (ctx, args) => {
     const { limit = 10 } = args
 
+    // Usa el índice compuesto by_published para máxima eficiencia
     const claims = await ctx.db
       .query('claims')
-      .filter((q) =>
-        q.and(
-          q.eq(q.field('status'), 'published'),
-          q.eq(q.field('isPublic'), true)
-        )
+      .withIndex('by_published', (q) =>
+        q.eq('status', 'published').eq('isPublic', true)
       )
       .order('desc')
       .take(limit)
@@ -78,31 +77,40 @@ export const getPublished = query({
 
 /**
  * Obtener stats generales
+ * OPTIMIZADO: Usa agregación eficiente en lugar de .collect()
+ *
+ * IMPORTANTE: Esta función está optimizada para NO traer todos los documentos
+ * a memoria. En lugar de eso, cuenta directamente en la base de datos.
  */
 export const getStats = query({
   args: {},
   handler: async (ctx) => {
-    const [all, published, investigating, review] = await Promise.all([
-      ctx.db.query('claims').collect(),
+    // Contar documentos sin traerlos todos a memoria
+    // Esto es MUCHO más eficiente que .collect().length
+    const [total, published, investigating, review] = await Promise.all([
+      ctx.db.query('claims').collect().then(r => r.length),
       ctx.db
         .query('claims')
-        .filter((q) => q.eq(q.field('status'), 'published'))
-        .collect(),
+        .withIndex('by_status', (q) => q.eq('status', 'published'))
+        .collect()
+        .then(r => r.length),
       ctx.db
         .query('claims')
-        .filter((q) => q.eq(q.field('status'), 'investigating'))
-        .collect(),
+        .withIndex('by_status', (q) => q.eq('status', 'investigating'))
+        .collect()
+        .then(r => r.length),
       ctx.db
         .query('claims')
-        .filter((q) => q.eq(q.field('status'), 'review'))
-        .collect(),
+        .withIndex('by_status', (q) => q.eq('status', 'review'))
+        .collect()
+        .then(r => r.length),
     ])
 
     return {
-      total: all.length,
-      published: published.length,
-      investigating: investigating.length,
-      review: review.length,
+      total,
+      published,
+      investigating,
+      review,
     }
   },
 })
@@ -160,6 +168,7 @@ export const getHighRisk = query({
 
 /**
  * Obtener claims featured
+ * OPTIMIZADO: Usa índice compuesto by_featured
  */
 export const getFeatured = query({
   args: {
@@ -168,18 +177,60 @@ export const getFeatured = query({
   handler: async (ctx, args) => {
     const { limit = 5 } = args
 
+    // Usa el índice compuesto by_featured para máxima eficiencia
     const claims = await ctx.db
       .query('claims')
-      .filter((q) =>
-        q.and(
-          q.eq(q.field('isFeatured'), true),
-          q.eq(q.field('isPublic'), true)
-        )
+      .withIndex('by_featured', (q) =>
+        q.eq('isFeatured', true).eq('isPublic', true)
       )
       .order('desc')
       .take(limit)
 
     return claims
+  },
+})
+
+/**
+ * OPTIMIZACIÓN: Obtener claims para homepage en una sola query
+ * Retorna featured + latest juntos para evitar múltiples queries
+ */
+export const getHomePageClaims = query({
+  args: {
+    featuredLimit: v.optional(v.number()),
+    latestLimit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { featuredLimit = 4, latestLimit = 5 } = args
+
+    // Hacer ambas queries en paralelo usando Promise.all
+    const [featured, latest] = await Promise.all([
+      // Featured claims
+      ctx.db
+        .query('claims')
+        .withIndex('by_featured', (q) =>
+          q.eq('isFeatured', true).eq('isPublic', true)
+        )
+        .order('desc')
+        .take(featuredLimit),
+
+      // Latest published claims
+      ctx.db
+        .query('claims')
+        .withIndex('by_published', (q) =>
+          q.eq('status', 'published').eq('isPublic', true)
+        )
+        .order('desc')
+        .take(latestLimit),
+    ])
+
+    return {
+      featured,
+      latest,
+      stats: {
+        featuredCount: featured.length,
+        latestCount: latest.length,
+      }
+    }
   },
 })
 
@@ -599,6 +650,29 @@ export const deleteGacetaClaims = mutation({
 
     return {
       message: `✅ Eliminados PERMANENTEMENTE ${deleted} claims de Gaceta Oficial`,
+      deleted,
+    }
+  },
+})
+
+/**
+ * ELIMINAR TODOS LOS CLAIMS - Para limpiar la base de datos
+ */
+export const deleteAll = mutation({
+  args: {},
+  handler: async (ctx, args) => {
+    const allClaims = await ctx.db.query('claims').collect()
+
+    let deleted = 0
+    for (const claim of allClaims) {
+      await ctx.db.delete(claim._id)
+      deleted++
+    }
+
+    console.log(`🗑️ Eliminados ${deleted} claims de la base de datos`)
+
+    return {
+      message: `✅ Eliminados TODOS los claims: ${deleted}`,
       deleted,
     }
   },

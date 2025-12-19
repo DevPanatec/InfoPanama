@@ -178,11 +178,14 @@ async function scrapeArticle(context: any, url: string): Promise<ScrapedArticle 
     return {
       title,
       url,
+      sourceUrl: url,
+      sourceName: 'La Prensa',
+      sourceType: 'news_website' as const,
       content: content.trim(),
-      author,
-      publishedDate,
+      scrapedAt: new Date().toISOString(),
+      publishedDate: publishedDate.toISOString(),
       imageUrl,
-      source: 'La Prensa',
+      author,
       category,
     }
   } catch (error) {

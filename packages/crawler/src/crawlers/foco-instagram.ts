@@ -17,6 +17,7 @@ const INSTAGRAM_URL = `https://www.instagram.com/${INSTAGRAM_USERNAME}/`
 // Configuración de Browserbase
 const BROWSERBASE_API_KEY = process.env.BROWSERBASE_API_KEY || ''
 const BROWSERBASE_PROJECT_ID = process.env.BROWSERBASE_PROJECT_ID || ''
+const BROWSERBASE_SESSION_ID = process.env.BROWSERBASE_SESSION_ID || '' // Sesión persistente con login de Instagram
 
 // 2Captcha como fallback (opcional)
 const CAPTCHA_API_KEY = process.env.CAPTCHA_2CAPTCHA_KEY || ''
@@ -33,11 +34,20 @@ export async function crawlFocoInstagram(): Promise<ScrapedArticle[]> {
 
   console.log('🔒 Usando Browserbase (anti-detección + IPs rotativas)')
 
+  // Construir URL de conexión con sesión persistente si está disponible
+  let connectionUrl = `wss://connect.browserbase.com?apiKey=${BROWSERBASE_API_KEY}&projectId=${BROWSERBASE_PROJECT_ID}`
+
+  if (BROWSERBASE_SESSION_ID) {
+    connectionUrl += `&sessionId=${BROWSERBASE_SESSION_ID}`
+    console.log('🔐 Usando sesión persistente autenticada')
+  } else {
+    console.log('⚠️  Sin sesión persistente - Instagram puede bloquear el acceso')
+    console.log('   Agrega BROWSERBASE_SESSION_ID a .env para usar sesión autenticada')
+  }
+
   // Conectar a Browserbase
   console.log('   → Conectando a Browserbase...')
-  const browser = await chromium.connectOverCDP(
-    `wss://connect.browserbase.com?apiKey=${BROWSERBASE_API_KEY}&projectId=${BROWSERBASE_PROJECT_ID}`
-  )
+  const browser = await chromium.connectOverCDP(connectionUrl)
   console.log('   ✅ Conexión establecida')
 
   const context = browser.contexts()[0]
@@ -79,22 +89,47 @@ export async function crawlFocoInstagram(): Promise<ScrapedArticle[]> {
       await page.waitForTimeout(2000)
     }
 
-    // Extraer URLs de posts
+    // Debug: guardar screenshot y HTML para ver qué está pasando
+    console.log('📸 Tomando screenshot de diagnóstico...')
+    await page.screenshot({ path: 'instagram-debug.png', fullPage: true })
+
+    const htmlContent = await page.content()
+    console.log(`📄 HTML length: ${htmlContent.length} characters`)
+
+    // Buscar posts usando múltiples estrategias
     const postLinks = await page.evaluate(() => {
       const links: string[] = []
-      const anchors = document.querySelectorAll('a[href*="/p/"]')
 
-      anchors.forEach((anchor) => {
-        const href = (anchor as HTMLAnchorElement).href
-        if (href && !links.includes(href)) {
-          links.push(href)
+      // Estrategia 1: Buscar por href que contenga /p/
+      document.querySelectorAll('a').forEach((anchor) => {
+        const href = anchor.href
+        if (href && href.includes('/p/') && href.includes('instagram.com')) {
+          if (!links.includes(href)) {
+            links.push(href)
+          }
         }
       })
+
+      // Estrategia 2: Buscar en el contenido de la página usando regex
+      const matches = document.body.innerHTML.matchAll(/href="(\/p\/[^"]+)"/g)
+      for (const match of matches) {
+        const fullUrl = `https://www.instagram.com${match[1]}`
+        if (!links.includes(fullUrl)) {
+          links.push(fullUrl)
+        }
+      }
 
       return links
     })
 
     console.log(`📊 Encontrados ${postLinks.length} posts`)
+
+    if (postLinks.length === 0) {
+      console.log('\n⚠️  No se encontraron posts. Diagnóstico:')
+      console.log('   - Screenshot guardado en: instagram-debug.png')
+      console.log('   - Verifica el screenshot para ver si Instagram está bloqueando')
+      console.log('   - Es posible que necesites sesión autenticada\n')
+    }
 
     // Scrapear cada post (máximo 10 para no saturar)
     const linksToScrape = postLinks.slice(0, 10)

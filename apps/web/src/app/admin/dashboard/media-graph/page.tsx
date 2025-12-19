@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { MediaGraph } from '@/components/graph/MediaGraph'
 import { GraphFilters, type GraphFilterOptions } from '@/components/graph/GraphFilters'
 import { Download, Plus, Sparkles, Loader2, Link2, RefreshCw } from 'lucide-react'
@@ -29,9 +29,9 @@ export default function MediaGraphPage() {
   const reanalyzeMarked = useAction(api.graphAnalysis.reanalyzeMarkedEntities)
   const articles = useQuery(api.articles.list, { limit: 10 })
   const graphStats = useQuery(api.entityRelations.getGraphStats)
-  const markedEntities = useQuery(api.entities.getMarkedForReview, { limit: 50 })
+  const markedEntities = useQuery(api.nodeReview.getMarkedNodes, { limit: 50 })
 
-  const handleAnalyzeWithAI = async () => {
+  const handleAnalyzeWithAI = useCallback(async () => {
     console.log('🔍 handleAnalyzeWithAI llamado', { articles: articles?.length })
 
     if (!articles || articles.length === 0) {
@@ -60,7 +60,7 @@ export default function MediaGraphPage() {
     } finally {
       setIsAnalyzing(false)
     }
-  }
+  }, [articles, analyzeBatch])
 
   const handleGenerateCoMentions = async () => {
     console.log('🔗 Generando co-menciones...')

@@ -53,25 +53,30 @@ export function MediaGraph({
   // Obtener TODOS los nodos del grafo OSINT
   const graphData = useQuery(api.entityRelations.getFullGraph)
 
-  // Mutaciones para marcar entidades
-  const markForReview = useMutation(api.entities.markForReview)
-  const unmarkForReview = useMutation(api.entities.unmarkForReview)
+  // Mutaciones para marcar nodos (funciona con actors, sources Y entities)
+  const markForReview = useMutation(api.nodeReview.markNodeForReview)
+  const unmarkForReview = useMutation(api.nodeReview.unmarkNodeForReview)
 
   // Handler para marcar/desmarcar nodo para revisión
   const handleMarkForReview = async (nodeId: string) => {
     try {
-      const entity = graphData?.nodes.find(n => n._id === nodeId)
-      if (!entity) return
+      const node = graphData?.nodes.find(n => n.id === nodeId)
+      if (!node) {
+        console.error('❌ Nodo no encontrado:', nodeId)
+        return
+      }
 
-      if (entity.markedForReview) {
-        await unmarkForReview({ entityId: nodeId as any })
-        console.log('✅ Entidad desmarcada para revisión:', entity.label)
+      const markedStatus = (node.data as any)?.markedForReview
+
+      if (markedStatus) {
+        await unmarkForReview({ nodeId })
+        console.log('✅ Nodo desmarcado para revisión:', node.label)
       } else {
-        await markForReview({ entityId: nodeId as any, requestedBy: 'user' })
-        console.log('✅ Entidad marcada para revisión:', entity.label)
+        await markForReview({ nodeId, requestedBy: 'user' })
+        console.log('✅ Nodo marcado para revisión:', node.label)
       }
     } catch (error) {
-      console.error('Error al marcar/desmarcar entidad:', error)
+      console.error('Error al marcar/desmarcar nodo:', error)
     }
   }
 
@@ -236,9 +241,15 @@ export function MediaGraph({
   // Auto-focus en el primer resultado cuando cambia la búsqueda
   useEffect(() => {
     if (searchedNode && filters?.searchQuery) {
-      setFocusedSearchNode(String(searchedNode.id))
-      console.log('🎯 Auto-focus en primer resultado:', searchedNode.label, searchedNode.id)
+      const nodeId = String(searchedNode.id)
+      console.log('🎯 Auto-focus en primer resultado:', {
+        label: searchedNode.label,
+        id: nodeId,
+        nodeCompleto: searchedNode
+      })
+      setFocusedSearchNode(nodeId)
     } else if (!filters?.searchQuery) {
+      console.log('🔍 Limpiando búsqueda - removiendo focus')
       setFocusedSearchNode(null)
     }
   }, [searchedNode, filters?.searchQuery])
@@ -269,6 +280,16 @@ export function MediaGraph({
       }
     }
   }, [filters?.searchQuery, searchedNode, nodes])
+
+  // Listener para detectar cambios de fullscreen (DEBE estar ANTES de los returns condicionales)
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [])
 
   // Obtener detalles del nodo seleccionado
   const selectedNode = selectedNodeId
@@ -365,16 +386,6 @@ export function MediaGraph({
       }
     }
   }
-
-  // Listener para detectar cambios de fullscreen
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement)
-    }
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange)
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
-  }, [])
 
   // Renderizar grafo
   return (
@@ -492,7 +503,7 @@ export function MediaGraph({
           node={nodeDetails}
           onClose={() => setSelectedNodeId(null)}
           onMarkForReview={handleMarkForReview}
-          markedForReview={selectedNode?.markedForReview || false}
+          markedForReview={(selectedNode?.data as any)?.markedForReview || false}
         />
       )}
     </div>
