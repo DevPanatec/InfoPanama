@@ -169,6 +169,87 @@ function generateContentHash(content: string): string {
   return `${Math.abs(hash)}-${content.length}`
 }
 
+/**
+ * Filtrar artículos para SOLO incluir investigaciones y fact-checks SUSTANCIOSOS
+ * NO chismes ni noticias informativas ligeras
+ */
+function isInvestigativeOrFactCheck(article: ScrapedArticle): boolean {
+  const title = article.title.toLowerCase()
+  const content = article.content.toLowerCase()
+  const fullText = `${title} ${content}`
+
+  // PALABRAS CLAVE FUERTES (debe tener al menos una)
+  const strongInvestigationKeywords = [
+    // Fact-checking EXPLÍCITO
+    'verificamos', 'verificación', 'fact-check', 'fact check',
+    'es falso que', 'es verdadero que', 'comprobamos',
+    'desmentido', 'desmiente', 'fake news', 'desinformación',
+
+    // Investigación SERIA
+    'investigación revela', 'fiscalía investiga', 'mp investiga',
+    'documentos revelan', 'evidencia muestra', 'pruebas indican',
+    'contratos irregulares', 'licitación irregular',
+
+    // Corrupción CONFIRMADA
+    'corrupción', 'corrupto', 'soborno', 'sobornos', 'coima',
+    'peculado', 'malversación', 'lavado de dinero', 'blanqueo',
+    'desvío de fondos', 'enriquecimiento ilícito',
+
+    // Legal/Judicial SERIO
+    'procesado por', 'imputado por', 'sentenciado por',
+    'tribunal ordena', 'juez ordena detención', 'audiencia de imputación',
+    'acusado de corrupción', 'denuncia penal',
+
+    // Transparencia
+    'auditoría revela', 'contraloría detecta', 'falta de transparencia',
+  ]
+
+  // CHISMES o noticias ligeras (descartar si SOLO tiene estas sin keywords fuertes)
+  const lightContentIndicators = [
+    // Anuncios simples
+    'anunció', 'anuncia', 'inauguró', 'inaugura',
+    'visitará', 'asistió', 'participó en evento',
+    'declaraciones', 'opinó', 'comentó',
+
+    // Deportes/Entretenimiento
+    'mundial', 'copa', 'partido', 'gol', 'campeonato',
+    'transmitirá', 'transmisión', 'canal',
+    'artista', 'cantante', 'actor', 'concierto', 'estreno',
+    'farándula', 'celebridad',
+
+    // Servicios/Clima
+    'pronóstico', 'temperatura', 'clima', 'lluvia',
+    'tráfico', 'avenida cerrada', 'construcción',
+  ]
+
+  // 1. Si tiene palabras FUERTES de investigación → INCLUIR
+  const hasStrongKeywords = strongInvestigationKeywords.some(keyword => fullText.includes(keyword))
+  if (hasStrongKeywords) {
+    return true
+  }
+
+  // 2. Si NO tiene palabras fuertes pero es contenido ligero → DESCARTAR
+  const isLightContent = lightContentIndicators.some(keyword => fullText.includes(keyword))
+  if (isLightContent) {
+    return false
+  }
+
+  // 3. Verificar si el artículo tiene profundidad (no es solo un anuncio corto)
+  const hasSubstance = content.length > 500 // Al menos 500 caracteres de contenido
+
+  // 4. Palabras MODERADAS (solo incluir si tiene sustancia)
+  const moderateKeywords = [
+    'denuncia', 'acusación', 'controversia', 'polémica',
+    'irregularidad', 'sospecha', 'cuestionamiento',
+    'demanda', 'querella', 'audiencia', 'tribunal',
+  ]
+
+  const hasModerateKeywords = moderateKeywords.some(keyword => fullText.includes(keyword))
+
+  // Solo incluir si tiene palabras moderadas Y contenido sustancioso
+  return hasModerateKeywords && hasSubstance
+}
+
 async function main() {
   console.log('🚀 Iniciando Pipeline OSINT de InfoPanama\n')
   console.log('='.repeat(60))
@@ -258,14 +339,19 @@ async function main() {
   console.log('\n\n🤖 FASE 2: EXTRACCIÓN DE CLAIMS CON IA')
   console.log('='.repeat(60))
 
-  // FILTRAR: Extraer claims de TODOS los medios noticiosos, EXCEPTO Gaceta Oficial (documentos legales)
-  const newsArticles = articles.filter((article) =>
+  // FILTRO 1: Excluir Gaceta Oficial
+  const withoutGaceta = articles.filter((article) =>
     article.sourceName !== 'Gaceta Oficial de Panamá' &&
     !article.url?.includes('gacetaoficial.gob.pa')
   )
-  console.log(`📰 Filtrando artículos de noticias: ${newsArticles.length} de ${articles.length} artículos`)
-  console.log(`   ✅ Procesando medios: La Prensa, TVN, Telemetro, Panama América, Crítica, La Estrella, Capital Financiero, Metro Libre, RPC Radio, Foco y otros`)
-  console.log(`   ⚠️  Excluyendo ${articles.length - newsArticles.length} artículos de Gaceta Oficial (no verificables)`)
+  console.log(`📰 Filtro 1 - Excluyendo Gaceta Oficial: ${withoutGaceta.length} de ${articles.length} artículos`)
+
+  // FILTRO 2: SOLO artículos de investigación y fact-checking
+  const newsArticles = withoutGaceta.filter(isInvestigativeOrFactCheck)
+  console.log(`🔍 Filtro 2 - SOLO investigaciones y fact-checks: ${newsArticles.length} de ${withoutGaceta.length} artículos`)
+  console.log(`   ✅ Incluye: verificaciones, investigaciones, denuncias, corrupción, fraude`)
+  console.log(`   ❌ Excluye: deportes, entretenimiento, noticias generales, tráfico, clima`)
+  console.log(`   ⚠️  Artículos descartados: ${articles.length - newsArticles.length}`)
 
   let totalClaimsExtracted = 0
   let totalActorsCreated = 0

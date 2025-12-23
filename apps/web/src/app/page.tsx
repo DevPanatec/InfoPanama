@@ -31,6 +31,25 @@ export default function HomePage() {
   return (
     <>
       <main className="min-h-screen bg-white">
+        {/* Barra de Categorías - pegada al navbar */}
+        {categories && categories.length > 0 && (
+          <div className="bg-[#163A5F] border-b border-white/10">
+            <div className="container mx-auto px-4 max-w-7xl">
+              <div className="flex items-center overflow-x-auto scrollbar-hide">
+                {categories.map((cat: { name: string; count: number }) => (
+                  <Link
+                    key={cat.name}
+                    href={`/verificaciones?category=${encodeURIComponent(cat.name)}`}
+                    className="flex-shrink-0 px-6 py-3 text-white/90 hover:bg-white/10 transition-colors border-b-2 border-transparent hover:border-amber-400 hover:text-white font-medium text-sm uppercase tracking-wide whitespace-nowrap"
+                  >
+                    {cat.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           {/* Layout de 2 columnas: Featured + Latest */}
           <div className="grid lg:grid-cols-[1.5fr,1fr] gap-8 mb-12">
@@ -104,29 +123,6 @@ export default function HomePage() {
               <ArrowRight className="h-5 w-5" />
             </Link>
           </div>
-
-          {/* Categorías horizontales */}
-          {categories && categories.length > 0 && (
-            <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-              <h3 className="font-bold text-deep-blue mb-4 text-lg">
-                Explorar por Categoría
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {categories.map((cat: { name: string; count: number }, index: number) => (
-                  <Link
-                    key={cat.name}
-                    href={`/verificaciones?category=${encodeURIComponent(cat.name)}`}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                      CATEGORY_COLORS[index % CATEGORY_COLORS.length]
-                    } hover:opacity-90 hover:scale-105 transition-all capitalize`}
-                  >
-                    {cat.name}
-                    <span className="ml-1 opacity-70">({cat.count})</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </main>
 

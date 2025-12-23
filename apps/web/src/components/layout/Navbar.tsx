@@ -37,9 +37,9 @@ export function Navbar() {
   }, [isOpen])
 
   return (
-    <nav className="border-b border-digital-blue/30 bg-gradient-to-b from-verifica-blue/80 via-soft-blue/30 to-white backdrop-blur sticky top-0 z-50 shadow-xl">
-      <div className="container mx-auto px-4">
-        <div className="flex h-20 items-center justify-between">
+    <nav className="bg-[#0F2A44] sticky top-0 z-50 shadow-lg">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="flex h-16 items-center justify-between">
           <Link
             href="/"
             className="hover:opacity-90 transition-opacity duration-200 cursor-pointer"
@@ -47,9 +47,9 @@ export function Navbar() {
             <Image
               src="/images/logo.png"
               alt="VerificaPty"
-              width={180}
-              height={45}
-              className="h-10 w-auto"
+              width={240}
+              height={60}
+              className="h-12 w-auto"
               priority
             />
           </Link>
@@ -60,10 +60,10 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-base font-medium transition ${
+                className={`text-sm font-semibold uppercase tracking-wide transition-colors ${
                   pathname === link.href
-                    ? 'text-deep-blue font-semibold'
-                    : 'text-verifica-blue hover:text-deep-blue'
+                    ? 'text-amber-400'
+                    : 'text-white hover:text-amber-300'
                 }`}
               >
                 {link.label}
@@ -88,7 +88,7 @@ export function Navbar() {
             </SignedIn>
             <SignedOut>
               <SignInButton mode="modal">
-                <button className="px-4 py-2 text-sm font-medium text-slate-700 hover:text-blue-700 transition">
+                <button className="px-4 py-2 text-sm font-medium text-white hover:text-amber-300 transition">
                   Iniciar sesión
                 </button>
               </SignInButton>
@@ -97,15 +97,15 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-verifica-blue/10 transition"
+            className="md:hidden p-2 hover:bg-white/10 transition rounded"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? 'Cerrar menú' : 'Abrir menú'}
             aria-expanded={isOpen}
           >
             {isOpen ? (
-              <X className="h-6 w-6 text-verifica-blue" />
+              <X className="h-6 w-6 text-white" />
             ) : (
-              <Menu className="h-6 w-6 text-verifica-blue" />
+              <Menu className="h-6 w-6 text-white" />
             )}
           </button>
         </div>
@@ -114,14 +114,14 @@ export function Navbar() {
       {/* Mobile Menu Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 top-20 bg-black/20 backdrop-blur-sm md:hidden z-40"
+          className="fixed inset-0 top-16 bg-black/50 backdrop-blur-sm md:hidden z-40"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Mobile Menu Panel */}
       <div
-        className={`fixed top-20 left-0 right-0 bg-white border-b border-slate-200 shadow-xl md:hidden z-50 transform transition-all duration-300 ease-in-out ${
+        className={`fixed top-16 left-0 right-0 bg-[#163A5F] shadow-xl md:hidden z-50 transform transition-all duration-300 ease-in-out ${
           isOpen
             ? 'translate-y-0 opacity-100'
             : '-translate-y-full opacity-0 pointer-events-none'
@@ -133,10 +133,10 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-4 py-3 rounded-lg text-base font-medium transition ${
+                className={`px-4 py-3 text-sm font-semibold uppercase tracking-wide transition ${
                   pathname === link.href
-                    ? 'bg-digital-blue text-white'
-                    : 'text-blue-gray hover:bg-soft-blue hover:text-digital-blue'
+                    ? 'bg-white/10 text-amber-400 border-l-4 border-amber-400'
+                    : 'text-white hover:bg-white/5 hover:text-amber-300'
                 }`}
                 onClick={() => setIsOpen(false)}
               >
@@ -146,10 +146,10 @@ export function Navbar() {
           </div>
 
           {/* Actions in Mobile */}
-          <div className="mt-4 pt-4 border-t border-slate-700 space-y-2">
+          <div className="mt-4 pt-4 border-t border-white/10 space-y-2">
             <Link
               href="/solicitar-verificacion"
-              className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-digital-blue text-white font-medium rounded-lg hover:bg-verifica-blue transition"
+              className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-amber-500 text-white font-semibold hover:bg-amber-600 transition"
               onClick={() => setIsOpen(false)}
             >
               <Plus className="h-4 w-4" />
@@ -157,7 +157,7 @@ export function Navbar() {
             </Link>
             <Link
               href="/notificaciones"
-              className="flex items-center justify-center gap-2 w-full px-4 py-3 border border-slate-600 text-slate-300 font-medium rounded-lg hover:bg-slate-700 transition"
+              className="flex items-center justify-center gap-2 w-full px-4 py-3 border border-white/20 text-white font-medium hover:bg-white/5 transition"
               onClick={() => setIsOpen(false)}
             >
               <BellIcon className="h-4 w-4" />
@@ -166,10 +166,10 @@ export function Navbar() {
           </div>
 
           {/* Admin Link in Mobile */}
-          <div className="mt-4 pt-4 border-t border-slate-700">
+          <div className="mt-4 pt-4 border-t border-white/10">
             <Link
               href="/admin/dashboard"
-              className="block px-4 py-3 rounded-lg text-sm text-slate-400 hover:bg-slate-700 hover:text-slate-300 transition"
+              className="block px-4 py-3 text-sm text-white/70 hover:bg-white/5 hover:text-white transition"
               onClick={() => setIsOpen(false)}
             >
               Acceso Administrativo

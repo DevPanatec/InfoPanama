@@ -1,0 +1,70 @@
+name: Auto Crawler - Cada 2 Días
+
+# Se ejecuta automáticamente cada 2 días a las 9:00 AM UTC (5:00 AM Panamá)
+on:
+  schedule:
+    # Cron: minuto hora día-del-mes mes día-de-la-semana
+    # "0 9 */2 * *" = Cada 2 días a las 9:00 AM UTC
+    - cron: '0 9 */2 * *'
+
+  # También permite ejecución manual desde GitHub Actions UI
+  workflow_dispatch:
+
+jobs:
+  crawl-news:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: 📚 Install dependencies
+        run: |
+          npm ci
+          cd packages/crawler
+          npm ci
+
+      - name: 🌐 Install Playwright browsers
+        run: |
+          cd packages/crawler
+          npx playwright install chromium
+          npx playwright install-deps
+
+      - name: 🔄 Ejecutar crawler de La Prensa
+        env:
+          CONVEX_URL: ${{ secrets.CONVEX_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd packages/crawler
+          npm run crawl:prensa
+        continue-on-error: true
+        timeout-minutes: 30
+
+      - name: 🔄 Ejecutar crawler de RPC Radio
+        env:
+          CONVEX_URL: ${{ secrets.CONVEX_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd packages/crawler
+          npm run crawl:rpc
+        continue-on-error: true
+        timeout-minutes: 20
+
+      - name: 🔄 Ejecutar crawler de Capital Financiero
+        env:
+          CONVEX_URL: ${{ secrets.CONVEX_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          cd packages/crawler
+          npm run crawl:capital
+        continue-on-error: true
+        timeout-minutes: 20
+
+      - name: ✅ Crawling completado
+        run: echo "✅ Crawling automático completado exitosamente"

@@ -203,7 +203,7 @@ export const getHomePageClaims = query({
     const { featuredLimit = 4, latestLimit = 5 } = args
 
     // Hacer ambas queries en paralelo usando Promise.all
-    const [featured, latest] = await Promise.all([
+    const [featuredAll, latestAll] = await Promise.all([
       // Featured claims
       ctx.db
         .query('claims')
@@ -211,7 +211,7 @@ export const getHomePageClaims = query({
           q.eq('isFeatured', true).eq('isPublic', true)
         )
         .order('desc')
-        .take(featuredLimit),
+        .take(featuredLimit * 5), // Traer más para filtrar
 
       // Latest published claims
       ctx.db
@@ -220,8 +220,31 @@ export const getHomePageClaims = query({
           q.eq('status', 'published').eq('isPublic', true)
         )
         .order('desc')
-        .take(latestLimit),
+        .take(latestLimit * 5), // Traer más para filtrar
     ])
+
+    // Filtrar solo claims con imagen Y con veredicto (verificadas)
+    // Solo mostrar claims aprobadas/publicadas que hayan sido verificadas
+    const featured = featuredAll
+      .filter(c =>
+        c.imageUrl &&
+        c.verdict &&
+        (c.status === 'approved' || c.status === 'published')
+      )
+      .slice(0, featuredLimit)
+
+    // Crear un Set de IDs de featured claims para excluirlas de latest
+    const featuredIds = new Set(featured.map(c => c._id))
+
+    // Filtrar latest excluyendo las que ya están en featured
+    const latest = latestAll
+      .filter(c =>
+        c.imageUrl &&
+        c.verdict &&
+        (c.status === 'approved' || c.status === 'published') &&
+        !featuredIds.has(c._id) // 🔥 NUEVO: Evitar duplicados con featured
+      )
+      .slice(0, latestLimit)
 
     return {
       featured,

@@ -10,10 +10,17 @@
     "crawl:metro": "tsx src/crawlers/metro-libre.ts",
     "crawl:rpc": "tsx src/crawlers/rpc-radio.ts",
     "crawl:capital": "tsx src/crawlers/capital-financiero.ts",
+    "crawl:foco": "tsx run-focopanama.ts",
     "crawl:all": "tsx src/index.ts",
     "crawl:entities": "tsx src/crawl-entities.ts",
     "crawl:orphans": "tsx src/crawl-orphans.ts",
-    "extract:claims": "tsx src/processors/claim-extractor.ts"
+    "extract:claims": "tsx src/processors/claim-extractor.ts",
+    "create-session": "tsx create-instagram-session.ts",
+    "test:instagram": "tsx scripts/test/test-instagram.ts",
+    "test:browserbase": "tsx scripts/test/test-browserbase-api.ts",
+    "utils:reset-db": "tsx scripts/utils/reset-database.ts",
+    "utils:cleanup-db": "tsx scripts/utils/cleanup-database.ts",
+    "utils:check-db": "tsx scripts/utils/check-database.ts"
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.12",

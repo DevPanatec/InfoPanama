@@ -4,23 +4,24 @@ import { CheckCircle2, XCircle, HelpCircle, Loader2, Search, Filter, X, ArrowRig
 import { useQuery } from 'convex/react'
 import { api } from '@infopanama/convex'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
 export default function VerificacionesPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const initialSearch = searchParams.get('search') || ''
+  const initialCategory = searchParams.get('category') || 'all' // 🔥 NUEVO: Leer categoría del URL
 
   const [searchQuery, setSearchQuery] = useState(initialSearch)
   const [selectedVerdict, setSelectedVerdict] = useState<string>('all')
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory) // 🔥 NUEVO: Inicializar con URL
   const [selectedRisk, setSelectedRisk] = useState<string>('all')
 
-  // Queries
+  // Queries - 🔥 OPTIMIZADO: Solo 50 claims en lugar de 200
   const allClaims = useQuery(api.claims.list, {
     status: 'published',
-    limit: 200
+    limit: 50 // 🔥 REDUCIDO de 200 a 50 para velocidad
   })
 
   const categories = useQuery(api.claims.getCategories, {})
@@ -207,7 +208,7 @@ export default function VerificacionesPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            {filteredClaims.map((claim: any, index: number) => {
+            {filteredClaims.map((claim: any) => {
               const verdictInfo = getVerdictInfo(claim.verdict)
               const Icon = verdictInfo.icon
 

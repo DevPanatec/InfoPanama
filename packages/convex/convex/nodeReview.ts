@@ -151,3 +151,96 @@ export const getMarkedNodes = query({
     return markedNodes.slice(0, limit)
   },
 })
+
+/**
+ * Obtener estadísticas de nodos marcados
+ */
+export const getMarkedNodesStats = query({
+  handler: async (ctx) => {
+    let entitiesCount = 0
+    let actorsCount = 0
+    let sourcesCount = 0
+
+    // Contar entities marcadas
+    const entities = await ctx.db.query('entities').collect()
+    for (const entity of entities) {
+      if (entity.markedForReview === true) entitiesCount++
+    }
+
+    // Contar actors marcados
+    const actors = await ctx.db.query('actors').collect()
+    for (const actor of actors) {
+      if (actor.markedForReview === true) actorsCount++
+    }
+
+    // Contar sources marcadas
+    const sources = await ctx.db.query('sources').collect()
+    for (const source of sources) {
+      if (source.markedForReview === true) sourcesCount++
+    }
+
+    return {
+      total: entitiesCount + actorsCount + sourcesCount,
+      entities: entitiesCount,
+      actors: actorsCount,
+      sources: sourcesCount,
+    }
+  },
+})
+
+/**
+ * Marcar automáticamente nodos con pocas relaciones para revisión
+ */
+export const autoMarkLowConnectionNodes = mutation({
+  args: {
+    minRelations: v.optional(v.number()), // Nodos con menos de X relaciones
+  },
+  handler: async (ctx, args) => {
+    const minRelations = args.minRelations ?? 2
+    let markedCount = 0
+
+    // Obtener todas las entidades
+    const entities = await ctx.db.query('entities').collect()
+
+    for (const entity of entities) {
+      // Contar relaciones de esta entidad
+      const relationsOut = await ctx.db
+        .query('entityRelations')
+        .withIndex('by_source', (q) =>
+          q.eq('sourceId', entity._id).eq('sourceType', 'entity')
+        )
+        .filter((q) => q.eq(q.field('isActive'), true))
+        .collect()
+
+      const relationsIn = await ctx.db
+        .query('entityRelations')
+        .withIndex('by_target', (q) =>
+          q.eq('targetId', entity._id).eq('targetType', 'entity')
+        )
+        .filter((q) => q.eq(q.field('isActive'), true))
+        .collect()
+
+      const totalRelations = relationsOut.length + relationsIn.length
+
+      // Si tiene pocas relaciones y no está marcada, marcarla
+      if (totalRelations < minRelations && !entity.markedForReview) {
+        await ctx.db.patch(entity._id, {
+          markedForReview: true,
+          reviewRequestedAt: Date.now(),
+          reviewRequestedBy: 'auto-marker',
+          updatedAt: Date.now(),
+        })
+        markedCount++
+        console.log(
+          `🔍 Auto-marcado: ${entity.name} (${totalRelations} relaciones)`
+        )
+      }
+    }
+
+    return {
+      success: true,
+      markedCount,
+      message: `Se marcaron ${markedCount} nodos con menos de ${minRelations} relaciones`,
+    }
+  },
+})
