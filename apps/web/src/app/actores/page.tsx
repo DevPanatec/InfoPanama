@@ -1,63 +1,31 @@
+'use client'
+
 import { User, Users, Building2, Bot, AlertTriangle, Shield, TrendingUp, MessageSquare } from 'lucide-react'
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
+import Link from 'next/link'
 
 export default function ActoresPage() {
-  const actores = [
-    {
-      nombre: 'José Raúl Mulino',
-      tipo: 'person',
-      cargo: 'Presidente de Panamá',
-      verificaciones: 23,
-      credibilidad: 75,
-      afiliacion: 'Realizando Metas',
-    },
-    {
-      nombre: 'Laurentino Cortizo',
-      tipo: 'person',
-      cargo: 'Ex-Presidente de Panamá',
-      verificaciones: 45,
-      credibilidad: 68,
-      afiliacion: 'PRD',
-    },
-    {
-      nombre: 'Ministerio de Salud',
-      tipo: 'official',
-      cargo: 'Institución Gubernamental',
-      verificaciones: 34,
-      credibilidad: 82,
-      afiliacion: 'Gobierno',
-    },
-    {
-      nombre: 'Asamblea Nacional',
-      tipo: 'official',
-      cargo: 'Órgano Legislativo',
-      verificaciones: 56,
-      credibilidad: 71,
-      afiliacion: 'Gobierno',
-    },
-    {
-      nombre: 'Cámara de Comercio',
-      tipo: 'group',
-      cargo: 'Organización Empresarial',
-      verificaciones: 12,
-      credibilidad: 79,
-      afiliacion: 'Sector Privado',
-    },
-    {
-      nombre: 'SUNTRACS',
-      tipo: 'group',
-      cargo: 'Sindicato',
-      verificaciones: 18,
-      credibilidad: 73,
-      afiliacion: 'Sector Laboral',
-    },
-  ]
+  // Obtener actores reales de Convex
+  const actoresData = useQuery(api.actors.list, {})
+
+  // Calcular estadísticas mientras se cargan los datos
+  const actores = actoresData || []
+  const totalActores = actores.length
+  const totalVerificaciones = actores.reduce((sum: number, a: any) => sum + (a.claimsCount || 0), 0)
+  const credibilidadMedia = actores.length > 0
+    ? Math.round(actores.reduce((sum: number, a: any) => sum + (a.credibilityScore || 0), 0) / actores.length)
+    : 0
 
   const getIcon = (tipo: string) => {
     switch (tipo) {
       case 'person': return User
       case 'official': return Building2
       case 'group': return Users
-      case 'troll': return Bot
+      case 'organization': return Building2
+      case 'troll_network': return Bot
+      case 'botnet': return Bot
+      case 'media_outlet': return Building2
       default: return User
     }
   }
@@ -67,7 +35,11 @@ export default function ActoresPage() {
       case 'person': return 'Persona'
       case 'official': return 'Institución'
       case 'group': return 'Organización'
-      case 'troll': return 'Cuenta Sospechosa'
+      case 'organization': return 'Organización'
+      case 'troll_network': return 'Red de Trolls'
+      case 'botnet': return 'Red de Bots'
+      case 'media_outlet': return 'Medio de Comunicación'
+      case 'HB': return 'Honeybadger'
       default: return tipo
     }
   }
@@ -77,7 +49,10 @@ export default function ActoresPage() {
       case 'person': return 'bg-blue-100 text-blue-700'
       case 'official': return 'bg-sky-100 text-sky-700'
       case 'group': return 'bg-blue-50 text-blue-600'
-      case 'troll': return 'bg-slate-200 text-slate-700'
+      case 'organization': return 'bg-sky-50 text-sky-600'
+      case 'troll_network': return 'bg-red-100 text-red-700'
+      case 'botnet': return 'bg-red-100 text-red-700'
+      case 'media_outlet': return 'bg-purple-100 text-purple-700'
       default: return 'bg-slate-100 text-slate-700'
     }
   }
@@ -117,7 +92,7 @@ export default function ActoresPage() {
                 <User className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-800">6</p>
+                <p className="text-2xl font-bold text-slate-800">{totalActores}</p>
                 <p className="text-sm text-slate-500">Actores</p>
               </div>
             </div>
@@ -129,8 +104,8 @@ export default function ActoresPage() {
                 <MessageSquare className="h-6 w-6 text-sky-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-800">188</p>
-                <p className="text-sm text-slate-500">Verificaciones</p>
+                <p className="text-2xl font-bold text-slate-800">{totalVerificaciones}</p>
+                <p className="text-sm text-slate-500">Declaraciones</p>
               </div>
             </div>
           </div>
@@ -141,7 +116,7 @@ export default function ActoresPage() {
                 <TrendingUp className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-800">74%</p>
+                <p className="text-2xl font-bold text-slate-800">{credibilidadMedia || 0}%</p>
                 <p className="text-sm text-slate-500">Credibilidad Media</p>
               </div>
             </div>
@@ -166,71 +141,89 @@ export default function ActoresPage() {
             <h2 className="text-2xl font-bold text-slate-800">Actores Monitoreados</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {actores.map((actor) => {
-              const Icon = getIcon(actor.tipo)
-              const credibilityColor = getCredibilityColor(actor.credibilidad)
-              const typeColor = getTypeColor(actor.tipo)
+          {!actoresData ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="text-slate-500 mt-4">Cargando actores...</p>
+            </div>
+          ) : actores.length === 0 ? (
+            <div className="text-center py-12 bg-slate-50 rounded-2xl">
+              <Users className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+              <p className="text-slate-600 text-lg font-medium">No hay actores registrados aún</p>
+              <p className="text-slate-500 mt-2">Los actores se crearán automáticamente cuando el crawler detecte nuevas figuras públicas.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {actores.map((actor: any) => {
+                const Icon = getIcon(actor.type || 'person')
+                const credibilityScore = actor.credibilityScore || 0
+                const credibilityColor = getCredibilityColor(credibilityScore)
+                const typeColor = getTypeColor(actor.type || 'person')
+                const claimsCount = actor.claimsCount || 0
 
-              return (
-                <div
-                  key={actor.nombre}
-                  className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all group"
-                >
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition">
-                        <Icon className="h-6 w-6 text-blue-600" />
+                return (
+                  <Link
+                    key={actor._id}
+                    href={`/actores/${actor.slug || actor._id}`}
+                    className="bg-white rounded-2xl p-6 border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all group"
+                  >
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition">
+                          <Icon className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition line-clamp-1">
+                            {actor.name}
+                          </h3>
+                          <p className="text-sm text-slate-500">{actor.description || 'Actor político'}</p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition line-clamp-1">
-                          {actor.nombre}
-                        </h3>
-                        <p className="text-sm text-slate-500">{actor.cargo}</p>
+                    </div>
+
+                    {/* Info */}
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-center justify-between">
+                        <span className={`text-xs font-medium px-3 py-1 rounded-full ${typeColor}`}>
+                          {getTypeLabel(actor.type || 'person')}
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          {claimsCount} declaraciones
+                        </span>
+                      </div>
+
+                      {actor.verified && (
+                        <div className="flex items-center gap-2 text-sm text-blue-600">
+                          <Shield className="h-4 w-4" />
+                          <span>Verificado</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Credibility */}
+                    <div className="mb-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium text-slate-700">Credibilidad</span>
+                        <span className="text-lg font-bold text-slate-800">{credibilityScore}%</span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                        <div
+                          className={`h-2 rounded-full bg-gradient-to-r ${credibilityColor} transition-all duration-500`}
+                          style={{ width: `${credibilityScore}%` }}
+                        />
                       </div>
                     </div>
-                  </div>
 
-                  {/* Info */}
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-center justify-between">
-                      <span className={`text-xs font-medium px-3 py-1 rounded-full ${typeColor}`}>
-                        {getTypeLabel(actor.tipo)}
-                      </span>
-                      <span className="text-xs text-slate-500">
-                        {actor.verificaciones} verificaciones
-                      </span>
+                    {/* Action */}
+                    <div className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-500 hover:to-blue-600 transition-all font-medium text-sm shadow-md hover:shadow-lg group-hover:scale-[1.02] text-center">
+                      Ver Perfil Completo
                     </div>
-
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <Building2 className="h-4 w-4" />
-                      <span>{actor.afiliacion}</span>
-                    </div>
-                  </div>
-
-                  {/* Credibility */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium text-slate-700">Credibilidad</span>
-                      <span className="text-lg font-bold text-slate-800">{actor.credibilidad}%</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                      <div
-                        className={`h-2 rounded-full bg-gradient-to-r ${credibilityColor} transition-all duration-500`}
-                        style={{ width: `${actor.credibilidad}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Action */}
-                  <button className="w-full px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-500 hover:to-blue-600 transition-all font-medium text-sm shadow-md hover:shadow-lg group-hover:scale-[1.02]">
-                    Ver Perfil Completo
-                  </button>
-                </div>
-              )
-            })}
-          </div>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {/* Info Section */}
