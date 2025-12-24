@@ -247,21 +247,31 @@ async function main() {
               }
             }
 
+            // Validar speaker (evitar "null" literal)
+            const validSpeaker = claim.speaker && claim.speaker !== 'null' && claim.speaker.toLowerCase() !== 'null'
+              ? claim.speaker
+              : null
+
+            // Crear título válido
+            const claimTitle = validSpeaker
+              ? `${validSpeaker}: "${claim.text.substring(0, 80)}..."`
+              : `"${claim.text.substring(0, 100)}..."`
+
             // Crear claim con el formato CORRECTO de Convex
             const claimData: any = {
-              title: `${claim.speaker ? claim.speaker + ': ' : ''}"${claim.text.substring(0, 80)}..."`,
-              description: claim.context,
+              title: claimTitle,
+              description: claim.context || claim.text,
               claimText: claim.text,
-              category: claim.category,
-              tags: [article.sourceName, article.category || 'General', ...actors],
-              riskLevel: claim.riskLevel,
+              category: claim.category || 'otros',
+              tags: [article.sourceName, article.category || 'General', ...actors].filter(Boolean),
+              riskLevel: claim.riskLevel || 'MEDIUM',
               sourceType: 'auto_extracted',
               sourceUrl: article.url,
               imageUrl: article.imageUrl,
               isPublic: true,
               isFeatured: claim.riskLevel === 'HIGH' || claim.riskLevel === 'CRITICAL',
               autoPublished: true,
-              status: 'published',
+              status: 'new',
             }
 
             if (actorId) {

@@ -163,10 +163,17 @@ async function scrapeArticle(context: any, url: string): Promise<ScrapedArticle 
 
     const publishedDate = new Date(dateText)
 
-    // Extraer imagen
+    // Extraer imagen - probar múltiples selectores
     const imageUrl =
-      $('.article-image img').first().attr('src') ||
       $('meta[property="og:image"]').attr('content') ||
+      $('meta[name="twitter:image"]').attr('content') ||
+      $('.article-image img').first().attr('src') ||
+      $('article img').first().attr('src') ||
+      $('.story-image img').first().attr('src') ||
+      $('.featured-image img').first().attr('src') ||
+      $('img[class*="article"]').first().attr('src') ||
+      $('img[class*="featured"]').first().attr('src') ||
+      $('figure img').first().attr('src') ||
       undefined
 
     // Extraer categoría de la URL o metadata

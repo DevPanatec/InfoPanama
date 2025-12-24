@@ -426,21 +426,31 @@ async function main() {
         const actorId = actorMap.get(i)
 
         try {
+          // Validar speaker (evitar "null" literal)
+          const validSpeaker = claim.speaker && claim.speaker !== 'null' && claim.speaker.toLowerCase() !== 'null'
+            ? claim.speaker
+            : null
+
+          // Crear título válido
+          const claimTitle = validSpeaker
+            ? `${validSpeaker}: "${claim.text.substring(0, 80)}..."`
+            : `"${claim.text.substring(0, 100)}..."`
+
           // Crear el claim en Convex con actorId si se encontró/creó uno
           const claimData: any = {
-            title: `${claim.speaker ? claim.speaker + ': ' : ''}"${claim.text.substring(0, 80)}..."`,
-            description: claim.context,
+            title: claimTitle,
+            description: claim.context || claim.text,
             claimText: claim.text,
-            category: claim.category,
-            tags: [article.sourceName, article.category || 'General'],
-            riskLevel: claim.riskLevel,
+            category: claim.category || 'otros',
+            tags: [article.sourceName, article.category || 'General'].filter(Boolean),
+            riskLevel: claim.riskLevel || 'MEDIUM',
             sourceType: 'auto_extracted',
             sourceUrl: article.url,
             imageUrl: article.imageUrl, // ✅ Agregar imagen del artículo al claim
             isPublic: true,
             isFeatured: claim.riskLevel === 'HIGH' || claim.riskLevel === 'CRITICAL',
-            autoPublished: true, // ✅ Auto-publicar para mostrar en landing
-            status: 'published', // ✅ Publicar directamente (cambiar a 'new' si quieres revisión manual)
+            autoPublished: true,
+            status: 'new', // 🔍 Requiere revisión manual antes de publicar
           }
 
           // Agregar actorId si existe
